@@ -79,7 +79,8 @@ class Time(Artifact):
 
     @property
     def isPOD(self):
-        '''isPartOfDay <=> morning, etc.; fragile, tests only that there is a POD and neither a full date nor a full time
+        '''isPartOfDay <=> morning, etc.; fragile, tests only that there is a
+        POD and neither a full date nor a full time
         '''
         return self.POD is not None and not self.hasDate and not self.hasTime
 

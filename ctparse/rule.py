@@ -34,6 +34,32 @@ def rule(*patterns):
             if p in _str_regex:
                 # have seen this regex before - recycle
                 return regex_match(_str_regex[p])
+            # test the regex first
+            defines = (r'(?(DEFINE)(?<_hour>{regex_hour})(?P<_minute>{regex_minute})'
+                       '(?P<_day>{regex_day})(?P<_month>{regex_month})'
+                       '(?P<_year>{regex_year})'
+                       '(?P<_pos_bnd>{regex_pos_behind_sep})'
+                       '(?P<_pos_bfr>{regex_pos_before_sep}))').format(
+                           regex_hour=_regex_hour,
+                           regex_minute=_regex_minute,
+                           regex_day=_regex_day,
+                           regex_month=_regex_month,
+                           regex_year=_regex_year,
+                           regex_pos_behind_sep=_regex_pos_behind_sep,
+                           regex_pos_before_sep=_regex_pos_before_sep)
+            re = r'{defines}(?i)(?P<{re_key}>{re})'.format(
+                    defines=defines,
+                    re=p,
+                    re_key='R{}'.format(re_id))
+            new_rr = regex.compile(
+                # Removed the separator here - leads to more matches,
+                # as now each rule can also match if it is not followed
+                # or preceeded by a separator character
+                # r'(?i)(?:{sep})(?P<{re_key}>{re})(?:{sep})'.format(
+                re,
+                regex.VERSION1)
+            if new_rr.match(''):
+                raise ValueError('expression {} matches empty strings'.format(p))
             _regex_cnt += 1
             _regex_str[re_id] = p
             _str_regex[p] = re_id
@@ -53,15 +79,7 @@ def rule(*patterns):
                     defines=defines,
                     re=p,
                     re_key='R{}'.format(re_id))
-            _regex[re_id] = regex.compile(
-                # Removed the separator here - leads to more matches,
-                # as now each rule can also match if it is not followed
-                # or preceeded by a separator character
-                # r'(?i)(?:{sep})(?P<{re_key}>{re})(?:{sep})'.format(
-                re,
-                regex.VERSION1)
-            if _regex[re_id].match(''):
-                raise ValueError('expression {} matches empty strings'.format(p))
+            _regex[re_id] = new_rr
             return regex_match(re_id)
         else:
             return p
