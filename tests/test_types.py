@@ -1,6 +1,6 @@
 from unittest import TestCase
 import regex
-from ctparse.types import Artifact, RegexMatch
+from ctparse.types import Artifact, RegexMatch, Time, Interval
 
 
 class TestArtifact(TestCase):
@@ -40,3 +40,85 @@ class TestRegexMatch(TestCase):
         self.assertEqual(r._text, 'match me')
         self.assertEqual(repr(r), 'RegexMatch[4-12]{1:match me}')
         self.assertEqual(r.nb_str(), 'RegexMatch[]{1:match me}')
+
+
+class TestTime(TestCase):
+    def test_init(self):
+        self.assertIsNotNone(Time())
+
+    def test_isDOY(self):
+        self.assertTrue(Time(month=1, day=1).isDOY)
+        self.assertFalse(Time(year=1).isDOY)
+
+    def test_isDOM(self):
+        self.assertTrue(Time(day=1).isDOM)
+        self.assertFalse(Time(month=1).isDOM)
+
+    def test_isDOW(self):
+        self.assertTrue(Time(DOW=1).isDOW)
+        self.assertFalse(Time().isDOW)
+
+    def test_isMonth(self):
+        self.assertTrue(Time(month=1).isMonth)
+        self.assertFalse(Time(day=1).isMonth)
+        self.assertFalse(Time(year=1).isMonth)
+
+    def test_isPOD(self):
+        self.assertTrue(Time(POD='morning').isPOD)
+        self.assertFalse(Time(day=1).isPOD)
+        self.assertFalse(Time(year=1).isPOD)
+
+    def test_isTOD(self):
+        self.assertTrue(Time(hour=1, minute=1).isTOD)
+        self.assertTrue(Time(hour=1).isTOD)
+        self.assertFalse(Time(minute=1).isTOD)
+        self.assertFalse(Time().isTOD)
+
+    def test_isDate(self):
+        self.assertTrue(Time(year=1, month=1, day=1).isDate)
+        self.assertFalse(Time(year=1, month=1).isDate)
+        self.assertFalse(Time(year=1, day=1).isDate)
+        self.assertFalse(Time(day=1, month=1).isDate)
+        self.assertFalse(Time(year=1, month=1, day=1, hour=1).isDate)
+
+    def test_isDateTime(self):
+        self.assertTrue(Time(year=1, month=1, day=1, hour=1).isDateTime)
+        self.assertFalse(Time(year=1, month=1, day=1).isDateTime)
+
+    def test_isYear(self):
+        self.assertTrue(Time(year=1).isYear)
+        self.assertFalse(Time(year=1, month=1).isYear)
+
+    def test_hasDate(self):
+        self.assertTrue(Time(year=1, month=1, day=1).hasDate)
+        self.assertFalse(Time(year=1, month=1).isDate)
+        self.assertFalse(Time(year=1, day=1).isDate)
+        self.assertFalse(Time(day=1, month=1).isDate)
+        self.assertTrue(Time(year=1, month=1, day=1, hour=1).hasDate)
+
+    def test_hasTime(self):
+        self.assertTrue(Time(hour=1, minute=1, day=1, month=1, year=1).hasTime)
+        self.assertTrue(Time(hour=1, day=1, month=1, year=1).hasTime)
+        self.assertFalse(Time(day=1, month=1, year=1).hasTime)
+
+    def test_repr(self):
+        t = Time(year=1, month=1, day=1, hour=1, minute=1, DOW=1, POD='pod')
+        self.assertEqual(repr(t),
+                         'Time[0-0]{0001-01-01 01:01 (1/pod)}')
+
+
+class TestInterval(TestCase):
+    def test_init(self):
+        self.assertIsNotNone(Interval())
+
+    def test_isPOD(self):
+        self.assertTrue(Interval(POD='pod').isPOD)
+
+    def test_isTimeInterval(self):
+        self.assertTrue(
+            Interval(Time(hour=1),
+                     Time(hour=2)).isTimeInterval)
+
+    def test_repr(self):
+        self.assertEqual(repr(Interval(Time(), Time(), POD='pod')),
+                         'Interval[0-0]{X-X-X X:X (X/X) - X-X-X X:X (X/X) (pod)}')

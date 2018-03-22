@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/comtravo/ctparse.svg?branch=master)](https://travis-ci.org/comtravo/ctparse)
 
+**This code is in early alpha stage. There can and will be potentially breaking changes right on the `master` branch**
+
 # Comtravo Time Parser
 
 ## Background
@@ -17,9 +19,9 @@ from datetime import datetime
 # Set reference time
 ts = datetime(2018, 3, 12, 14, 30)
 ctparse('May 5th 2:30 in the afternoon')
-
---> Time[0-29]{2018-05-05 14:30 (X/X)}
 ```
+
+This should return `Time[0-29]{2018-05-05 14:30 (X/X)}`
 
 ## Implementation
 `ctparse` - as `duckling` - is a mixture of a rule and regular expression based system + some probabilistic modeling. In this sense it resembles a PCFG.
