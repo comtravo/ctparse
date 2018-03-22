@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/comtravo/ctparse.svg?branch=master)](https://travis-ci.org/comtravo/ctparse)
+
 # Comtravo Time Parser
 
 ## Background
