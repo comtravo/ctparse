@@ -1,0 +1,43 @@
+import logging
+from sklearn.pipeline import make_pipeline
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+
+logger = logging.getLogger(__name__)
+
+
+class NB:
+    def __init__(self):
+        self._model = None
+
+    def fit(self, X, y):
+        # X, y = self._prepare_data(X, y)
+        self._model = make_pipeline(
+            CountVectorizer(ngram_range=(2, 3), lowercase=False,
+                            tokenizer=lambda x: x),
+            MultinomialNB(alpha=1.0))
+        self._model.fit(X, y)
+        # Make sure that class order is -1, 1
+        assert self._model.classes_[0] == -1
+        return self
+
+    def predict(self, X):
+        """wrapper to predict - if no model is fitted, return 0.0 for all samples"""
+        if self._model is None:
+            return [0.0 for x in X]
+        return self._model.predict_log_proba(X)[:, 1] - self._model.predict_log_proba(X)[:, 0]
+
+    def map_prod(self, prod, y=None):
+        """given one production, transform it into all sub-sequences of len 1 - len(prod)"""
+        Xs = []
+        ys = []
+        for i in range(1, len(prod)):
+            Xs.append([str(w) for w in prod[:i]])
+            ys.append(1 if y else -1)
+        if not Xs:
+            return [[]], [-1]
+        return Xs, ys
+
+    def apply(self, x):
+        """apply model to a single data point"""
+        return self.predict([[str(w) for w in x]])[0]
