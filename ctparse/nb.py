@@ -6,6 +6,11 @@ from sklearn.naive_bayes import MultinomialNB
 logger = logging.getLogger(__name__)
 
 
+def _id(x):
+    # can not pickle models if using a lambda below
+    return x
+
+
 class NB:
     def __init__(self):
         self._model = None
@@ -14,7 +19,7 @@ class NB:
         # X, y = self._prepare_data(X, y)
         self._model = make_pipeline(
             CountVectorizer(ngram_range=(2, 3), lowercase=False,
-                            tokenizer=lambda x: x),
+                            tokenizer=_id),
             MultinomialNB(alpha=1.0))
         self._model.fit(X, y)
         # Make sure that class order is -1, 1

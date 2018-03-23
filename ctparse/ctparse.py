@@ -1,5 +1,8 @@
 import logging
 import regex
+import pickle
+import bz2
+import os
 from tqdm import tqdm
 from time import perf_counter
 from datetime import datetime
@@ -113,7 +116,13 @@ def _ctparse(txt, ts=None, timeout=0, nb=None):
         return
 
 
-_nb = NB()
+_model_file = os.path.join(os.path.dirname(__file__), 'models', 'model.pbz')
+if os.path.exists(_model_file):
+    logger.info('Loading model from {}'.format(_model_file))
+    _nb = pickle.load(bz2.open(_model_file, 'rb'))
+else:
+    logger.warning('No model found, initializing empty model')
+    _nb = NB()
 
 
 def ctparse(txt, ts=None, timeout=0, debug=False):
@@ -295,3 +304,11 @@ def run_corpus():
     if at_least_one_failed:
         raise Exception('ctparse corpus has errors')
     return Xs, ys
+
+
+def build_model(X, y, save=False):
+    nb = NB()
+    nb.fit(X, y)
+    if save:
+        pickle.dump(nb, bz2.open(_model_file, 'wb'))
+    return nb
