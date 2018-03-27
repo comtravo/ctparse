@@ -472,7 +472,7 @@ def ruleBeforeTime(ts, _, t):
     return Interval(t_from=None, t_to=t)
 
 
-@rule(r'nach|after|frühe?stens|earliest', dimension(Time))
+@rule(r'nach|ab|after|frühe?stens|earliest', dimension(Time))
 def ruleAfterTime(ts, _, t):
     return Interval(t_from=t, t_to=None)
 
@@ -520,8 +520,16 @@ def ruleDateTimeDateTime(ts, d1, _, d2):
 def ruleTODTOD(ts, t1, _, t2):
     if t1.hour > t2.hour:
         return None
-    if t1.hour == t2.hour and t1.minute >= t2.minute:
-        return None
+    if t1.hour == t2.hour:
+        if t1.minute is not None and t2.minute is not None and t1.minute >= t2.minute:
+            # 6:30 - 6:30?
+            return None
+        if t1.minute is None and t2.minute is not None:
+            # 6:30 - 6?
+            return None
+        if t1.minute is None and t2.minute is None:
+            # 6 - 6?
+            return None
     return Interval(t_from=t1, t_to=t2)
 
 
