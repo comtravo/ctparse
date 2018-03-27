@@ -2,6 +2,7 @@ class Artifact:
     def __init__(self):
         self.mstart = 0
         self.mend = 0
+        self._attrs = ['mstart', 'mend']
 
     def update_span(self, *args):
         self.mstart = args[0].mstart
@@ -22,10 +23,33 @@ class Artifact:
         return '{}[]{{{}}}'.format(
             self.__class__.__name__, str(self))
 
+    def __eq__(self, other):
+        return all(getattr(self, a) == getattr(other, a) for a in self._attrs)
+
+    def __hash__(self):
+        return hash(tuple(getattr(self, a) for a in self._attrs))
+
+    def _hasOnly(self, *args):
+        '''check that all attributes set to True are set (i.e. not None) and
+        all set to False are not set (i.e. None)
+
+        '''
+        return all(
+            getattr(self, a) is not None if a in args else getattr(self, a) is None
+            for a in self._attrs)
+
+    def _hasAtLeast(self, *args):
+        '''check that all attributes set to True are set (i.e. not None) and
+        all set to False are not set (i.e. None)
+
+        '''
+        return all(getattr(self, a) is not None for a in args)
+
 
 class RegexMatch(Artifact):
     def __init__(self, id, m):
         super().__init__()
+        self._attrs = ['mstart', 'mend', 'id']
         self.key = 'R{}'.format(id)
         self.id = id
         self.match = m
@@ -36,18 +60,11 @@ class RegexMatch(Artifact):
     def __str__(self):
         return '{}:{}'.format(self.id, self._text)
 
-    def __hash__(self):
-        return hash((self.mstart, self.mend, self.id))
-
-    def __eq__(self, other):
-        return (self.mstart == other.mstart and
-                self.mend == other.mend and
-                self.id == other.id)
-
 
 class Time(Artifact):
     def __init__(self, year=None, month=None, day=None, hour=None, minute=None, DOW=None, POD=None):
         super().__init__()
+        self._attrs = ['year', 'month', 'day', 'hour', 'minute', 'DOW', 'POD']
         # Might add some validation here, did not to avoid the overhead
         self.year = year
         self.month = month
@@ -57,18 +74,6 @@ class Time(Artifact):
         self.DOW = DOW
         self.POD = POD
 
-    def __eq__(self, other):
-        return (self.year == other.year and
-                self.month == other.month and
-                self.day == other.day and
-                self.hour == other.hour and
-                self.minute == other.minute and
-                self.DOW == other.DOW and
-                self.POD == other.POD)
-
-    def __hash__(self):
-        return hash((self.year, self.month, self.day, self.hour, self.minute, self.DOW, self.POD))
-
     # ------------------------------------------------------------------------------------
     # Make sure to not accidentially test bool(x) as False when x==0, but you meant x==None
     # ------------------------------------------------------------------------------------
@@ -76,13 +81,15 @@ class Time(Artifact):
     def isDOY(self):
         '''isDayOfYear <=> a dd.mm but not year
         '''
-        return bool(self.month and self.day and not self.year)
+        # return bool(self.month and self.day and not self.year)
+        return self._hasOnly('month', 'day')
 
     @property
     def isDOM(self):
         '''isDayOfMonth <=> a dd but no month
         '''
-        return bool(self.day and not self.month)
+        # return bool(self.day and not self.month)
+        return self._hasOnly('day')
 
     @property
     def isDOW(self):
@@ -91,48 +98,58 @@ class Time(Artifact):
         however, the production rules do not do that.
 
         '''
-        return bool(self.DOW is not None)
+        # return bool(self.DOW is not None)
+        return self._hasOnly('DOW')
 
     @property
     def isMonth(self):
-        return bool(self.month and not self.day and not self.year)
+        # return bool(self.month and not self.day and not self.year)
+        return self._hasOnly('month')
 
     @property
     def isPOD(self):
         '''isPartOfDay <=> morning, etc.; fragile, tests only that there is a
         POD and neither a full date nor a full time
         '''
-        return self.POD is not None and not self.hasDate and not self.hasTime
+        # return self.POD is not None and not self.hasDate and not self.hasTime
+        return self._hasOnly('POD')
 
     @property
     def isTOD(self):
         '''isTimeOfDay - only a time, not date'''
-        return self.hasTime and not self.hasDate
+        # return self.hasTime and not self.hasDate
+        return self._hasOnly('hour') or self._hasOnly('hour', 'minute')
 
     @property
     def isDate(self):
         '''isDate - only a date, not time'''
-        return self.hasDate and not self.hasTime
+        # return self.hasDate and not self.hasTime
+        return self._hasOnly('year', 'month', 'day')
 
     @property
     def isDateTime(self):
         '''a date and a time'''
-        return self.hasDate and self.hasTime
+        # return self.hasDate and self.hasTime
+        return (self._hasOnly('year', 'month', 'day', 'hour') or
+                self._hasOnly('year', 'month', 'day', 'hour', 'minute'))
 
     @property
     def isYear(self):
         '''just a year'''
-        return bool(not self.month and not self.day and self.year)
+        # return bool(not self.month and not self.day and self.year)
+        return self._hasOnly('year')
 
     @property
     def hasDate(self):
         '''at least at date'''
-        return bool(self.year and self.month and self.day)
+        # return bool(self.year and self.month and self.day)
+        return self._hasAtLeast('year', 'month', 'day')
 
     @property
     def hasTime(self):
         '''at least a time to the hour'''
-        return bool(self.hour is not None)
+        # return bool(self.hour is not None)
+        return self._hasAtLeast('hour')
 
     def __str__(self):
         return '{}-{}-{} {}:{} ({}/{})'.format(
@@ -148,13 +165,14 @@ class Time(Artifact):
 class Interval(Artifact):
     def __init__(self, t_from=None, t_to=None, POD=None):
         super().__init__()
+        self._attrs = ['t_from', 't_to', 'POD']
         self.t_from = t_from
         self.t_to = t_to
         self.POD = POD
 
     @property
     def isPOD(self):
-        return self.POD is not None
+        return self._hasOnly('POD')
 
     @property
     def isTimeInterval(self):
@@ -165,11 +183,3 @@ class Interval(Artifact):
             str(self.t_from),
             str(self.t_to),
             '{}'.format(self.POD) if self.POD is not None else 'X')
-
-    def __eq__(self, other):
-        return (self.t_from == other.t_from and
-                self.t_to == other.t_to and
-                self.POD == other.POD)
-
-    def __hash__(self):
-        return hash((self.t_from, self.t_to, self.POD))
