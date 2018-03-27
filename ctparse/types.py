@@ -36,6 +36,14 @@ class RegexMatch(Artifact):
     def __str__(self):
         return '{}:{}'.format(self.id, self._text)
 
+    def __hash__(self):
+        return hash((self.mstart, self.mend, self.id))
+
+    def __eq__(self, other):
+        return (self.mstart == other.mstart and
+                self.mend == other.mend and
+                self.id == other.id)
+
 
 class Time(Artifact):
     def __init__(self, year=None, month=None, day=None, hour=None, minute=None, DOW=None, POD=None):
@@ -48,6 +56,18 @@ class Time(Artifact):
         self.minute = minute
         self.DOW = DOW
         self.POD = POD
+
+    def __eq__(self, other):
+        return (self.year == other.year and
+                self.month == other.month and
+                self.day == other.day and
+                self.hour == other.hour and
+                self.minute == other.minute and
+                self.DOW == other.DOW and
+                self.POD == other.POD)
+
+    def __hash__(self):
+        return hash((self.year, self.month, self.day, self.hour, self.minute, self.DOW, self.POD))
 
     # ------------------------------------------------------------------------------------
     # Make sure to not accidentially test bool(x) as False when x==0, but you meant x==None
@@ -145,3 +165,11 @@ class Interval(Artifact):
             str(self.t_from),
             str(self.t_to),
             '{}'.format(self.POD) if self.POD is not None else 'X')
+
+    def __eq__(self, other):
+        return (self.t_from == other.t_from and
+                self.t_to == other.t_to and
+                self.POD == other.POD)
+
+    def __hash__(self):
+        return hash((self.t_from, self.t_to, self.POD))

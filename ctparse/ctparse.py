@@ -61,9 +61,6 @@ def timeit(f):
 
 
 def _ctparse(txt, ts=None, timeout=0, nb=None):
-    def _key(s):
-        return '+'.join(x.__repr__() for x in s)
-
     t_fun = _timeout(timeout)
 
     try:
@@ -74,9 +71,9 @@ def _ctparse(txt, ts=None, timeout=0, nb=None):
         stash, _ts = timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
-        stash = [(s, [r.id for r in s], nb.apply([r.id for r in s])) for s in stash]
+        stash = [(s, tuple(r.id for r in s), nb.apply([r.id for r in s])) for s in stash]
         # track what has been added to the stash and do not add again
-        stash_prod = set([_key(s) for s in stash])
+        stash_prod = set(s for s in stash)
         # track what has been emitted and do not emit agin
         parse_prod = set()
         while stash:
@@ -87,19 +84,17 @@ def _ctparse(txt, ts=None, timeout=0, nb=None):
                 for r_match in match_rule(s, r[1]):
                     ns = r[0](ts, *s[r_match[0]:r_match[1]])
                     if ns is not None:
-                        new_el = s[:r_match[0]] + [ns] + s[r_match[1]:]
-                        key = _key(new_el)
-                        if key not in stash_prod:
-                            new_seq = rule_seq + [r_name]
+                        new_el = s[:r_match[0]] + (ns,) + s[r_match[1]:]
+                        if new_el not in stash_prod:
+                            new_seq = rule_seq + (r_name,)
                             new_score = nb.apply(new_seq)
                             new_stash.append((new_el, new_seq, new_score))
-                            stash_prod.add(key)
+                            stash_prod.add(new_el)
             if not new_stash:
                 for x in s:
                     if type(x) is not RegexMatch:
-                        key = _key([x])
-                        if key not in parse_prod:
-                            parse_prod.add(key)
+                        if x not in parse_prod:
+                            parse_prod.add(x)
                             score_rule = nb.apply(rule_seq)
                             len_score = log(float(len(x))/len(txt))
                             logger.debug('New parse (len stash {} {:6.2f} {:6.2f})'
@@ -234,7 +229,7 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
         for j in range(i+1, n_rm):
             M[j][i] = get_m_dist(regex_matches[i], regex_matches[j])
 
-    stack = [[i] for i in reversed(range(n_rm)) if sum(M[i]) == 0]
+    stack = [(i,) for i in reversed(range(n_rm)) if sum(M[i]) == 0]
     while stack:
         t_fun()
         s = stack.pop()
@@ -242,15 +237,15 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
         new_prod = False
         for j in range(i+1, n_rm):
             if M[j][i] == 1:
-                stack.append(s + [j])
+                stack.append(s + (j,))
                 new_prod = True
         if not new_prod:
-            prod = [regex_matches[i] for i in s]
+            prod = tuple(regex_matches[i] for i in s)
             logger.debug(' -> sub sequence {}'.format(prod))
             yield prod
 
 
-def run_corpus():
+def run_corpus(corpus):
     """Load the corpus (currently hard coded), run it through ctparse with no timeout.
 
     The corpus passes if ctparse generates the desired solution for
@@ -270,7 +265,6 @@ def run_corpus():
     All samples from one production are given the same label: 1 iff
     the final production was correct, -1 otherwise.
     """
-    from . time.corpus import corpus as corpus
     at_least_one_failed = False
     pos_parses = neg_parses = 0
     Xs = []
