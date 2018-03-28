@@ -108,6 +108,28 @@ mkMonths([
     ("December", r"december|dezember|dez\.?|dec\.?")])
 
 
+def mkDDMonths(months):
+    for month_num, (month, month_ex) in enumerate(months):
+        exec('''@rule(r"(?&_pos_bfr)(?P<day>(?&_day))\.?({})(?&_pos_bnd)")
+def ruleDDMonth{}(ts, m): return Time(month={}, day=int(m.match.group('day')))'''.format(
+            month_ex, month, month_num + 1))
+
+
+mkDDMonths([
+    ("January", r"january?|jan\.?"),
+    ("February", r"february?|feb\.?"),
+    ("March", r"märz|march|mar\.?|mär\.?"),
+    ("April", r"april|apr\.?"),
+    ("May", r"mai|may\.?"),
+    ("June", r"juni|june|jun\.?"),
+    ("July", r"juli|july|jul\.?"),
+    ("August", r"august|aug\.?"),
+    ("September", r"september|sept?\.?"),
+    ("October", r"oktober|october|oct\.?|okt\.?"),
+    ("November", r"november|nov\.?"),
+    ("December", r"december|dezember|dez\.?|dec\.?")])
+
+
 # note that for the first/last it isn't really optimal for capture currently
 # also vormittags is never captured for some reason
 # it will always return noon and never return before_noon
@@ -345,12 +367,14 @@ def ruleLatentPOD(ts, pod):
     t_from = ts + relativedelta(hour=h_from)
     if t_from <= ts:
         t_from += relativedelta(days=1)
-    t_to = t_from + relativedelta(hour=h_to)
-    t_from = Time(year=t_from.year, month=t_from.month, day=t_from.day,
-                  hour=t_from.hour, minute=0)
-    t_to = Time(year=t_to.year, month=t_to.month, day=t_to.day,
-                hour=t_to.hour, minute=0)
-    return Interval(t_from=t_from, t_to=t_to, POD=pod.POD)
+    return Time(year=t_from.year, month=t_from.month, day=t_from.day,
+                POD=pod.POD)
+    # t_to = t_from + relativedelta(hour=h_to)
+    # t_from = Time(year=t_from.year, month=t_from.month, day=t_from.day,
+    #               hour=t_from.hour, minute=0)
+    # t_to = Time(year=t_to.year, month=t_to.month, day=t_to.day,
+    #             hour=t_to.hour, minute=0)
+    # return Interval(t_from=t_from, t_to=t_to, POD=pod.POD)
 
 
 @rule(r'(?&_pos_bfr)(?P<day>(?&_day))[\./\-](?P<month>(?&_month))\.?(?&_pos_bnd)')
