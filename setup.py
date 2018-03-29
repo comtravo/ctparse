@@ -27,7 +27,9 @@ setup(
         'Programming Language :: Python :: 3.6'
     ],
     keywords='time parsing natural language',
-    packages=find_packages(),
+    packages=['ctparse'],
+    package_dir={'ctparse': 'ctparse'},
+    package_data={'ctparse': ['models/model.pbz']},
     install_requires=['numpy>=1.14.0,<2.0.0',
                       'python-dateutil>=2.6.1,<3.0.0',
                       'regex>=2018.2.8',
@@ -38,9 +40,6 @@ setup(
         'dev': [],
         'test': ['pytest', 'pytest-coverage', 'pytest-flake8'],
     },
-    data_files=[
-        ('models/', ['models/model.pbz'])
-    ],
     entry_points={},
     project_urls={},
 )
