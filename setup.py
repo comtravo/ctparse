@@ -27,7 +27,7 @@ setup(
         'Programming Language :: Python :: 3.6'
     ],
     keywords='time parsing natural language',
-    packages=['ctparse'],
+    packages=['ctparse', 'ctparse.time'],
     package_dir={'ctparse': 'ctparse'},
     package_data={'ctparse': ['models/model.pbz']},
     install_requires=['numpy>=1.14.0,<2.0.0',
