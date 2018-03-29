@@ -156,7 +156,7 @@ class Time(Artifact):
                 continue
             if getattr(a, attr) is not None and getattr(b, attr) is not None:
                 if getattr(a, attr) == getattr(b, attr):
-                   params[attr] = getattr(a, attr)
+                    params[attr] = getattr(a, attr)
                 else:
                     return None
             elif getattr(a, attr) is not None:
