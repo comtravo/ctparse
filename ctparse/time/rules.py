@@ -71,7 +71,7 @@ def ruleAbsorbDOWComma(ts, dow, _):
 
 def _podFromMatch(pod, mod=''):
     pod = pod.lower().strip()
-    if pod.startswith('mor') or pod.endswith('früh') or pod.startswith('early'):
+    if pod.startswith('mor') or 'früh' in pod or pod.startswith('early'):
         pod = 'morning'
     elif pod.startswith('after') or pod.startswith('nach'):
         pod = 'afternoon'

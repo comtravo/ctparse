@@ -106,7 +106,7 @@ def _ctparse(txt, ts=None, timeout=0, nb=None):
                 stash.extend(new_stash)
                 stash.sort(key=lambda s: s[2])
     except TimeoutError as e:
-        logger.warning('Timeout on "{}"'.format(txt))
+        logger.debug('Timeout on "{}"'.format(txt))
         yield None
         return
 

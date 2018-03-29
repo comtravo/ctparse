@@ -241,6 +241,17 @@ corpus = [
      ('abends',
       'late',
       'spät')),
+    # Date + POD
+    ('Time[]{2017-01-25 X:X (X/evening)}',
+     '2018-03-07T12:43',
+     ('25.01.2017 abends',
+      '25.01.2017 late',
+      '25.01.2017 spät')),
+    ('Time[]{2020-01-25 X:X (X/evening)}',
+     '2018-03-07T12:43',
+     ('25.01.2020 abends',
+      '25.01.2020 late',
+      '25.01.2020 spät')),
     # ruleTODPOD
     ('Time[]{2018-03-08 08:00 (X/X)}',  # next day since moning is already over
      '2018-03-07T12:43',
