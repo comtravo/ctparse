@@ -89,6 +89,34 @@ corpus = [
       'So.',
       'sunday',
       'Sun.')),
+    # ruleDOWMonday + POD
+    ('Time[]{2018-03-12 X:X (X/morning)}',
+     '2018-03-07T12:43',
+     ('Montagmorgen',)),
+    # ruleDOWTuesday + POD
+    ('Time[]{2018-03-13 X:X (X/evening)}',
+     '2018-03-07T12:43',
+     ('Dienstagabend',)),
+    # ruleDOWWednesday + POD
+    ('Time[]{2018-03-14 X:X (X/beforenoon)}',
+     '2018-03-07T12:43',
+     ('Mittwochvormittag',)),
+    # ruleDOWThursday + POD
+    ('Time[]{2018-03-08 X:X (X/noon)}',
+     '2018-03-07T12:43',
+     ('Donnerstagmittag',)),
+    # ruleDOWFriday + POD
+    ('Time[]{2018-03-09 X:X (X/afternoon)}',
+     '2018-03-07T12:43',
+     ('Freitagnachmittag',)),
+    # ruleDOWSaturday + POD
+    ('Time[]{2018-03-10 X:X (X/morning)}',
+     '2018-03-07T12:43',
+     ('Samstagfrüh',)),
+    # ruleDOWSunday + POD
+    ('Time[]{2018-03-11 X:X (X/evening)}',
+     '2018-03-07T12:43',
+     ('Sonntagabends',)),
     # ruleMonthJanuary
     ('Time[]{X-01-X X:X (X/X)}',
      '2018-03-07T12:43',

@@ -81,14 +81,12 @@ class Time(Artifact):
     def isDOY(self):
         '''isDayOfYear <=> a dd.mm but not year
         '''
-        # return bool(self.month and self.day and not self.year)
         return self._hasOnly('month', 'day')
 
     @property
     def isDOM(self):
         '''isDayOfMonth <=> a dd but no month
         '''
-        # return bool(self.day and not self.month)
         return self._hasOnly('day')
 
     @property
@@ -98,12 +96,10 @@ class Time(Artifact):
         however, the production rules do not do that.
 
         '''
-        # return bool(self.DOW is not None)
         return self._hasOnly('DOW')
 
     @property
     def isMonth(self):
-        # return bool(self.month and not self.day and not self.year)
         return self._hasOnly('month')
 
     @property
@@ -111,45 +107,63 @@ class Time(Artifact):
         '''isPartOfDay <=> morning, etc.; fragile, tests only that there is a
         POD and neither a full date nor a full time
         '''
-        # return self.POD is not None and not self.hasDate and not self.hasTime
         return self._hasOnly('POD')
 
     @property
     def isTOD(self):
         '''isTimeOfDay - only a time, not date'''
-        # return self.hasTime and not self.hasDate
         return self._hasOnly('hour') or self._hasOnly('hour', 'minute')
 
     @property
     def isDate(self):
         '''isDate - only a date, not time'''
-        # return self.hasDate and not self.hasTime
         return self._hasOnly('year', 'month', 'day')
 
     @property
     def isDateTime(self):
         '''a date and a time'''
-        # return self.hasDate and self.hasTime
         return (self._hasOnly('year', 'month', 'day', 'hour') or
                 self._hasOnly('year', 'month', 'day', 'hour', 'minute'))
 
     @property
     def isYear(self):
         '''just a year'''
-        # return bool(not self.month and not self.day and self.year)
         return self._hasOnly('year')
 
     @property
     def hasDate(self):
         '''at least at date'''
-        # return bool(self.year and self.month and self.day)
         return self._hasAtLeast('year', 'month', 'day')
+
+    @property
+    def hasDOW(self):
+        '''at least at date'''
+        return self._hasAtLeast('DOW')
 
     @property
     def hasTime(self):
         '''at least a time to the hour'''
         # return bool(self.hour is not None)
         return self._hasAtLeast('hour')
+
+    @classmethod
+    def intersect(cls, a, b, exclude=[]):
+        params = {}
+        if type(a) != type(b):
+            return None
+        for attr in a._attrs:
+            if attr in exclude:
+                continue
+            if getattr(a, attr) is not None and getattr(b, attr) is not None:
+                if getattr(a, attr) == getattr(b, attr):
+                   params[attr] = getattr(a, attr)
+                else:
+                    return None
+            elif getattr(a, attr) is not None:
+                params[attr] = getattr(a, attr)
+            elif getattr(b, attr) is not None:
+                params[attr] = getattr(b, attr)
+        return Time(**params)
 
     def __str__(self):
         return '{}-{}-{} {}:{} ({}/{})'.format(
