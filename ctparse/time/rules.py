@@ -71,7 +71,7 @@ def ruleAbsorbDOWComma(ts, dow, _):
 
 def _podFromMatch(pod, mod=''):
     pod = pod.lower().strip()
-    if pod.startswith('mor') or pod.startswith('früh'):
+    if pod.startswith('mor') or pod.endswith('früh') or pod.startswith('early'):
         pod = 'morning'
     elif pod.startswith('after') or pod.startswith('nach'):
         pod = 'afternoon'
@@ -81,7 +81,7 @@ def _podFromMatch(pod, mod=''):
         pass
     elif pod.startswith('mittag'):
         pod = 'noon'
-    elif pod.startswith('abend'):
+    elif pod.startswith('abend') or pod.startswith('spät') or pod.startswith('late'):
         pod = 'evening'
     elif pod.startswith('nacht'):
         pod = 'night'
@@ -183,7 +183,7 @@ mkDDMonths([
 # before         after/before      after/before         after/before
 # early          late/early        late/early
 @rule(r'(?&_pos_bfr)(?P<mod>(früh(er)?|spät(er)?|early|late)\s*)?'
-      '(?P<pod>morning|morgend?s?|'
+      '(?P<pod>morning|morgend?s?|(in der )?frühe?|spät|early|late|'
       '(after\s*)?noon|(vor\s?|nach\s?)?mittags?|'
       'evening|abends?|night|nachts?)(?&_pos_bnd)')
 def rulePOD(ts, m):

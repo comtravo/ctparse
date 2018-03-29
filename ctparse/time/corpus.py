@@ -218,6 +218,9 @@ corpus = [
     ('Time[]{2018-03-08 X:X (X/morning)}',
      '2018-03-07T12:43',
      ('morgens',
+      'früh',
+      'in der früh',
+      'early',
       'morning')),
     ('Time[]{2018-03-08 X:X (X/earlymorning)}',
      '2018-03-07T12:43',
@@ -233,6 +236,11 @@ corpus = [
      '2018-03-07T12:43',
      ('mittags',
       'noon')),
+    ('Time[]{2018-03-07 X:X (X/evening)}',
+     '2018-03-07T12:43',
+     ('abends',
+      'late',
+      'spät')),
     # ruleTODPOD
     ('Time[]{2018-03-08 08:00 (X/X)}',  # next day since moning is already over
      '2018-03-07T12:43',
