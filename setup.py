@@ -38,9 +38,9 @@ setup(
         'dev': [],
         'test': ['pytest', 'pytest-coverage', 'pytest-flake8'],
     },
-    data_files={
-        'models/': ['models/model.pbz']
-    },
+    data_files=[
+        ('models/', ['models/model.pbz'])
+    ],
     entry_points={},
     project_urls={},
 )
