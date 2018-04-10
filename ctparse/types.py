@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 class Artifact:
     def __init__(self):
         self.mstart = 0
@@ -59,6 +62,28 @@ class RegexMatch(Artifact):
 
     def __str__(self):
         return '{}:{}'.format(self.id, self._text)
+
+
+pod_hours = {
+    'earlymorning': (0, 6),
+    'morning': (5, 8),
+    'latemorning': (8, 10),
+    'earlybeforenoon': (8, 11),
+    'beforenoon': (9, 12),
+    'latebeforenoon': (10, 13),
+    'earlynoon': (11, 13),
+    'noon': (12, 14),
+    'latenoon': (13, 15),
+    'earlyafternoon': (13, 15),
+    'afternoon': (14, 16),
+    'lateafternoon': (15, 17),
+    'earlyevening': (16, 18),
+    'evening': (17, 19),
+    'lateevening': (18, 20),
+    'earlynight': (18, 20),
+    'night': (19, 22),
+    'latenight': (20, 23)
+}
 
 
 class Time(Artifact):
@@ -132,19 +157,23 @@ class Time(Artifact):
 
     @property
     def hasDate(self):
-        '''at least at date'''
+        '''at least a date'''
         return self._hasAtLeast('year', 'month', 'day')
 
     @property
     def hasDOW(self):
-        '''at least at date'''
+        '''at least a day of week'''
         return self._hasAtLeast('DOW')
 
     @property
     def hasTime(self):
         '''at least a time to the hour'''
-        # return bool(self.hour is not None)
         return self._hasAtLeast('hour')
+
+    @property
+    def hasPOD(self):
+        '''at least a part of day'''
+        return self._hasAtLeast('POD')
 
     @classmethod
     def intersect(cls, a, b, exclude=[]):
@@ -175,25 +204,50 @@ class Time(Artifact):
             '{:d}'.format(self.DOW) if self.DOW is not None else 'X',
             '{}'.format(self.POD) if self.POD is not None else 'X')
 
-
-class Interval(Artifact):
-    def __init__(self, t_from=None, t_to=None, POD=None):
-        super().__init__()
-        self._attrs = ['t_from', 't_to', 'POD']
-        self.t_from = t_from
-        self.t_to = t_to
-        self.POD = POD
+    @property
+    def start(self):
+        if self.hasPOD:
+            hour = pod_hours[self.POD][0]
+        else:
+            hour = self.hour or 0
+        return Time(year=self.year, month=self.month, day=self.day,
+                    hour=hour, minute=self.minute or 0)
 
     @property
-    def isPOD(self):
-        return self._hasOnly('POD')
+    def end(self):
+        if self.hasPOD:
+            hour = pod_hours[self.POD][1]
+        else:
+            hour = self.hour or 0
+        return Time(year=self.year, month=self.month, day=self.day,
+                    hour=hour, minute=self.minute or 59)
+
+    @property
+    def dt(self):
+        return datetime(self.year, self.month, self.day,
+                        self.hour, self.minute)
+
+
+class Interval(Artifact):
+    def __init__(self, t_from=None, t_to=None):
+        super().__init__()
+        self._attrs = ['t_from', 't_to']
+        self.t_from = t_from
+        self.t_to = t_to
 
     @property
     def isTimeInterval(self):
-        return self.t_from.isTOD and self.t_to.isTOD and not self.isPOD
+        return self.t_from.isTOD and self.t_to.isTOD
 
     def __str__(self):
-        return '{} - {} ({})'.format(
+        return '{} - {}'.format(
             str(self.t_from),
-            str(self.t_to),
-            '{}'.format(self.POD) if self.POD is not None else 'X')
+            str(self.t_to))
+
+    @property
+    def start(self):
+        return self.t_from.start
+
+    @property
+    def end(self):
+        return self.t_to.end

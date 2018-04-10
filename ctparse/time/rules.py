@@ -2,7 +2,7 @@ import logging
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY
 from .. rule import rule, predicate, dimension, _regex_to_join
-from .. types import Time, Interval
+from .. types import Time, Interval, pod_hours
 
 
 logger = logging.getLogger(__name__)
@@ -190,28 +190,6 @@ def rulePOD(ts, m):
     pod = _podFromMatch(m.match.group('pod'),
                         m.match.group('mod'))
     return Time(POD=pod)
-
-
-pod_hours = {
-    'earlymorning': (0, 6),
-    'morning': (5, 8),
-    'latemorning': (8, 10),
-    'earlybeforenoon': (8, 11),
-    'beforenoon': (9, 12),
-    'latebeforenoon': (10, 13),
-    'earlynoon': (11, 13),
-    'noon': (12, 14),
-    'latenoon': (13, 15),
-    'earlyafternoon': (13, 15),
-    'afternoon': (14, 16),
-    'lateafternoon': (15, 17),
-    'earlyevening': (16, 18),
-    'evening': (17, 19),
-    'lateevening': (18, 20),
-    'earlynight': (18, 20),
-    'night': (19, 22),
-    'latenight': (20, 23)
-}
 
 
 @rule(r'(?&_pos_bfr)(?P<day>(?&_day))\.?(?&_pos_bnd)')

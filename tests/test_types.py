@@ -111,14 +111,11 @@ class TestInterval(TestCase):
     def test_init(self):
         self.assertIsNotNone(Interval())
 
-    def test_isPOD(self):
-        self.assertTrue(Interval(POD='pod').isPOD)
-
     def test_isTimeInterval(self):
         self.assertTrue(
             Interval(Time(hour=1),
                      Time(hour=2)).isTimeInterval)
 
     def test_repr(self):
-        self.assertEqual(repr(Interval(Time(), Time(), POD='pod')),
-                         'Interval[0-0]{X-X-X X:X (X/X) - X-X-X X:X (X/X) (pod)}')
+        self.assertEqual(repr(Interval(Time(), Time())),
+                         'Interval[0-0]{X-X-X X:X (X/X) - X-X-X X:X (X/X)}')
