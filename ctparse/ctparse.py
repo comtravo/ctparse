@@ -130,7 +130,7 @@ def ctparse(txt, ts=None, timeout=0, debug=False):
             logger.warning('Failed to produce result for "{}"'.format(txt))
             return None
         parsed.sort(key=lambda tup: float(tup[2]))
-        return parsed[-1]
+        return parsed[-1][0]
 
 
 def match_rule(seq, rule):
