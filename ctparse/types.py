@@ -218,7 +218,7 @@ class Time(Artifact):
         if self.hasPOD:
             hour = pod_hours[self.POD][1]
         else:
-            hour = self.hour or 0
+            hour = self.hour or 23
         return Time(year=self.year, month=self.month, day=self.day,
                     hour=hour, minute=self.minute or 59)
 

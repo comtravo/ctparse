@@ -64,7 +64,7 @@ def _ctparse(txt, ts=None, timeout=0, nb=None):
     t_fun = _timeout(timeout)
 
     try:
-        if not ts:
+        if ts is None:
             ts = datetime.now()
         p, _tp = timeit(_match_regex)(txt)
         logger.debug('time in _match_regex: {:.0f}ms'.format(1000*_tp))
