@@ -246,8 +246,20 @@ class Interval(Artifact):
 
     @property
     def start(self):
-        return self.t_from.start
+        if self.t_from is not None:
+            return self.t_from.start
+        else:
+            end = self.t_to.end
+            end.hour = 0
+            end.minute = 0
+            return end
 
     @property
     def end(self):
-        return self.t_to.end
+        if self.t_to is not None:
+            return self.t_to.end
+        else:
+            start = self.t_from.start
+            start.hour = 23
+            start.minute = 59
+            return start
