@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='ctparse',
-    version='1.0.0',
+    version='0.0.1',
     description='Parse natural language time expressions into structured ones',
     long_description=long_description,
     url='https://github.com/comtravo/ctparse',
