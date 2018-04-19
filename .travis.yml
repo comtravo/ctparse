@@ -1,7 +1,15 @@
 language: python
 python:
-  - "3.6"
+- '3.6'
 before_install:
-  - pip install pytest pytest-cov pytest-flake8
+- pip install pytest pytest-cov pytest-flake8
 script:
-  - pytest --cov --flake8 .
+- pytest --cov --flake8 .
+deploy:
+  provider: pypi
+  user: "sebastiamika"
+  password:
+    secure: S5UQo9UO27vAWyiwbTmWxgJzZfVjt5Jq5LdpUv9i/q0Zr+dto1HhYFO9hVgVXisDEqacBu2LEdubsxxdYtE3E5XFF1E2sQGCe0ennv+JE0+4HmxT/ExXkyirUAxJ1r52mLqqfVW3xN8tFG8EiE9BtdcdDNShX7AY1VsYkpPjutAYKHozCfB6/0CgIpDUJCC9sp68N9yDQzn6sUXUYX4b81EnA8V/jhl7caanw+r4fxv5f+mPhq+lZ54pVHiAh+S1qVC2EZne3or4EJKsGSydNBHwBZ4RJWrDwH1Y37NzJksrwrpmbJnNDZsu10IPJlh7WymFaYLJonfPTNPniVgrGYK8LE5ehNJzSVhR2SG5f4BscCpuuN3u+4M4fNq0ac+kglYarmcxnmW3JAQ9KVd9eabZOWpE2Ba3E/wLxHtvSUMp+KgpMAfvOR932IBmXIGgjSEKepgQoh8OMS3+2/Na6qMWEKHsBgt96Vco2vdqtmVprV9BHtQLxWiqUJo7cdzN1pUznomclT7B2JP0Iu+sI26dYrhGmG4PZlbQv/so7abHpeu0LkzhM1p063NyxW+l+23sDF6h+xFwqElpDHFoF+LQ1cyWiZdgoYw1/Y1XjmNM2UBCGrviFc7qDyQ+c+MutsNlMMyaI1rhib6HwJZRC/KJJYdbKpdsGErCSLBvb/s=
+  server: https://test.pypi.org/pypi
+  on:
+    tags: true
