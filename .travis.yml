@@ -1,6 +1,9 @@
 language: python
 python:
 - '3.6'
+branches:
+  only:
+    - master
 before_install:
 - pip install pytest pytest-cov pytest-flake8
 script:
@@ -13,3 +16,4 @@ deploy:
   server: https://test.pypi.org/pypi
   on:
     tags: true
+    branch: master

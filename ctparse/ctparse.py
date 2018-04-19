@@ -71,7 +71,9 @@ def _ctparse(txt, ts=None, timeout=0, nb=None):
         stash, _ts = timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
-        stash = [(s, tuple(r.id for r in s), nb.apply([r.id for r in s])) for s in stash]
+        stash = [(s, tuple(r.id for r in s),
+                  nb.apply([r.id for r in s]) + log(float(s[-1].mend - s[0].mstart)/len(txt)))
+                 for s in stash]
         # track what has been added to the stash and do not add again
         stash_prod = set(s for s in stash)
         # track what has been emitted and do not emit agin
@@ -88,7 +90,9 @@ def _ctparse(txt, ts=None, timeout=0, nb=None):
                         if new_el not in stash_prod:
                             new_seq = rule_seq + (r_name,)
                             new_score = nb.apply(new_seq)
-                            new_stash.append((new_el, new_seq, new_score))
+                            len_score = log(float(new_el[-1].mend - new_el[0].mstart)/len(txt))
+                            print(len_score)
+                            new_stash.append((new_el, new_seq, new_score + len_score))
                             stash_prod.add(new_el)
             if not new_stash:
                 for x in s:
