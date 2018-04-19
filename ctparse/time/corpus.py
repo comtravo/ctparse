@@ -284,7 +284,9 @@ corpus = [
     ('Interval[]{2018-08-05 X:X (X/X) - 2018-08-16 X:X (X/X)}',
      '2018-03-07T12:43',
      ('5.8. - 16.8.',
-      'August 5th - August 16th')),
+      'August 5th - August 16th',
+      '5. - 16.8.',
+      '5. bis zum 16.8.')),
     # ruleDateTimeDateTime
     ('Interval[]{2018-08-05 08:00 (X/X) - 2018-08-16 13:00 (X/X)}',
      '2018-03-07T12:43',
