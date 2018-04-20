@@ -18,7 +18,7 @@ class NB:
     def fit(self, X, y):
         # X, y = self._prepare_data(X, y)
         self._model = make_pipeline(
-            CountVectorizer(ngram_range=(2, 3), lowercase=False,
+            CountVectorizer(ngram_range=(1, 3), lowercase=False,
                             tokenizer=_id),
             MultinomialNB(alpha=1.0))
         self._model.fit(X, y)
