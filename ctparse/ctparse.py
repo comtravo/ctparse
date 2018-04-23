@@ -3,6 +3,7 @@ import regex
 import pickle
 import bz2
 import os
+from copy import deepcopy
 from tqdm import tqdm
 from time import perf_counter
 from datetime import datetime
@@ -60,7 +61,62 @@ def timeit(f):
     return _wrapper
 
 
-def _ctparse(txt, ts=None, timeout=0, nb=None):
+class StashElement:
+    '''A partial parse result with
+
+    * prod: the current partial production
+    * rules: the sequence of regular expressions and rules used/applied to produce prod
+    * score: the score assigned to this production
+    '''
+    def __init__(self, prod, txt_len):
+        '''Create new initial stash element based on a production that has not
+        yet been touched, i.e. it is only a sequence of matchin
+        regular expressions
+        '''
+        self.prod = prod
+        self.rules = tuple(r.id for r in prod),
+        self.txt_len = txt_len
+        self.max_covered_chars = self.prod[-1].mend - self.prod[0].mstart
+        self.len_score = log(self.max_covered_chars/self.txt_len)
+        self.update_score()
+
+    def update_score(self):
+        self.score = _nb.apply(self.rules) + self.len_score
+
+    def apply_rule(self, ts, rule, rule_name, match):
+        '''Check whether the production in rule can be applied to this stash
+        element. If yes, return a copy where this update is
+        incorporated in the production, the record of applied rules
+        and the score.
+        '''
+        # prod, prod_name, start, end):
+        prod = rule[0](ts, *self.prod[match[0]:match[1]])
+        if prod is not None:
+            new_s = deepcopy(self)
+            new_s.prod = self.prod[:match[0]] + (prod,) + self.prod[match[1]:]
+            new_s.rules = self.rules + (rule_name,)
+            new_s.update_score()
+            return new_s
+        else:
+            return None
+
+    def __lt__(self, other):
+        '''Sort stash elements by (a) the length of text they can
+        (potentially) cover and (b) the score assigned to the
+        production.
+
+        a < b <=> a.max_covered_chars < b.max_covered_chars or
+                  (a.max_covered_chars <= b.max_covered_chars and a.score < b.score)
+        '''
+        return ((self.max_covered_chars < other.max_covered_chars) or
+                (self.max_covered_chars == other.max_covered_chars and
+                 self.score < other.score))
+
+
+def _ctparse(txt, ts=None, timeout=0):
+    def get_score(seq, len_match):
+        return _nb.apply(seq) + log(len_match/len(txt))
+
     t_fun = _timeout(timeout)
 
     try:
@@ -71,40 +127,47 @@ def _ctparse(txt, ts=None, timeout=0, nb=None):
         stash, _ts = timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
-        stash = [(s, tuple(r.id for r in s), nb.apply([r.id for r in s])) for s in stash]
+        stash = [StashElement(prod=s, txt_len=len(txt)) for s in stash]
+        stash.sort()
         # track what has been added to the stash and do not add again
-        stash_prod = set(s for s in stash)
+        # if the score is not better
+        stash_prod = {}
         # track what has been emitted and do not emit agin
-        parse_prod = set()
+        parse_prod = {}
         while stash:
             t_fun()
-            s, rule_seq, score = stash.pop()
+            s = stash.pop()
             new_stash = []
             for r_name, r in rules.items():
-                for r_match in match_rule(s, r[1]):
-                    ns = r[0](ts, *s[r_match[0]:r_match[1]])
-                    if ns is not None:
-                        new_el = s[:r_match[0]] + (ns,) + s[r_match[1]:]
-                        if new_el not in stash_prod:
-                            new_seq = rule_seq + (r_name,)
-                            new_score = nb.apply(new_seq)
-                            new_stash.append((new_el, new_seq, new_score))
-                            stash_prod.add(new_el)
+                for r_match in match_rule(s.prod, r[1]):
+                    # apply production part of rule
+                    new_s = s.apply_rule(ts, r, r_name, r_match)
+                    if new_s and stash_prod.get(new_s.prod, new_s.score - 1) < new_s.score:
+                        new_stash.append(new_s)
+                        stash_prod[new_s.prod] = new_s.score
             if not new_stash:
-                for x in s:
+                # no new productions were generated from this stash element.
+                # emit all (probably partial) production
+                for x in s.prod:
                     if type(x) is not RegexMatch:
-                        if x not in parse_prod:
-                            parse_prod.add(x)
-                            score_rule = nb.apply(rule_seq)
-                            len_score = log(float(len(x))/len(txt))
-                            logger.debug('New parse (len stash {} {:6.2f} {:6.2f})'
+                        # update score to be only relative to the text
+                        # match by the actual production, not the
+                        # initial sequence of regular expression
+                        # matches
+                        score_x = get_score(s.rules, len(x))
+                        # only emit productions not emitted before or
+                        # productions emitted before but scored higher
+                        if parse_prod.get(x, score_x - 1) < score_x:
+                            parse_prod[x] = score_x
+                            logger.debug('New parse (len stash {} {:6.2f})'
                                          ': {} -> {}'.format(
-                                             len(stash), score_rule, len_score, txt, x.__repr__()))
-                            yield x, rule_seq, score_rule + len_score
-
+                                             len(stash), score_x, txt, x.__repr__()))
+                            yield x, s.rules, score_x
             else:
+                # new productions generated, put on stash and sort
+                # stash by highst score
                 stash.extend(new_stash)
-                stash.sort(key=lambda s: s[2])
+                stash.sort()
     except TimeoutError as e:
         logger.debug('Timeout on "{}"'.format(txt))
         yield None
@@ -121,7 +184,7 @@ else:
 
 
 def ctparse(txt, ts=None, timeout=0, debug=False):
-    parsed = _ctparse(txt, ts, timeout=timeout, nb=_nb)
+    parsed = _ctparse(txt, ts, timeout=timeout)
     if debug:
         return parsed
     else:
@@ -266,7 +329,12 @@ def run_corpus(corpus):
     the final production was correct, -1 otherwise.
     """
     at_least_one_failed = False
-    pos_parses = neg_parses = 0
+    # pos_parses: number of parses that are correct
+    # neg_parses: number of parses that are wrong
+    # pos_first_parses: number of first parses generated that are correct
+    # pos_best_scored: number of correct parses that have the best score
+    pos_parses = neg_parses = pos_first_parses = pos_best_scored = 0
+    total_tests = 0
     Xs = []
     ys = []
     for target, ts, tests in tqdm(corpus):
@@ -274,7 +342,9 @@ def run_corpus(corpus):
         all_tests_pass = True
         for test in tests:
             one_prod_passes = False
-            for prod in _ctparse(test, ts, timeout=0, nb=_nb):
+            first_prod = True
+            y_score = []
+            for prod in _ctparse(test, ts, timeout=0):
                 if prod is None:
                     continue
                 y = prod[0].nb_str() == target
@@ -287,14 +357,27 @@ def run_corpus(corpus):
                 one_prod_passes |= y
                 pos_parses += int(y)
                 neg_parses += int(not y)
+                pos_first_parses += int(y and first_prod)
+                first_prod = False
+                y_score.append((prod[2], y))
             if not one_prod_passes:
                 logger.warning('failure: target "{}" never produced in "{}"'.format(target, test))
+            pos_best_scored += int(max(y_score, key=lambda x: x[0])[1])
+            total_tests += len(tests)
             all_tests_pass &= one_prod_passes
         if not all_tests_pass:
             logger.warning('failure: "{}" not always produced'.format(target))
             at_least_one_failed = True
+    logger.info('run {} tests on {} targets with a total of '
+                '{} positive and {} negative parses (={})'.format(
+                    total_tests, len(corpus), pos_parses, neg_parses,
+                    pos_parses+neg_parses))
     logger.info('share of correct parses in all parses: {:.2%}'.format(
         pos_parses/(pos_parses + neg_parses)))
+    logger.info('share of correct parses being produced first: {:.2%}'.format(
+        pos_first_parses/(pos_parses + neg_parses)))
+    logger.info('share of correct parses being scored highest: {:.2%}'.format(
+        pos_best_scored/total_tests))
     if at_least_one_failed:
         raise Exception('ctparse corpus has errors')
     return Xs, ys
@@ -306,3 +389,11 @@ def build_model(X, y, save=False):
     if save:
         pickle.dump(nb, bz2.open(_model_file, 'wb'))
     return nb
+
+
+def regenerate_model():
+    from . time.corpus import corpus as corpus_time
+    global _nb
+    _nb = NB()
+    X, y = run_corpus(corpus_time)
+    build_model(X, y, save=True)
