@@ -139,7 +139,7 @@ def _ctparse(txt, ts=None, timeout=0):
             s = stash.pop()
             new_stash = []
             for r_name, r in rules.items():
-                for r_match in match_rule(s.prod, r[1]):
+                for r_match in _match_rule(s.prod, r[1]):
                     # apply production part of rule
                     new_s = s.apply_rule(ts, r, r_name, r_match)
                     if new_s and stash_prod.get(new_s.prod, new_s.score - 1) < new_s.score:
@@ -184,6 +184,20 @@ else:
 
 
 def ctparse(txt, ts=None, timeout=0, debug=False):
+    '''Parse a string *txt* into a time expression
+
+    :param ts: reference time
+    :type ts: datetime.datetime
+    :param timeout: timeout for parsing in seconds; timeout=0
+                    indicates no timeout
+    :type timeout: int
+    :param debug: if True do return iterator over all resolution, else
+                  return highest scoring one (default=False)
+    :type debug: bool
+
+    :returns: Time or Interval
+
+    '''
     parsed = _ctparse(txt, ts, timeout=timeout)
     if debug:
         return parsed
@@ -196,7 +210,7 @@ def ctparse(txt, ts=None, timeout=0, debug=False):
         return parsed[-1][0]
 
 
-def match_rule(seq, rule):
+def _match_rule(seq, rule):
     if len(seq) == 0:
         return
     if len(rule) == 0:

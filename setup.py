@@ -8,9 +8,11 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+version = '0.0.2'
+
 setup(
     name='ctparse',
-    version='0.0.1',
+    version=version,
     description='Parse natural language time expressions into structured ones',
     long_description=long_description,
     url='https://github.com/comtravo/ctparse',
@@ -42,4 +44,9 @@ setup(
     },
     entry_points={},
     project_urls={},
+    command_options={
+        'build_sphinx': {
+            'source_dir': ('setup.py', 'docs'),
+            'build_dir': ('setup.py', './build/docs/'),
+            'version': ('setup.py', version)}},
 )
