@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # case a corresponding rule is needed (at least for the time being)
 # [Adding a "eat dash"-rule made things very slow and let to unmatched
 # "trivial" cases]
-_separator_regex = regex.compile(r'(^|$|\s|\n|,)+', regex.VERSION1)
+_separator_regex = regex.compile(r'(^|$|\s|\n|,|\p{Ps}|\p{Pe})+', regex.VERSION1)
 
 
 # used in many places in rules
@@ -47,7 +47,7 @@ def _timeout(timeout):
     return _tt
 
 
-def timeit(f):
+def _timeit(f):
     """timeit wrapper, use as `timeit(f)(args)
 
     Will return a tuple (f(args), t) where t the time in seconds the function call
@@ -74,7 +74,7 @@ class StashElement:
         regular expressions
         '''
         self.prod = prod
-        self.rules = tuple(r.id for r in prod),
+        self.rules = tuple(r.id for r in prod)
         self.txt_len = txt_len
         self.max_covered_chars = self.prod[-1].mend - self.prod[0].mstart
         self.len_score = log(self.max_covered_chars/self.txt_len)
@@ -113,6 +113,18 @@ class StashElement:
                  self.score < other.score))
 
 
+class CTParse:
+    def __init__(self, resolution, production, score):
+        self.resolution = resolution
+        self.production = production
+        self.score = score
+
+    def __repr__(self):
+        return '{} s={:.3f} p={}'.format(self.resolution,
+                                         self.score,
+                                         self.production)
+
+
 def _ctparse(txt, ts=None, timeout=0):
     def get_score(seq, len_match):
         return _nb.apply(seq) + log(len_match/len(txt))
@@ -122,9 +134,9 @@ def _ctparse(txt, ts=None, timeout=0):
     try:
         if ts is None:
             ts = datetime.now()
-        p, _tp = timeit(_match_regex)(txt)
+        p, _tp = _timeit(_match_regex)(txt)
         logger.debug('time in _match_regex: {:.0f}ms'.format(1000*_tp))
-        stash, _ts = timeit(_regex_stack)(txt, p, t_fun)
+        stash, _ts = _timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
         stash = [StashElement(prod=s, txt_len=len(txt)) for s in stash]
@@ -162,7 +174,7 @@ def _ctparse(txt, ts=None, timeout=0):
                             logger.debug('New parse (len stash {} {:6.2f})'
                                          ': {} -> {}'.format(
                                              len(stash), score_x, txt, x.__repr__()))
-                            yield x, s.rules, score_x
+                            yield CTParse(x, s.rules, score_x)
             else:
                 # new productions generated, put on stash and sort
                 # stash by highst score
@@ -206,8 +218,8 @@ def ctparse(txt, ts=None, timeout=0, debug=False):
         if not parsed or (len(parsed) == 1 and not parsed[0]):
             logger.warning('Failed to produce result for "{}"'.format(txt))
             return None
-        parsed.sort(key=lambda tup: float(tup[2]))
-        return parsed[-1][0]
+        parsed.sort(key=lambda p: p.score)
+        return parsed[-1]
 
 
 def _match_rule(seq, rule):
@@ -358,14 +370,14 @@ def run_corpus(corpus):
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for prod in _ctparse(test, ts, timeout=0):
+            for prod in _ctparse(test, ts, timeout=0.5):
                 if prod is None:
                     continue
-                y = prod[0].nb_str() == target
+                y = prod.resolution.nb_str() == target
                 # Build data set, one sample for each applied rule in
                 # the sequence of rules applied in this production
                 # *after* the matched regular expressions
-                X_prod, y_prod = _nb.map_prod(prod[1], y)
+                X_prod, y_prod = _nb.map_prod(prod.production, y)
                 Xs.extend(X_prod)
                 ys.extend(y_prod)
                 one_prod_passes |= y
@@ -373,7 +385,7 @@ def run_corpus(corpus):
                 neg_parses += int(not y)
                 pos_first_parses += int(y and first_prod)
                 first_prod = False
-                y_score.append((prod[2], y))
+                y_score.append((prod.score, y))
             if not one_prod_passes:
                 logger.warning('failure: target "{}" never produced in "{}"'.format(target, test))
             pos_best_scored += int(max(y_score, key=lambda x: x[0])[1])
