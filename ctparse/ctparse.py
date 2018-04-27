@@ -370,7 +370,7 @@ def run_corpus(corpus):
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for prod in _ctparse(test, ts, timeout=0.5):
+            for prod in _ctparse(test, ts):
                 if prod is None:
                     continue
                 y = prod.resolution.nb_str() == target
