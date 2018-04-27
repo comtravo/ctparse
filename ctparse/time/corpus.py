@@ -22,6 +22,11 @@ corpus = [
      '2018-12-31T12:43',
      ('morgen',
       'tomorrow')),
+    # ruleTomorrow + time
+    ('Time[]{2019-01-01 19:25 (X/X)}',
+     '2018-12-31T12:43',
+     ('morgen 19:25',
+      'tomorrow 7.25 pm')),
     # ruleYesterday
     # test on a leap-year
     ('Time[]{2020-02-29 X:X (X/X)}',
