@@ -27,7 +27,10 @@ class Artifact:
             self.__class__.__name__, str(self))
 
     def __eq__(self, other):
-        return all(getattr(self, a) == getattr(other, a) for a in self._attrs)
+        if type(other) != type(self):
+            return False
+        else:
+            return all(getattr(self, a) == getattr(other, a) for a in self._attrs)
 
     def __hash__(self):
         return hash(tuple(getattr(self, a) for a in self._attrs))
