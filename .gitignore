@@ -102,3 +102,6 @@ ENV/
 
 # pytest
 .pytest_cache/
+
+# system
+.DS_Store
