@@ -125,7 +125,7 @@ class CTParse:
                                          self.production)
 
 
-def _ctparse(txt, ts=None, timeout=0):
+def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0):
     def get_score(seq, len_match):
         return _nb.apply(seq) + log(len_match/len(txt))
 
@@ -141,6 +141,8 @@ def _ctparse(txt, ts=None, timeout=0):
         # add empty production path + counter of contained regex
         stash = [StashElement(prod=s, txt_len=len(txt)) for s in stash]
         stash.sort()
+        stash = [s for s in stash
+                 if s.max_covered_chars >= stash[-1].max_covered_chars * relative_match_len]
         # track what has been added to the stash and do not add again
         # if the score is not better
         stash_prod = {}
@@ -195,7 +197,7 @@ else:
     _nb = NB()
 
 
-def ctparse(txt, ts=None, timeout=0, debug=False):
+def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0):
     '''Parse a string *txt* into a time expression
 
     :param ts: reference time
@@ -206,11 +208,15 @@ def ctparse(txt, ts=None, timeout=0, debug=False):
     :param debug: if True do return iterator over all resolution, else
                   return highest scoring one (default=False)
     :type debug: bool
+    :param relative_match_len: relative minimum share of
+                               characters an initial regex match sequence must
+                               cover compared to the longest such sequence found
+                               to be considered for productions (default=1.0)
+    :type relative_match_len: float
 
     :returns: Time or Interval
-
     '''
-    parsed = _ctparse(txt, ts, timeout=timeout)
+    parsed = _ctparse(txt, ts, timeout=timeout, relative_match_len=relative_match_len)
     if debug:
         return parsed
     else:
