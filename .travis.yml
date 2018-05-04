@@ -5,8 +5,7 @@ branches:
   only:
     - master
 before_install:
-- pip install pytest-cov pytest-flake8
-- pip freeze
+- pip install pytest>=3.5.1 pytest-cov>=2.5.1 pytest-flake8>=1.0.1
 script:
 - pytest --cov --flake8 .
 deploy:
