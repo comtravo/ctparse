@@ -130,6 +130,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0):
         return _nb.apply(seq) + log(len_match/len(txt))
 
     t_fun = _timeout(timeout)
+    max_stash_depth = 50
 
     try:
         if ts is None:
@@ -143,6 +144,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0):
         stash.sort()
         stash = [s for s in stash
                  if s.max_covered_chars >= stash[-1].max_covered_chars * relative_match_len]
+        stash = stash[:max_stash_depth]
         # track what has been added to the stash and do not add again
         # if the score is not better
         stash_prod = {}
@@ -182,6 +184,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0):
                 # stash by highst score
                 stash.extend(new_stash)
                 stash.sort()
+                stash = stash[:max_stash_depth]
     except TimeoutError as e:
         logger.debug('Timeout on "{}"'.format(txt))
         yield None
