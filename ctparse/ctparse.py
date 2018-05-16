@@ -125,7 +125,7 @@ class CTParse:
                                          self.production)
 
 
-def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0):
+def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stash_depth=10):
     def get_score(seq, len_match):
         return _nb.apply(seq) + log(len_match/len(txt))
 
@@ -143,6 +143,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0):
         stash.sort()
         stash = [s for s in stash
                  if s.max_covered_chars >= stash[-1].max_covered_chars * relative_match_len]
+        stash = stash[-max_stash_depth:]
         # track what has been added to the stash and do not add again
         # if the score is not better
         stash_prod = {}
@@ -182,6 +183,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0):
                 # stash by highst score
                 stash.extend(new_stash)
                 stash.sort()
+                stash = stash[-max_stash_depth:]
     except TimeoutError as e:
         logger.debug('Timeout on "{}"'.format(txt))
         yield None
@@ -197,7 +199,7 @@ else:
     _nb = NB()
 
 
-def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0):
+def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0, max_stash_depth=10):
     '''Parse a string *txt* into a time expression
 
     :param ts: reference time
@@ -213,10 +215,15 @@ def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0):
                                cover compared to the longest such sequence found
                                to be considered for productions (default=1.0)
     :type relative_match_len: float
+    :param max_stash_depth: limit the maximal number of highest scored candidate productions
+                            considered for future productions (default=10); set to 0 to not
+                            limit
+    :type max_stash_depth: int
 
     :returns: Time or Interval
     '''
-    parsed = _ctparse(txt, ts, timeout=timeout, relative_match_len=relative_match_len)
+    parsed = _ctparse(txt, ts, timeout=timeout,
+                      relative_match_len=relative_match_len, max_stash_depth=max_stash_depth)
     if debug:
         return parsed
     else:
@@ -251,7 +258,7 @@ def _match_rule(seq, rule):
 def _match_regex(txt):
     """Match all known regex in txt and return a list of RegxMatch objects
     sorted by the start of the match. Overlapping matches of the same
-    expression are not returned.
+    expression are returned as well.
 
     :param txt: the text to match against
     :return: a list of RegexMatch objects ordered my Regex.mstart
@@ -271,12 +278,12 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
     Algo: somewhere on paper, but in a nutshell:
     * stack empty
 
-    * add all sequences of one expression to the stack, excludiong
+    * add all sequences of one expression to the stack, excluding
       expressions which can be reached from "earlier" expressison
       (i.e. there is no gap between them):
 
       - say A and B have no gap inbetween and all sequences starting
-        at A have already been produced. These be definition (which
+        at A have already been produced. These be definition (which?
         :-) include as sub-sequences all sequences starting at B. Any
         other sequences starting at B directly will not add valid
         variations, as each of them could be prefixed with a sequence
@@ -286,7 +293,7 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
 
       * get top sequence s from stack
 
-      * generate all possible continuation for this sequence,
+      * generate all possible continuations for this sequence,
         i.e. sequences where expression can be appended to the last
         element s[-1] in s and put these extended sequences on the stack
 
@@ -341,7 +348,8 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
 
 
 def run_corpus(corpus):
-    """Load the corpus (currently hard coded), run it through ctparse with no timeout.
+    """Load the corpus (currently hard coded), run it through ctparse with
+    no timeout and no limit on the stash depth.
 
     The corpus passes if ctparse generates the desired solution for
     each test at least once. Otherwise it fails.
@@ -359,6 +367,7 @@ def run_corpus(corpus):
 
     All samples from one production are given the same label: 1 iff
     the final production was correct, -1 otherwise.
+
     """
     at_least_one_failed = False
     # pos_parses: number of parses that are correct
@@ -376,7 +385,7 @@ def run_corpus(corpus):
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for prod in _ctparse(test, ts):
+            for prod in _ctparse(test, ts, max_stash_depth=0):
                 if prod is None:
                     continue
                 y = prod.resolution.nb_str() == target
