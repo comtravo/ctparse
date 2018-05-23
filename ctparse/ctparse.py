@@ -27,11 +27,6 @@ logger = logging.getLogger(__name__)
 _separator_regex = regex.compile(r'(^|$|\s|\n|,|\p{Ps}|\p{Pe})+', regex.VERSION1)
 
 
-# used in many places in rules
-_regex_to_join = (r'(\-|to( the)?|(un)?til|bis( zum)?|auf( den)?|und|'
-                  'no later than|spätestens?|at latest( at)?)')
-
-
 class TimeoutError(Exception):
     pass
 

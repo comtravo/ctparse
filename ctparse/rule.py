@@ -21,7 +21,7 @@ _regex_pos_before_sep = r'(?<=\pZ|\pP|\pC|^)'
 _regex_pos_behind_sep = r'(?=\pZ|\pP|\pC|$)'
 
 # used in many places in rules
-_regex_to_join = (r'(\-|to( the)?|(un)?til|bis( zum)?|auf( den)?|und|'
+_regex_to_join = (r'(\-|to( the)?|(un)?til|bis( zum)?|zum|auf( den)?|und|'
                   'no later than|spätestens?|at latest( at)?)')
 
 
