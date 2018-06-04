@@ -52,18 +52,6 @@ def ruleAbsorbFromInterval(ts, _, i):
     return i
 
 
-def ruleAbsorbOnADOW():
-    pass
-
-
-def ruleAbsorbInMonth():
-    pass
-
-
-def ruleAbsorbCommaTOD():
-    pass
-
-
 @rule(predicate('hasDOW'), r',( de(n|m|r))?')
 def ruleAbsorbDOWComma(ts, dow, _):
     return dow
@@ -85,6 +73,10 @@ def _podFromMatch(pod, mod=''):
         pod = 'evening'
     elif pod.startswith('nacht'):
         pod = 'night'
+    elif pod.startswith('erste') or pod.startswith('first'):
+        return 'first'
+    elif pod.startswith('letzte') or pod.startswith('last'):
+        return 'first'
     if mod:
         mod = mod.strip().lower()
         if mod.startswith('früh') or mod == 'early':
@@ -182,10 +174,10 @@ mkDDMonths([
 #        morning              noon              evening              night
 # before         after/before      after/before         after/before
 # early          late/early        late/early
-@rule(r'(?&_pos_bfr)(?P<mod>(früh(er)?|spät(er)?|early|late)\s*)?'
-      '(?P<pod>morning|morgend?s?|(in der )?frühe?|spät|early|late|'
+@rule(r'(?&_pos_bfr)(?:(sehr|very)\s+)?(?P<mod>(früh(er)?|spät(er)?|early|late)\s*)?'
+      '(?P<pod>morning|morgend?s?|erster?|first|(in der )?frühe?|spät|early|late|'
       '(after\s*)?noon|(vor\s?|nach\s?)?mittags?|'
-      'evening|abends?|night|nachts?)(?&_pos_bnd)')
+      'evening|abends?|night|nachts?|letzter?|last)(?&_pos_bnd)')
 def rulePOD(ts, m):
     pod = _podFromMatch(m.match.group('pod'),
                         m.match.group('mod'))

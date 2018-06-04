@@ -85,7 +85,9 @@ pod_hours = {
     'lateevening': (18, 20),
     'earlynight': (18, 20),
     'night': (19, 22),
-    'latenight': (20, 23)
+    'latenight': (20, 23),
+    'first': (0, 0),
+    'last': (23, 23)
 }
 
 
