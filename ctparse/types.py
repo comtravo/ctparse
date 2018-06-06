@@ -67,26 +67,42 @@ class RegexMatch(Artifact):
         return '{}:{}'.format(self.id, self._text)
 
 
-pod_hours = {
-    'earlymorning': (0, 6),
-    'morning': (5, 8),
-    'latemorning': (8, 10),
-    'earlybeforenoon': (8, 11),
-    'beforenoon': (9, 12),
-    'latebeforenoon': (10, 13),
-    'earlynoon': (11, 13),
-    'noon': (12, 14),
-    'latenoon': (13, 15),
-    'earlyafternoon': (13, 15),
-    'afternoon': (14, 16),
-    'lateafternoon': (15, 17),
-    'earlyevening': (16, 18),
-    'evening': (17, 19),
-    'lateevening': (18, 20),
-    'earlynight': (18, 20),
-    'night': (19, 22),
-    'latenight': (20, 23)
-}
+def _mk_pod_hours():
+    raw_pod_hours = {
+        'morning': [6, 9],
+        'beforenoon': [9, 12],
+        'noon': [11, 13],
+        'afternoon': [12, 17],
+        'evening': [17, 20],
+        'night': [19, 22],
+        'first': [0, 0],
+        'last': [23, 23]
+    }
+
+    ph = {}
+    for pod in ['morning', 'beforenoon', 'noon', 'afternoon', 'evening', 'night']:
+        for very in ['', 'very']:
+            for mod in ['', 'early', 'late']:
+                if very == 'very' and mod == '':
+                    continue
+                pod_hours = list(raw_pod_hours[pod])
+                if mod == 'early':
+                    pod_hours[0] -= 2
+                    if very:
+                        pod_hours[0] -= 1
+                elif mod == 'late':
+                    pod_hours[1] += 2
+                    if very:
+                        pod_hours[1] += 1
+                pod_hours[0] = max(pod_hours[0], 0)
+                pod_hours[1] = min(pod_hours[1], 23)
+                ph[very + mod + pod] = tuple(pod_hours)
+    return ph
+
+
+pod_hours = _mk_pod_hours()
+pod_hours['first'] = (0, 0)
+pod_hours['last'] = (23, 23)
 
 
 class Time(Artifact):

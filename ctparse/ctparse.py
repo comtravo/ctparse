@@ -194,6 +194,13 @@ else:
     _nb = NB()
 
 
+_repl = regex.compile(r'[(){}\[\],;]')
+
+
+def _preprocess_string(txt):
+    return _repl.sub(' ', txt, concurrent=True)
+
+
 def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0, max_stash_depth=10):
     '''Parse a string *txt* into a time expression
 
@@ -217,7 +224,7 @@ def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0, max_st
 
     :returns: Time or Interval
     '''
-    parsed = _ctparse(txt, ts, timeout=timeout,
+    parsed = _ctparse(_preprocess_string(txt), ts, timeout=timeout,
                       relative_match_len=relative_match_len, max_stash_depth=max_stash_depth)
     if debug:
         return parsed
