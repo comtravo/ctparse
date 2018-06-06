@@ -190,11 +190,6 @@ def rulePODFLast(ts, m):
     return Time(POD='last')
 
 
-_re_very = r'(?P<mod_very>(sehr|very)\s+)?'
-_re_early = r'(?P<mod_early>(früh(er)?|early)\s+)?'
-_re_late = r'(?P<mod_late>(spät(er)?|late)\s+)?'
-
-
 def _pod_from_match(pod, m):
     mod = ''
     if m.match.group('mod_early'):
