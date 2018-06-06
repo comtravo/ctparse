@@ -102,7 +102,7 @@ def _mk_pod_hours():
 
 pod_hours = _mk_pod_hours()
 pod_hours['first'] = (0, 0)
-pod_hours['last'] = (23, 23)        
+pod_hours['last'] = (23, 23)
 
 
 class Time(Artifact):
