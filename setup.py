@@ -46,6 +46,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/comtravo/ctparse',
-    version='0.0.8',
+    version='version='0.0.8'',
     zip_safe=False,
 )
