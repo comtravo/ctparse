@@ -6,9 +6,6 @@
 import pytest
 
 
-from ctparse import ctparse
-
-
 @pytest.fixture
 def response():
     """Sample pytest fixture.
