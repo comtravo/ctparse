@@ -24,33 +24,33 @@ _regex_pos_behind_sep = r'(?=\pZ|\pP|\pC|$)'
 _regex_to_join = (r'(\-|to( the)?|(un)?til|bis( zum)?|zum|auf( den)?|und|'
                   'no later than|spätestens?|at latest( at)?)')
 
+_defines = (r'(?(DEFINE)(?<_hour>{regex_hour})(?P<_minute>{regex_minute})'
+            '(?P<_day>{regex_day})(?P<_month>{regex_month})'
+            '(?P<_year>{regex_year})'
+            '(?P<_pos_bnd>{regex_pos_behind_sep})'
+            '(?P<_pos_bfr>{regex_pos_before_sep}))').format(
+                regex_hour=_regex_hour,
+                regex_minute=_regex_minute,
+                regex_day=_regex_day,
+                regex_month=_regex_month,
+                regex_year=_regex_year,
+                regex_pos_behind_sep=_regex_pos_behind_sep,
+                regex_pos_before_sep=_regex_pos_before_sep)
+
 
 def rule(*patterns):
     def _map(p):
         if type(p) is str:
             # its a regex
             global _regex_cnt
-            re_id = _regex_cnt
             if p in _str_regex:
                 # have seen this regex before - recycle
                 return regex_match(_str_regex[p])
             # test the regex first
-            defines = (r'(?(DEFINE)(?<_hour>{regex_hour})(?P<_minute>{regex_minute})'
-                       '(?P<_day>{regex_day})(?P<_month>{regex_month})'
-                       '(?P<_year>{regex_year})'
-                       '(?P<_pos_bnd>{regex_pos_behind_sep})'
-                       '(?P<_pos_bfr>{regex_pos_before_sep}))').format(
-                           regex_hour=_regex_hour,
-                           regex_minute=_regex_minute,
-                           regex_day=_regex_day,
-                           regex_month=_regex_month,
-                           regex_year=_regex_year,
-                           regex_pos_behind_sep=_regex_pos_behind_sep,
-                           regex_pos_before_sep=_regex_pos_before_sep)
-            re = r'{defines}(?i)(?P<{re_key}>{re})'.format(
-                    defines=defines,
+            re = r'{defines}(?i)(?P<R{re_key}>{re})'.format(
+                    defines=_defines,
                     re=p,
-                    re_key='R{}'.format(re_id))
+                    re_key=_regex_cnt)
             new_rr = regex.compile(
                 # Removed the separator here - leads to more matches,
                 # as now each rule can also match if it is not followed
@@ -60,27 +60,11 @@ def rule(*patterns):
                 regex.VERSION1)
             if new_rr.match(''):
                 raise ValueError('expression {} matches empty strings'.format(p))
+            _regex_str[_regex_cnt] = p
+            _str_regex[p] = _regex_cnt
+            _regex[_regex_cnt] = new_rr
             _regex_cnt += 1
-            _regex_str[re_id] = p
-            _str_regex[p] = re_id
-            defines = (r'(?(DEFINE)(?<_hour>{regex_hour})(?P<_minute>{regex_minute})'
-                       '(?P<_day>{regex_day})(?P<_month>{regex_month})'
-                       '(?P<_year>{regex_year})'
-                       '(?P<_pos_bnd>{regex_pos_behind_sep})'
-                       '(?P<_pos_bfr>{regex_pos_before_sep}))').format(
-                           regex_hour=_regex_hour,
-                           regex_minute=_regex_minute,
-                           regex_day=_regex_day,
-                           regex_month=_regex_month,
-                           regex_year=_regex_year,
-                           regex_pos_behind_sep=_regex_pos_behind_sep,
-                           regex_pos_before_sep=_regex_pos_before_sep)
-            re = r'{defines}(?i)(?P<{re_key}>{re})'.format(
-                    defines=defines,
-                    re=p,
-                    re_key='R{}'.format(re_id))
-            _regex[re_id] = new_rr
-            return regex_match(re_id)
+            return regex_match(_regex_cnt-1)
         else:
             return p
 
