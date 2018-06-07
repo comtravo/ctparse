@@ -4,18 +4,24 @@ ctparse - Parse natural language time expressions in python
 
 
 .. image:: https://travis-ci.org/comtravo/ctparse.svg?branch=master
-    :target: https://travis-ci.org/comtravo/ctparse
+     :target: https://travis-ci.org/comtravo/ctparse
+     :alt: Travis
+
+.. image:: https://codecov.io/gh/comtravo/ctparse/branch/master/graph/badge.svg
+     :target: https://codecov.io/gh/comtravo/ctparse
+     :alt: Coverage
 
 .. image:: https://img.shields.io/pypi/v/ctparse.svg
-        :target: https://pypi.python.org/pypi/ctparse
+     :target: https://pypi.python.org/pypi/ctparse
+     :alt: PyPi
 
 .. image:: https://pyup.io/repos/github/comtravo/ctparse/shield.svg
      :target: https://pyup.io/repos/github/comtravo/ctparse/
      :alt: Updates
 
 .. image:: https://readthedocs.org/projects/ctparse/badge/?version=latest
-        :target: https://ctparse.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
+     :target: https://ctparse.readthedocs.io/en/latest/?badge=latest
+     :alt: Documentation Status
 
 
 Parse natural language time expressions in python
