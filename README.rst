@@ -3,13 +3,15 @@ ctparse - Parse natural language time expressions in python
 ===========================================================
 
 
-Build Status`_
+.. image:: https://pyup.io/repos/github/audreyr/cookiecutter-pypackage/shield.svg
+     :target: https://pyup.io/repos/github/audreyr/cookiecutter-pypackage/
+     :alt: Updates
+
+.. image:: https://travis-ci.org/audreyr/cookiecutter-pypackage.svg?branch=master
+    :target: https://travis-ci.org/audreyr/cookiecutter-pypackage     
 
 .. image:: https://img.shields.io/pypi/v/ctparse.svg
         :target: https://pypi.python.org/pypi/ctparse
-
-.. image:: https://img.shields.io/travis/comtravo/ctparse.svg
-        :target: https://travis-ci.org/comtravo/ctparse
 
 .. image:: https://readthedocs.org/projects/ctparse/badge/?version=latest
         :target: https://ctparse.readthedocs.io/en/latest/?badge=latest
@@ -105,6 +107,5 @@ Credits
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
-.. _Build Status: https://travis-ci.org/comtravo/ctparse
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
