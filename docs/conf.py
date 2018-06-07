@@ -47,9 +47,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'ctparse - Parse natural language time expressions in pytho'
-copyright = u"2018, Sebastian Mika"
-author = u"Sebastian Mika"
+project = u'ctparse - Parse natural language time expressions'
+copyright = u"2018, Sebastian Mika, Comtravo GmbH"
+author = u"Sebastian Mika - Comtravo"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -84,7 +84,7 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a
 # theme further.  For a list of options available for each theme, see the
@@ -140,7 +140,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     (master_doc, 'ctparse',
-     u'ctparse - Parse natural language time expressions in pytho Documentation',
+     u'ctparse - Parse natural language time expressions Documentation',
      [author], 1)
 ]
 
@@ -152,7 +152,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'ctparse',
-     u'ctparse - Parse natural language time expressions in pytho Documentation',
+     u'ctparse - Parse natural language time expressions Documentation',
      author,
      'ctparse',
      'One line description of project.',

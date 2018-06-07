@@ -33,7 +33,14 @@ setup(
         'Topic :: Text Processing :: Linguistic',
     ],
     description="Parse natural language time expressions in python",
-    install_requires=requirements,
+    install_requires=[
+        'numpy==1.14.4',
+        'python-dateutil==2.7.3',
+        'regex==2018.6.6',
+        'scikit-learn==0.19.1',
+        'scipy==1.1.0',
+        'tqdm==4.23.4'
+    ],
     license="MIT license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
@@ -46,6 +53,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/comtravo/ctparse',
-    version='0.0.10',
+    version='0.0.11',
     zip_safe=False,
 )
