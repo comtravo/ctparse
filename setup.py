@@ -46,7 +46,7 @@ setup(
     include_package_data=True,
     keywords='ctparse time parsing natural language',
     name='ctparse',
-    packages=find_packages(include=['ctparse']),
+    packages=find_packages(include=['ctparse*']),
     package_dir={'ctparse': 'ctparse'},
     package_data={'ctparse': ['models/model.pbz']},
     setup_requires=setup_requirements,
