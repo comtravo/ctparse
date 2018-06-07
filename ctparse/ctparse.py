@@ -16,7 +16,6 @@ from . rule import rules, _regex
 
 logger = logging.getLogger(__name__)
 
-
 # any character matched by a production regex will spoil this (as
 # e.g. with '-'), since the expression sequence will not be "E1 - E2",
 # and hence E1+E2 are only separated by these chars, but rather "E1 ED
@@ -56,7 +55,7 @@ def _timeit(f):
     return _wrapper
 
 
-class StashElement:
+class StackElement:
     '''A partial parse result with
 
     * prod: the current partial production
@@ -64,7 +63,7 @@ class StashElement:
     * score: the score assigned to this production
     '''
     def __init__(self, prod, txt_len):
-        '''Create new initial stash element based on a production that has not
+        '''Create new initial stack element based on a production that has not
         yet been touched, i.e. it is only a sequence of matchin
         regular expressions
         '''
@@ -79,7 +78,7 @@ class StashElement:
         self.score = _nb.apply(self.rules) + self.len_score
 
     def apply_rule(self, ts, rule, rule_name, match):
-        '''Check whether the production in rule can be applied to this stash
+        '''Check whether the production in rule can be applied to this stack
         element. If yes, return a copy where this update is
         incorporated in the production, the record of applied rules
         and the score.
@@ -96,7 +95,7 @@ class StashElement:
             return None
 
     def __lt__(self, other):
-        '''Sort stash elements by (a) the length of text they can
+        '''Sort stack elements by (a) the length of text they can
         (potentially) cover and (b) the score assigned to the
         production.
 
@@ -120,7 +119,7 @@ class CTParse:
                                          self.production)
 
 
-def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stash_depth=10):
+def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10):
     def get_score(seq, len_match):
         return _nb.apply(seq) + log(len_match/len(txt))
 
@@ -131,32 +130,32 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stash_depth=10
             ts = datetime.now()
         p, _tp = _timeit(_match_regex)(txt)
         logger.debug('time in _match_regex: {:.0f}ms'.format(1000*_tp))
-        stash, _ts = _timeit(_regex_stack)(txt, p, t_fun)
+        stack, _ts = _timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
-        stash = [StashElement(prod=s, txt_len=len(txt)) for s in stash]
-        stash.sort()
-        stash = [s for s in stash
-                 if s.max_covered_chars >= stash[-1].max_covered_chars * relative_match_len]
-        stash = stash[-max_stash_depth:]
-        # track what has been added to the stash and do not add again
+        stack = [StackElement(prod=s, txt_len=len(txt)) for s in stack]
+        stack.sort()
+        stack = [s for s in stack
+                 if s.max_covered_chars >= stack[-1].max_covered_chars * relative_match_len]
+        stack = stack[-max_stack_depth:]
+        # track what has been added to the stack and do not add again
         # if the score is not better
-        stash_prod = {}
+        stack_prod = {}
         # track what has been emitted and do not emit agin
         parse_prod = {}
-        while stash:
+        while stack:
             t_fun()
-            s = stash.pop()
-            new_stash = []
+            s = stack.pop()
+            new_stack = []
             for r_name, r in rules.items():
                 for r_match in _match_rule(s.prod, r[1]):
                     # apply production part of rule
                     new_s = s.apply_rule(ts, r, r_name, r_match)
-                    if new_s and stash_prod.get(new_s.prod, new_s.score - 1) < new_s.score:
-                        new_stash.append(new_s)
-                        stash_prod[new_s.prod] = new_s.score
-            if not new_stash:
-                # no new productions were generated from this stash element.
+                    if new_s and stack_prod.get(new_s.prod, new_s.score - 1) < new_s.score:
+                        new_stack.append(new_s)
+                        stack_prod[new_s.prod] = new_s.score
+            if not new_stack:
+                # no new productions were generated from this stack element.
                 # emit all (probably partial) production
                 for x in s.prod:
                     if type(x) is not RegexMatch:
@@ -169,16 +168,16 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stash_depth=10
                         # productions emitted before but scored higher
                         if parse_prod.get(x, score_x - 1) < score_x:
                             parse_prod[x] = score_x
-                            logger.debug('New parse (len stash {} {:6.2f})'
+                            logger.debug('New parse (len stack {} {:6.2f})'
                                          ': {} -> {}'.format(
-                                             len(stash), score_x, txt, x.__repr__()))
+                                             len(stack), score_x, txt, x.__repr__()))
                             yield CTParse(x, s.rules, score_x)
             else:
-                # new productions generated, put on stash and sort
-                # stash by highst score
-                stash.extend(new_stash)
-                stash.sort()
-                stash = stash[-max_stash_depth:]
+                # new productions generated, put on stack and sort
+                # stack by highst score
+                stack.extend(new_stack)
+                stack.sort()
+                stack = stack[-max_stack_depth:]
     except TimeoutError as e:
         logger.debug('Timeout on "{}"'.format(txt))
         yield None
@@ -194,7 +193,7 @@ else:
     _nb = NB()
 
 
-def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0, max_stash_depth=10):
+def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0, max_stack_depth=10):
     '''Parse a string *txt* into a time expression
 
     :param ts: reference time
@@ -210,15 +209,15 @@ def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0, max_st
                                cover compared to the longest such sequence found
                                to be considered for productions (default=1.0)
     :type relative_match_len: float
-    :param max_stash_depth: limit the maximal number of highest scored candidate productions
+    :param max_stack_depth: limit the maximal number of highest scored candidate productions
                             considered for future productions (default=10); set to 0 to not
                             limit
-    :type max_stash_depth: int
+    :type max_stack_depth: int
 
     :returns: Time or Interval
     '''
     parsed = _ctparse(txt, ts, timeout=timeout,
-                      relative_match_len=relative_match_len, max_stash_depth=max_stash_depth)
+                      relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
     if debug:
         return parsed
     else:
@@ -344,7 +343,7 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
 
 def run_corpus(corpus):
     """Load the corpus (currently hard coded), run it through ctparse with
-    no timeout and no limit on the stash depth.
+    no timeout and no limit on the stack depth.
 
     The corpus passes if ctparse generates the desired solution for
     each test at least once. Otherwise it fails.
@@ -380,7 +379,7 @@ def run_corpus(corpus):
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for prod in _ctparse(test, ts, max_stash_depth=0):
+            for prod in _ctparse(test, ts, max_stack_depth=0):
                 if prod is None:
                     continue
                 y = prod.resolution.nb_str() == target
