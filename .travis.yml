@@ -3,7 +3,7 @@ python:
   - 3.6
   - 3.5
   - 3.4
-install: pip install -U tox-travis
+install: pip install -U tox-travis codecov
 script: tox
 deploy:
   provider: pypi
@@ -15,3 +15,5 @@ deploy:
     tags: true
     repo: comtravo/ctparse
     python: 3.6
+after_success:
+  codecov
