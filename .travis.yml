@@ -1,20 +1,19 @@
 language: python
 python:
-- '3.6'
-branches:
-  only:
-    - master
-before_install:
-- pip install -U pytest>=3.5.1 pytest-cov>=2.5.1 pytest-flake8>=1.0.1
-script:
-- pip freeze
-- pytest --cov --flake8 .
+  - 3.6
+  - 3.5
+  - 3.4
+install: pip install -U tox-travis codecov
+script: tox
 deploy:
   provider: pypi
-  user: "sebastiamika"
+  distributions: sdist bdist_wheel
+  user: ctsebastiamika
   password:
-    secure: S5UQo9UO27vAWyiwbTmWxgJzZfVjt5Jq5LdpUv9i/q0Zr+dto1HhYFO9hVgVXisDEqacBu2LEdubsxxdYtE3E5XFF1E2sQGCe0ennv+JE0+4HmxT/ExXkyirUAxJ1r52mLqqfVW3xN8tFG8EiE9BtdcdDNShX7AY1VsYkpPjutAYKHozCfB6/0CgIpDUJCC9sp68N9yDQzn6sUXUYX4b81EnA8V/jhl7caanw+r4fxv5f+mPhq+lZ54pVHiAh+S1qVC2EZne3or4EJKsGSydNBHwBZ4RJWrDwH1Y37NzJksrwrpmbJnNDZsu10IPJlh7WymFaYLJonfPTNPniVgrGYK8LE5ehNJzSVhR2SG5f4BscCpuuN3u+4M4fNq0ac+kglYarmcxnmW3JAQ9KVd9eabZOWpE2Ba3E/wLxHtvSUMp+KgpMAfvOR932IBmXIGgjSEKepgQoh8OMS3+2/Na6qMWEKHsBgt96Vco2vdqtmVprV9BHtQLxWiqUJo7cdzN1pUznomclT7B2JP0Iu+sI26dYrhGmG4PZlbQv/so7abHpeu0LkzhM1p063NyxW+l+23sDF6h+xFwqElpDHFoF+LQ1cyWiZdgoYw1/Y1XjmNM2UBCGrviFc7qDyQ+c+MutsNlMMyaI1rhib6HwJZRC/KJJYdbKpdsGErCSLBvb/s=
-  server: https://test.pypi.org/pypi
+    secure: UrnUvzT7FrXGayQa5sSFjTu21eBAU5g+cVZjzUh5P0oapbAZu3daqzAdVVNKtEZ8LmKAmzwoQ/uWIuXgizSFg4sIeXk+oJyForzT+1Fq7ek9t7L6C2O7ie8ApU4hG7ERmOeVZgUMM6BH4Pz2FwQVQ51Wx0nFkG93z+5vp07hnSEzI6l5sBAItB8M9rGW9olnYby/8E5EB9kTGV0Z+41pnyI9KasZDI2gj5K1PCfeh6kzLtG9m7BtsRWXDMhCM8qCtI65IzjxyUJ9m6JYxhdJC03HMemZ4vR1tQDunJy0bc+jeTHFFv+yg9uEgC5D/NIBJ2QZiItrpBsrp6CfrjXYnNvehYI+Gge9YTQKpXyuh+tm8dw6epO3sXBEtN0JQIPc96CVHxM1RR/3vEfj/QQ/F52qV1CmSLZ4wolr6uh45RWKf7OBgQi9j2ZaUPdtmOttFMZy1IS3Wf/kUfp7FdAAPGuwRVAQDKKtHiMirERRBIEJ0QO3JB+ZaPQcPb/NIZtT/EUrzhZCPFTZ5YFMdvgaP8ZXwEViHTbz71d0fXQO9mMpiNUQyFylfmARihA11S8Hdh7jpNa6otlVtTL0bxW4KDKBczFsQvtYNAejpW0jUcqhNRLAGwFC2yKbvT7MY1riqHkzSFuUTskFdJw4LtjACQp4Cs+TOtbXTedC3vb38Eg=
   on:
     tags: true
-    branch: master
+    repo: comtravo/ctparse
+    python: 3.6
+after_success:
+  codecov

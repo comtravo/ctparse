@@ -114,7 +114,7 @@ class CTParse:
         self.score = score
 
     def __repr__(self):
-        return '{} s={:.3f} p={}'.format(self.resolution,
+        return '{} s={:.3f} p={}'.format(self.resolution,
                                          self.score,
                                          self.production)
 
@@ -313,7 +313,7 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
 
     # --> avoid use of numpy here; since we need column sums below,
     # --> the representation of M is columns major, i.e. M[i] is the i-th
-    # --> column; M[i, j] then basically becomes M[j][i]
+    # --> column; M[i, j] then basically becomes M[j][i]
     M = [[0 for _ in range(n_rm)] for _ in range(n_rm)]
 
     def get_m_dist(m1, m2):
@@ -344,7 +344,7 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
                 new_prod = True
         if not new_prod:
             prod = tuple(regex_matches[i] for i in s)
-            logger.debug(' -> sub sequence {}'.format(prod))
+            logger.debug(' -> sub sequence {}'.format(prod))
             yield prod
 
 
@@ -410,7 +410,7 @@ def run_corpus(corpus):
         if not all_tests_pass:
             logger.warning('failure: "{}" not always produced'.format(target))
             at_least_one_failed = True
-    logger.info('run {} tests on {} targets with a total of '
+    logger.info('run {} tests on {} targets with a total of '
                 '{} positive and {} negative parses (={})'.format(
                     total_tests, len(corpus), pos_parses, neg_parses,
                     pos_parses+neg_parses))

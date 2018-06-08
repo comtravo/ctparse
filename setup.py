@@ -1,52 +1,58 @@
-from setuptools import setup
-from codecs import open
-from os import path
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-here = path.abspath(path.dirname(__file__))
+"""The setup script."""
 
-# Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
+from setuptools import setup, find_packages
 
-version = '0.0.8'
+with open('README.rst') as readme_file:
+    readme = readme_file.read()
+
+with open('HISTORY.rst') as history_file:
+    history = history_file.read()
+
+requirements = [ ]
+
+setup_requirements = ['pytest-runner', ]
+
+test_requirements = ['pytest', ]
 
 setup(
-    name='ctparse',
-    version=version,
-    description='Parse natural language time expressions into structured ones',
-    long_description=long_description,
-    url='https://github.com/comtravo/ctparse',
-    author='Comtravo',
+    author="Sebastian Mika/Comtravo",
     author_email='sebastian.mika@comtravo.com',
-    maintainer='Sebastian Mika',
-    maintainer_email='sebastian.mika@comtravo.com',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Text Processing :: Linguistic',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.6'
     ],
-    keywords='time parsing natural language',
-    packages=['ctparse', 'ctparse.time'],
+    description="Parse natural language time expressions in python",
+    install_requires=[
+        'numpy==1.14.4',
+        'python-dateutil==2.7.3',
+        'regex==2018.6.6',
+        'scikit-learn==0.19.1',
+        'scipy==1.1.0',
+        'tqdm==4.23.4'
+    ],
+    license="MIT license",
+    long_description=readme + '\n\n' + history,
+    include_package_data=True,
+    keywords='ctparse time parsing natural language',
+    name='ctparse',
+    packages=find_packages(include=['ctparse*']),
     package_dir={'ctparse': 'ctparse'},
     package_data={'ctparse': ['models/model.pbz']},
-    install_requires=['numpy>=1.14.0,<2.0.0',
-                      'python-dateutil>=2.6.1,<3.0.0',
-                      'regex>=2018.2.8',
-                      'scikit-learn>=0.19.1,<1.0.0',
-                      'scipy>=1.0.0,<2.0.0',
-                      'tqdm>=4.19.5,<5.0.0'],
-    extras_require={
-        'dev': [],
-        'test': ['pytest', 'pytest-coverage', 'pytest-flake8'],
-    },
-    entry_points={},
-    project_urls={},
-    command_options={
-        'build_sphinx': {
-            'source_dir': ('setup.py', 'docs'),
-            'build_dir': ('setup.py', './build/docs/'),
-            'version': ('setup.py', version)}},
+    setup_requires=setup_requirements,
+    test_suite='tests',
+    tests_require=test_requirements,
+    url='https://github.com/comtravo/ctparse',
+    version='0.0.13',
+    zip_safe=False,
 )
