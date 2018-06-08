@@ -1,22 +1,25 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-"""Tests for `ctparse` package."""
-
-import pytest
-
-
-@pytest.fixture
-def response():
-    """Sample pytest fixture.
-
-    See more at: http://doc.pytest.org/en/latest/fixture.html
-    """
-    # import requests
-    # return requests.get('https://github.com/audreyr/cookiecutter-pypackage')
+from unittest import TestCase
+from time import sleep
+from datetime import datetime
+from ctparse.ctparse import _timeout, ctparse
+from ctparse.types import Time
 
 
-def test_content(response):
-    """Sample pytest test function with the pytest fixture as an argument."""
-    # from bs4 import BeautifulSoup
-    # assert 'GitHub' in BeautifulSoup(response.content).title.string
+class TestCTParse(TestCase):
+    def test_timeout(self):
+        t_fun = _timeout(0.5)
+        with self.assertRaises(Exception):
+            sleep(1)
+            t_fun()
+        t_fun = _timeout(0)
+        t_fun()  # all good
+
+    def test_ctparse(self):
+        txt = '12.12.2020'
+        res = ctparse(txt)
+        self.assertEqual(res.resolution, Time(year=2020, month=12, day=12))
+        txt = '12.12.'
+        res = ctparse(txt, ts=datetime(2020, 12, 1))
+        self.assertEqual(res.resolution, Time(year=2020, month=12, day=12))
+        res = ctparse(txt, ts=datetime(2020, 12, 1), debug=True)
+        self.assertEqual(next(res).resolution, Time(year=2020, month=12, day=12))

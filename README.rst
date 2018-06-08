@@ -24,7 +24,7 @@ ctparse - Parse natural language time expressions in python
      :alt: Documentation Status
 
 
-Parse natural language time expressions in python
+
 
 **This code is in early alpha stage. There can and will be potentially
 breaking changes right on the ``master`` branch**
@@ -33,9 +33,6 @@ breaking changes right on the ``master`` branch**
 * Free software: MIT license
 * Documentation: https://ctparse.readthedocs.io.
 
-
-Comtravo Time Parser
-====================
 
 Background
 ----------

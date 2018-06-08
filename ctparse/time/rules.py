@@ -249,7 +249,7 @@ def rulePODAfterNoon(ts, m):
 
 
 @rule(r'(?&_pos_bfr)'
-      '(evening|late|abend?s?|spät)'
+      '(evening|tonight|late|abend?s?|spät)'
       '(?&_pos_bnd)')
 def rulePODEvening(ts, m):
     return Time(POD='evening')
