@@ -5,6 +5,10 @@ python:
   - 3.4
 install: pip install -U tox-travis codecov
 script: tox
+branches:
+  only:
+  - master
+  - /^v\d+\.\d+\.\d+$/
 deploy:
   provider: pypi
   distributions: sdist bdist_wheel
