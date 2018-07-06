@@ -184,7 +184,8 @@ else:
     _nb = NB()
 
 
-_repl1 = regex.compile(r'[,;\s\p{Ps}\p{Pe}]', regex.VERSION1)
+# replace all comma, semicolon, whitespace, invisible control, opening and closing brackets
+_repl1 = regex.compile(r'[,;\pZ\pC\p{Ps}\p{Pe}]', regex.VERSION1)
 _repl2 = regex.compile(r'\s+', regex.VERSION1)
 
 
