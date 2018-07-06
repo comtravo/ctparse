@@ -185,13 +185,11 @@ else:
 
 
 # replace all comma, semicolon, whitespace, invisible control, opening and closing brackets
-_repl1 = regex.compile(r'[,;\pZ\pC\p{Ps}\p{Pe}]', regex.VERSION1)
-_repl2 = regex.compile(r'\s+', regex.VERSION1)
+_repl1 = regex.compile(r'[,;\pZ\pC\p{Ps}\p{Pe}]+', regex.VERSION1)
 
 
 def _preprocess_string(txt):
-    txt = _repl1.sub(' ', txt, concurrent=True)
-    return _repl2.sub(' ', txt, concurrent=True).strip()
+    return _repl1.sub(' ', txt, concurrent=True).strip()
 
 
 def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0, max_stack_depth=10):
@@ -309,7 +307,7 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
     # --> the representation of M is columns major, i.e. M[i] is the i-th
     # --> column; M[i, j] then basically becomes M[j][i]
     M = [[0 for _ in range(n_rm)] for _ in range(n_rm)]
-    
+
     _separator_regex = regex.compile(r'\s*', regex.VERSION1)
 
     def get_m_dist(m1, m2):

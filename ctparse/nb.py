@@ -30,7 +30,8 @@ class NB:
         """wrapper to predict - if no model is fitted, return 0.0 for all samples"""
         if self._model is None:
             return [0.0 for x in X]
-        return self._model.predict_log_proba(X)[:, 1] - self._model.predict_log_proba(X)[:, 0]
+        pred = self._model.predict_log_proba(X)
+        return pred[:, 1] - pred[:, 0]
 
     def map_prod(self, prod, y=None):
         """given one production, transform it into all sub-sequences of len 1 - len(prod)"""
