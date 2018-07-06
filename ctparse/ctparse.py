@@ -16,15 +16,6 @@ from . rule import rules, _regex
 
 logger = logging.getLogger(__name__)
 
-# any character matched by a production regex will spoil this (as
-# e.g. with '-'), since the expression sequence will not be "E1 - E2",
-# and hence E1+E2 are only separated by these chars, but rather "E1 ED
-# E3", where ED is the '-'-matching expression. Hence, to capture this
-# case a corresponding rule is needed (at least for the time being)
-# [Adding a "eat dash"-rule made things very slow and let to unmatched
-# "trivial" cases]
-_separator_regex = regex.compile(r'(^|$|\s|\n|,|\p{Ps}|\p{Pe})+', regex.VERSION1)
-
 
 class TimeoutError(Exception):
     pass
@@ -193,11 +184,12 @@ else:
     _nb = NB()
 
 
-_repl = regex.compile(r'[(){}\[\],;]')
+# replace all comma, semicolon, whitespace, invisible control, opening and closing brackets
+_repl1 = regex.compile(r'[,;\pZ\pC\p{Ps}\p{Pe}]+', regex.VERSION1)
 
 
 def _preprocess_string(txt):
-    return _repl.sub(' ', txt, concurrent=True)
+    return _repl1.sub(' ', txt, concurrent=True).strip()
 
 
 def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0, max_stack_depth=10):
@@ -316,6 +308,8 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
     # --> column; M[i, j] then basically becomes M[j][i]
     M = [[0 for _ in range(n_rm)] for _ in range(n_rm)]
 
+    _separator_regex = regex.compile(r'\s*', regex.VERSION1)
+
     def get_m_dist(m1, m2):
         # 1 if there is no relevant gap between m1 and m2, 0 otherwise
         # assumes that m1 and m2 are sorted be their start index
@@ -386,7 +380,7 @@ def run_corpus(corpus):
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for prod in _ctparse(test, ts, max_stack_depth=0):
+            for prod in ctparse(test, ts, max_stack_depth=0, debug=True):
                 if prod is None:
                     continue
                 y = prod.resolution.nb_str() == target
