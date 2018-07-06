@@ -426,14 +426,14 @@ def ruleLatentPOD(ts, pod):
     # return Interval(t_from=t_from, t_to=t_to, POD=pod.POD)
 
 
-@rule(r'(?&_pos_bfr)(?P<day>(?&_day))[\./\-](?P<month>(?&_month))\.?(?&_pos_bnd)')
+@rule(r'(?!<\d|\.)(?P<day>(?&_day))[\./\-](?P<month>(?&_month))\.?(?!\d)')
 def ruleDDMM(ts, m):
     return Time(month=int(m.match.group('month')),
                 day=int(m.match.group('day')))
 
 
-@rule(r'(?&_pos_bfr)(?P<day>(?&_day))[-/\.](?P<month>(?&_month))[-/\.]'
-      '(?P<year>(?&_year))(?&_pos_bnd)')
+@rule(r'(?!<\d|\.)(?P<day>(?&_day))[-/\.](?P<month>(?&_month))[-/\.]'
+      '(?P<year>(?&_year))(?!\d)')
 def ruleDDMMYYYY(ts, m):
     y = int(m.match.group('year'))
     if y < 2000:
@@ -443,7 +443,7 @@ def ruleDDMMYYYY(ts, m):
                 day=int(m.match.group('day')))
 
 
-@rule(r'(?&_pos_bfr)(?P<hour>(?&_hour))([:|uhr|h|\.]?'
+@rule(r'(?!<\d|\.)(?P<hour>(?&_hour))([:|uhr|h|\.]?'
       '(?P<minute>(?&_minute))?\s*(uhr|h)?)(?P<ampm>\s*[ap]\.?m\.?)?(?&_pos_bnd)')
 def ruleHHMM(ts, m):
     # hh [am|pm]
