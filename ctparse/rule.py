@@ -17,8 +17,8 @@ _regex_minute = r'[0-5]\d'
 _regex_day = r'[012]?[1-9]|10|20|30|31'
 _regex_month = r'10|11|12|0?[1-9]'
 _regex_year = r'(?:19\d\d)|(?:20[0-2]\d)|(?:\d\d)'
-_regex_pos_before_sep = r'(?<=\pZ|\pP|\pC|^)'
-_regex_pos_behind_sep = r'(?=\pZ|\pP|\pC|$)'
+_regex_pos_before_sep = r'(?<=\pZ|\pP|^)'
+_regex_pos_behind_sep = r'(?=\pZ|\pP|$)'
 
 # used in many places in rules
 _regex_to_join = (r'(\-|to( the)?|(un)?til|bis( zum)?|zum|auf( den)?|und|'

@@ -82,50 +82,43 @@ def _get_wd_pod(m):
         return None
 
 
-@rule(r'(?&_pos_bfr)' + r'(montags?|mondays?|mon?\.?)' + _wd_mod_re +
-      '(?&_pos_bnd)')
+@rule(r'(montags?|mondays?|mon?\.?)' + _wd_mod_re)
 def ruleMonday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=0, POD=pod)
 
 
-@rule(r'(?&_pos_bfr)' + r'(die?nstags?|die?\.?|tuesdays?|tue?\.?)' + _wd_mod_re +
-      '(?&_pos_bnd)')
+@rule(r'(die?nstags?|die?\.?|tuesdays?|tue?\.?)' + _wd_mod_re)
 def ruleTuesday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=1, POD=pod)
 
 
-@rule(r'(?&_pos_bfr)' + r'(mittwochs?|mi\.?|wednesday?|wed\.?)' + _wd_mod_re +
-      '(?&_pos_bnd)')
+@rule(r'(mittwochs?|mi\.?|wednesday?|wed\.?)' + _wd_mod_re)
 def ruleWednesday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=2, POD=pod)
 
 
-@rule(r'(?&_pos_bfr)' + r'(donn?erstags?|don?\.?|thursdays?|thur?\.?)' + _wd_mod_re +
-      '(?&_pos_bnd)')
+@rule(r'(donn?erstags?|don?\.?|thursdays?|thur?\.?)' + _wd_mod_re)
 def ruleThursday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=3, POD=pod)
 
 
-@rule(r'(?&_pos_bfr)' + r'(freitags?|fr\.?|fridays?|fri?\.?)' + _wd_mod_re +
-      '(?&_pos_bnd)')
+@rule(r'(freitags?|fridays?|fri?\.?)\s*' + _wd_mod_re)
 def ruleFriday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=4, POD=pod)
 
 
-@rule(r'(?&_pos_bfr)' + r'(samstags?|sonnabends?|sa\.?|saturdays?|sat?\.?)' + _wd_mod_re +
-      '(?&_pos_bnd)')
+@rule(r'(samstags?|sonnabends?|saturdays?|sat?\.?)' + _wd_mod_re)
 def ruleSaturday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=5, POD=pod)
 
 
-@rule(r'(?&_pos_bfr)' + r'(sonntags?|so\.?|sundays?|sun?\.?)' + _wd_mod_re +
-      '(?&_pos_bnd)')
+@rule(r'(sonntags?|so\.?|sundays?|sun?\.?)' + _wd_mod_re)
 def ruleSunday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=6, POD=pod)
@@ -133,7 +126,7 @@ def ruleSunday(ts, m):
 
 def mkMonths(months):
     for month_num, (month, month_ex) in enumerate(months):
-        exec('''@rule(r"(?&_pos_bfr)({})(?&_pos_bnd)")
+        exec('''@rule(r"({})")
 def ruleMonth{}(ts, m): return Time(month={})'''.format(
             month_ex, month, month_num + 1))
 
@@ -155,7 +148,7 @@ mkMonths([
 
 def mkDDMonths(months):
     for month_num, (month, month_ex) in enumerate(months):
-        exec('''@rule(r"(?&_pos_bfr)(?P<day>(?&_day))\.?({})(?&_pos_bnd)")
+        exec('''@rule(r"(?P<day>(?&_day))\.?\s*({})")
 def ruleDDMonth{}(ts, m): return Time(month={}, day=int(m.match.group('day')))'''.format(
             month_ex, month, month_num + 1))
 
@@ -175,17 +168,13 @@ mkDDMonths([
     ("December", r"december|dezember|dez\.?|dec\.?")])
 
 
-@rule(r'(?&_pos_bfr)'
-      '(erster?|first|earliest|as early|frühe?st(ens?)?|so früh)'
-      '( (as )?possible| (wie )?möglich(er?)?)?'
-      '(?&_pos_bnd)')
+@rule(r'(erster?|first|earliest|as early|frühe?st(ens?)?|so früh)'
+      '( (as )?possible| (wie )?möglich(er?)?)?')
 def rulePODFirst(ts, m):
     return Time(POD='first')
 
 
-@rule(r'(?&_pos_bfr)'
-      '(letzter?|last|latest|as late as possible|spätest möglich(er?)?|so spät wie möglich(er?)?)'
-      '(?&_pos_bnd)')
+@rule(r'(letzter?|last|latest|as late as possible|spätest möglich(er?)?|so spät wie möglich(er?)?)')
 def rulePODFLast(ts, m):
     return Time(POD='last')
 
@@ -213,81 +202,65 @@ def ruleEarlyLatePOD(ts, m, p):
     return Time(POD=_pod_from_match(p.POD, m))
 
 
-@rule(r'(?&_pos_bfr)'
-      '(very early|sehr früh)'
-      '(?&_pos_bnd)')
+@rule(r'(very early|sehr früh)')
 def rulePODEarlyMorning(ts, m):
     return Time(POD='earlymorning')
 
 
-@rule(r'(?&_pos_bfr)'
-      '(morning|morgend?s?|(in der )?frühe?|early)'
-      '(?&_pos_bnd)')
+@rule(r'(morning|morgend?s?|(in der )?frühe?|early)')
 def rulePODMorning(ts, m):
     return Time(POD='morning')
 
 
-@rule(r'(?&_pos_bfr)'
-      '(before\s?noon|vor\s?mittags?)'
-      '(?&_pos_bnd)')
+@rule(r'(before\s?noon|vor\s?mittags?)')
 def rulePODBeforeNoon(ts, m):
     return Time(POD='beforenoon')
 
 
-@rule(r'(?&_pos_bfr)'
-      '(noon|mittags?)'
-      '(?&_pos_bnd)')
+@rule(r'(noon|mittags?)')
 def rulePODNoon(ts, m):
     return Time(POD='noon')
 
 
-@rule(r'(?&_pos_bfr)'
-      '(after\s?noon|nach\s?mittags?)'
-      '(?&_pos_bnd)')
+@rule(r'(after\s?noon|nach\s?mittags?)')
 def rulePODAfterNoon(ts, m):
     return Time(POD='afternoon')
 
 
-@rule(r'(?&_pos_bfr)'
-      '(evening|tonight|late|abend?s?|spät)'
-      '(?&_pos_bnd)')
+@rule(r'(evening|tonight|late|abend?s?|spät)')
 def rulePODEvening(ts, m):
     return Time(POD='evening')
 
 
-@rule(r'(?&_pos_bfr)'
-      '(very late|sehr spät)'
-      '(?&_pos_bnd)')
+@rule(r'(very late|sehr spät)')
 def rulePODLateEvening(ts, m):
     return Time(POD='lateevening')
 
 
-@rule(r'(?&_pos_bfr)'
-      '(night|nachts?)'
-      '(?&_pos_bnd)')
+@rule(r'(night|nachts?)')
 def rulePODNight(ts, m):
     return Time(POD='night')
 
 
-@rule(r'(?&_pos_bfr)(?P<day>(?&_day))\.?(?&_pos_bnd)')
+@rule(r'(?!<\d|\.)(?P<day>(?&_day))\.?(?!\d)')
 def ruleDOM1(ts, m):
     # Ordinal day "5."
     return Time(day=int(m.match.group('day')))
 
 
-@rule(r'(?&_pos_bfr)(?P<month>(?&_month))(\.|(?!\d))')
+@rule(r'(?!<\d|\.)(?P<month>(?&_month))\.?(?!\d)')
 def ruleMonthOrdinal(ts, m):
     # Ordinal day "5."
     return Time(month=int(m.match.group('month')))
 
 
-@rule(r'(?&_pos_bfr)(?P<day>(?&_day))\s*(?:st|rd|th|ten|ter)')
+@rule(r'(?!<\d|\.)(?P<day>(?&_day))\s*(?:st|rd|th|ten|ter)')
 # a "[0-31]" followed by a th/st
 def ruleDOM2(ts, m):
     return Time(day=int(m.match.group('day')))
 
 
-@rule(r'(?&_pos_bfr)(?P<year>(?&_year))(?!\d)')
+@rule(r'(?!<\d|\.)(?P<year>(?&_year))(?!\d)')
 def ruleYear(ts, m):
     y = int(m.match.group('year'))
     if y < 1900:
