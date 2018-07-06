@@ -443,8 +443,8 @@ def ruleDDMMYYYY(ts, m):
                 day=int(m.match.group('day')))
 
 
-@rule(r'(?!<\d|\.)(?P<hour>(?&_hour))([:|uhr|h|\.]?'
-      '(?P<minute>(?&_minute))?\s*(uhr|h)?)(?P<ampm>\s*[ap]\.?m\.?)?(?&_pos_bnd)')
+@rule(r'(?!<\d|\.)(?P<hour>(?&_hour))((:|uhr|h|\.)?'
+      '(?P<minute>(?&_minute))?\s*(uhr|h)?)(?P<ampm>\s*[ap]\.?m\.?)?(?!\d)')
 def ruleHHMM(ts, m):
     # hh [am|pm]
     # hh:mm
