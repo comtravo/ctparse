@@ -463,7 +463,7 @@ def ruleHHMM(ts, m):
         return t
 
 
-@rule(r'(?&_pos_bfr)(?P<hour>(?&_hour))\s*(uhr|h|o\'?clock)')
+@rule(r'(?!<\d|\.)(?P<hour>(?&_hour))\s*(uhr|h|o\'?clock)')
 def ruleHHOClock(ts, m):
     return Time(hour=int(m.match.group('hour')))
 
