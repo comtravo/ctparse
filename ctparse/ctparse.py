@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # case a corresponding rule is needed (at least for the time being)
 # [Adding a "eat dash"-rule made things very slow and let to unmatched
 # "trivial" cases]
-_separator_regex = regex.compile(r'(^|$|\s|\n|,|\p{Ps}|\p{Pe})+', regex.VERSION1)
+_separator_regex = regex.compile(r'\s*', regex.VERSION1)
 
 
 class TimeoutError(Exception):
@@ -193,11 +193,13 @@ else:
     _nb = NB()
 
 
-_repl = regex.compile(r'[(){}\[\],;]')
+_repl1 = regex.compile(r'[,;\s\p{Ps}\p{Pe}]', regex.VERSION1)
+_repl2 = regex.compile(r'\s+', regex.VERSION1)
 
 
 def _preprocess_string(txt):
-    return _repl.sub(' ', txt, concurrent=True)
+    txt = _repl1.sub(' ', txt, concurrent=True)
+    return _repl2.sub(' ', txt, concurrent=True).strip()
 
 
 def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0, max_stack_depth=10):
@@ -386,7 +388,7 @@ def run_corpus(corpus):
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for prod in _ctparse(test, ts, max_stack_depth=0):
+            for prod in ctparse(test, ts, max_stack_depth=0, debug=True):
                 if prod is None:
                     continue
                 y = prod.resolution.nb_str() == target
