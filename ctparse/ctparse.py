@@ -16,15 +16,6 @@ from . rule import rules, _regex
 
 logger = logging.getLogger(__name__)
 
-# any character matched by a production regex will spoil this (as
-# e.g. with '-'), since the expression sequence will not be "E1 - E2",
-# and hence E1+E2 are only separated by these chars, but rather "E1 ED
-# E3", where ED is the '-'-matching expression. Hence, to capture this
-# case a corresponding rule is needed (at least for the time being)
-# [Adding a "eat dash"-rule made things very slow and let to unmatched
-# "trivial" cases]
-_separator_regex = regex.compile(r'\s*', regex.VERSION1)
-
 
 class TimeoutError(Exception):
     pass
@@ -317,6 +308,8 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
     # --> the representation of M is columns major, i.e. M[i] is the i-th
     # --> column; M[i, j] then basically becomes M[j][i]
     M = [[0 for _ in range(n_rm)] for _ in range(n_rm)]
+    
+    _separator_regex = regex.compile(r'\s*', regex.VERSION1)
 
     def get_m_dist(m1, m2):
         # 1 if there is no relevant gap between m1 and m2, 0 otherwise
