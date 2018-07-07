@@ -2,6 +2,10 @@
 Usage
 =====
 
-To use ctparse - Parse natural language time expressions in pytho in a project::
+To use ctparse simply import the main ``ctparse`` function:
 
-    import ctparse
+    from ctparse import ctparse
+
+    ctparse('today', datetime(2018, 7, 8), timeout=1)
+
+For more details on the parameters please see the docstrings
