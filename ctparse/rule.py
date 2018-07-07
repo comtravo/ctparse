@@ -17,8 +17,6 @@ _regex_minute = r'[0-5]\d'
 _regex_day = r'[012]?[1-9]|10|20|30|31'
 _regex_month = r'10|11|12|0?[1-9]'
 _regex_year = r'(?:19\d\d)|(?:20[0-2]\d)|(?:\d\d)'
-_regex_pos_before_sep = r'(?<=\pZ|\pP|\pC|^)'
-_regex_pos_behind_sep = r'(?=\pZ|\pP|\pC|$)'
 
 # used in many places in rules
 _regex_to_join = (r'(\-|to( the)?|(un)?til|bis( zum)?|zum|auf( den)?|und|'
@@ -26,16 +24,12 @@ _regex_to_join = (r'(\-|to( the)?|(un)?til|bis( zum)?|zum|auf( den)?|und|'
 
 _defines = (r'(?(DEFINE)(?<_hour>{regex_hour})(?P<_minute>{regex_minute})'
             '(?P<_day>{regex_day})(?P<_month>{regex_month})'
-            '(?P<_year>{regex_year})'
-            '(?P<_pos_bnd>{regex_pos_behind_sep})'
-            '(?P<_pos_bfr>{regex_pos_before_sep}))').format(
+            '(?P<_year>{regex_year}))').format(
                 regex_hour=_regex_hour,
                 regex_minute=_regex_minute,
                 regex_day=_regex_day,
                 regex_month=_regex_month,
-                regex_year=_regex_year,
-                regex_pos_behind_sep=_regex_pos_behind_sep,
-                regex_pos_before_sep=_regex_pos_before_sep)
+                regex_year=_regex_year)
 
 
 def rule(*patterns):
