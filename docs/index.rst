@@ -1,5 +1,5 @@
-Welcome to ctparse - Parse natural language time expressions in pytho's documentation!
-======================================
+Welcome to the ctparse documentation!
+=====================================
 
 .. toctree::
    :maxdepth: 2
@@ -8,8 +8,8 @@ Welcome to ctparse - Parse natural language time expressions in pytho's document
    readme
    installation
    usage
-   modules
    contributing
+   modules
    authors
    history
 
