@@ -8,4 +8,4 @@ To use ctparse simply import the main ``ctparse`` function:
 
     ctparse('today', datetime(2018, 7, 8), timeout=1)
 
-For more details on the parameters please see the docstrings
+For more details on the parameters please see the docstrings.
