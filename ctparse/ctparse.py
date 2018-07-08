@@ -8,6 +8,7 @@ from tqdm import tqdm
 from time import perf_counter
 from datetime import datetime
 from math import log
+from functools import wraps
 
 from . types import RegexMatch
 from . nb import NB
@@ -39,6 +40,7 @@ def _timeit(f):
     took to run.
 
     """
+    @wraps(f)
     def _wrapper(*args, **kwargs):
         start_time = perf_counter()
         res = f(*args, **kwargs)
@@ -105,6 +107,9 @@ class CTParse:
         self.score = score
 
     def __repr__(self):
+        return f'CTParse({self.resolution}, {self.production}, {self.score})'
+
+    def __str__(self):
         return '{} s={:.3f} p={}'.format(self.resolution,
                                          self.score,
                                          self.production)
@@ -149,7 +154,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
                 # no new productions were generated from this stack element.
                 # emit all (probably partial) production
                 for x in s.prod:
-                    if type(x) is not RegexMatch:
+                    if not isinstance(x, RegexMatch):
                         # update score to be only relative to the text
                         # match by the actual production, not the
                         # initial sequence of regular expression
@@ -223,15 +228,15 @@ def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0, max_st
         parsed = [p for p in parsed if p]
         if not parsed or (len(parsed) == 1 and not parsed[0]):
             logger.warning('Failed to produce result for "{}"'.format(txt))
-            return None
+            return
         parsed.sort(key=lambda p: p.score)
         return parsed[-1]
 
 
 def _match_rule(seq, rule):
-    if len(seq) == 0:
+    if not seq:
         return
-    if len(rule) == 0:
+    if not rule:
         return
     i_r = 0
     i_s = 0
