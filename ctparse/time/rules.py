@@ -540,14 +540,20 @@ def ruleAfter():
     pass
 
 
-@rule(r'vor|before|spätestens|latest', dimension(Time))
-def ruleBeforeTime(ts, _, t):
-    return Interval(t_from=None, t_to=t)
+@rule(r'(?P<not>not |nicht )?(vor|before|spätestens|latest)', dimension(Time))
+def ruleBeforeTime(ts, r, t):
+    if r.match.group('not'):
+        return Interval(t_from=t, t_to=None)
+    else:
+        return Interval(t_from=None, t_to=t)
 
 
-@rule(r'nach|ab|after|frühe?stens|earliest', dimension(Time))
-def ruleAfterTime(ts, _, t):
-    return Interval(t_from=t, t_to=None)
+@rule(r'(?P<not>not |nicht )?(nach|ab|after|frühe?stens|earliest)', dimension(Time))
+def ruleAfterTime(ts, r, t):
+    if r.match.group('not'):
+        return Interval(t_from=None, t_to=t)
+    else:
+        return Interval(t_from=t, t_to=None)
 
 
 def rulePrevious():

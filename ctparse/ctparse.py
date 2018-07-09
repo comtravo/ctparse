@@ -125,9 +125,15 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
         stack = [StackElement(prod=s, txt_len=len(txt)) for s in stack]
+        # sort stack by length of covered string and - if that is equal - score
+        # --> last element is longest coverage and highest scored
         stack.sort()
+        # only keep initial stack elements that cover at least
+        # relative_match_len characters of what the highest
+        # scored/covering stack element does cover
         stack = [s for s in stack
                  if s.max_covered_chars >= stack[-1].max_covered_chars * relative_match_len]
+        # limit depth of stack
         stack = stack[-max_stack_depth:]
         # track what has been added to the stack and do not add again
         # if the score is not better
