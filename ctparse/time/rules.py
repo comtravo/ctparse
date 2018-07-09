@@ -79,7 +79,7 @@ def _get_wd_pod(m):
     elif m.match.group('night'):
         return 'night'
     else:
-        return None
+        return
 
 
 @rule(r'(montags?|mondays?|mon?\.?)\s*' + _wd_mod_re)
@@ -507,7 +507,7 @@ def ruleTODPOD(ts, tod, pod):
     elif tod.hour > 12 and ('beforenoon' in pod.POD or
                             'morning' in pod.POD):
         # 17Uhr morgen -> do not merge
-        return None
+        return
     else:
         h = tod.hour
     return Time(hour=h, minute=tod.minute)
@@ -557,18 +557,18 @@ def rulePrevious():
 @rule(predicate('isDate'), _regex_to_join, predicate('isDate'))
 def ruleDateDate(ts, d1, _, d2):
     if d1.year > d2.year:
-        return None
+        return
     if d1.year == d2.year and d1.month > d2.month:
-        return None
+        return
     if d1.year == d2.year and d1.month == d2.month and d1.day >= d2.day:
-        return None
+        return
     return Interval(t_from=d1, t_to=d2)
 
 
 @rule(predicate('isDOM'), _regex_to_join, predicate('isDate'))
 def ruleDOMDate(ts, d1, _, d2):
     if d1.day >= d2.day:
-        return None
+        return
     return Interval(t_from=Time(year=d2.year, month=d2.month, day=d1.day),
                     t_to=d2)
 
@@ -586,33 +586,33 @@ def ruleDOYDate(ts, d1, _, d2):
 @rule(predicate('isDateTime'), _regex_to_join, predicate('isDateTime'))
 def ruleDateTimeDateTime(ts, d1, _, d2):
     if d1.year > d2.year:
-        return None
+        return
     if d1.year == d2.year and d1.month > d2.month:
-        return None
+        return
     if d1.year == d2.year and d1.month == d2.month and d1.day > d2.day:
-        return None
+        return
     if d1.year == d2.year and d1.month == d2.month and d1.day == d2.day and d1.hour > d2.hour:
-        return None
+        return
     if (d1.year == d2.year and d1.month == d2.month and d1.day == d2.day and
        d1.hour == d2.hour and d1.minute >= d2.minute):
-        return None
+        return
     return Interval(t_from=d1, t_to=d2)
 
 
 @rule(predicate('isTOD'), _regex_to_join, predicate('isTOD'))
 def ruleTODTOD(ts, t1, _, t2):
     if t1.hour > t2.hour:
-        return None
+        return
     if t1.hour == t2.hour:
         if t1.minute is not None and t2.minute is not None and t1.minute >= t2.minute:
             # 6:30 - 6:30?
-            return None
+            return
         if t1.minute is None and t2.minute is not None:
             # 6:30 - 6?
-            return None
+            return
         if t1.minute is None and t2.minute is None:
             # 6 - 6?
-            return None
+            return
     return Interval(t_from=t1, t_to=t2)
 
 
@@ -621,7 +621,7 @@ def ruleDateInterval(ts, d, i):
     # only makes sense if i is a time interval
     if not ((i.t_from is None or i.t_from.isTOD) and
             (i.t_to is None or i.t_to.isTOD)):
-        return None
+        return
     if i.t_from is None:
         return Interval(t_to=Time(year=d.year, month=d.month, day=d.day,
                                   hour=i.t_to.hour, minute=i.t_to.minute))

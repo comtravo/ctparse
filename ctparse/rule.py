@@ -73,7 +73,7 @@ def rule(*patterns):
                     # information by expanding it to that of all args
                     res.update_span(*args)
             except ValueError:
-                return None
+                return
             return res
         rules[f.__name__] = (wrapper, patterns)
         return wrapper
