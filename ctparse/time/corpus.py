@@ -334,14 +334,20 @@ corpus = [
      '2018-03-07T12:43',
      ('um 8 am 5. August',
       'at 8 on August 5th')),
-    # ruleDateDate
+    # ruleDateDate, ruleDOMDate
     ('Interval[]{2018-08-05 X:X (X/X) - 2018-08-16 X:X (X/X)}',
      '2018-03-07T12:43',
      ('5.8. - 16.8.',
       'August 5th - August 16th',
       '5. - 16.8.',
+      '5.8. - 16.8.2018',
       '5. bis zum 16.8.',
       'vom 05.08.2018 zum 16.08.2018')),
+    # ruleDOYDate
+    ('Interval[]{2017-08-05 X:X (X/X) - 2017-08-16 X:X (X/X)}',
+     '2018-03-07T12:43',
+     ('5.8. - 16.8.2017',
+      'Samstag 5.8. - Mittwoch 16.8.2017')),
     # ruleDateTimeDateTime
     ('Interval[]{2018-08-05 08:00 (X/X) - 2018-08-16 13:00 (X/X)}',
      '2018-03-07T12:43',
