@@ -82,25 +82,25 @@ def _get_wd_pod(m):
         return
 
 
-@rule(r'(montags?|mondays?|mon?\.?)' + _wd_mod_re)
+@rule(r'(montags?|mondays?|mon?\.?)\s*' + _wd_mod_re)
 def ruleMonday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=0, POD=pod)
 
 
-@rule(r'(die?nstags?|die?\.?|tuesdays?|tue?\.?)' + _wd_mod_re)
+@rule(r'(die?nstags?|die?\.?|tuesdays?|tue?\.?)\s*' + _wd_mod_re)
 def ruleTuesday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=1, POD=pod)
 
 
-@rule(r'(mittwochs?|mi\.?|wednesday?|wed\.?)' + _wd_mod_re)
+@rule(r'(mittwochs?|mi\.?|wednesday?|wed\.?)\s*' + _wd_mod_re)
 def ruleWednesday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=2, POD=pod)
 
 
-@rule(r'(donn?erstags?|don?\.?|thursdays?|thur?\.?)' + _wd_mod_re)
+@rule(r'(donn?erstags?|don?\.?|thursdays?|thur?\.?)\s*' + _wd_mod_re)
 def ruleThursday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=3, POD=pod)
@@ -112,13 +112,13 @@ def ruleFriday(ts, m):
     return Time(DOW=4, POD=pod)
 
 
-@rule(r'(samstags?|sonnabends?|saturdays?|sat?\.?)' + _wd_mod_re)
+@rule(r'(samstags?|sonnabends?|saturdays?|sat?\.?)\s*' + _wd_mod_re)
 def ruleSaturday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=5, POD=pod)
 
 
-@rule(r'(sonntags?|so\.?|sundays?|sun?\.?)' + _wd_mod_re)
+@rule(r'(sonntags?|so\.?|sundays?|sun?\.?)\s*' + _wd_mod_re)
 def ruleSunday(ts, m):
     pod = _get_wd_pod(m)
     return Time(DOW=6, POD=pod)
@@ -196,7 +196,7 @@ def _pod_from_match(pod, m):
 
 @rule(r'(?P<mod_very>(sehr|very)\s+)?'
       '((?P<mod_early>früh(er)?|early)'
-      '|(?P<mod_late>(spät(er)?|late)\s+))',
+      '|(?P<mod_late>(spät(er)?|late)))',
       predicate('isPOD'))
 def ruleEarlyLatePOD(ts, m, p):
     return Time(POD=_pod_from_match(p.POD, m))
@@ -212,7 +212,7 @@ def rulePODMorning(ts, m):
     return Time(POD='morning')
 
 
-@rule(r'(before\s?noon|vor\s?mittags?)')
+@rule(r'(before\s*noon|vor\s*mittags?)')
 def rulePODBeforeNoon(ts, m):
     return Time(POD='beforenoon')
 
@@ -222,7 +222,7 @@ def rulePODNoon(ts, m):
     return Time(POD='noon')
 
 
-@rule(r'(after\s?noon|nach\s?mittags?)')
+@rule(r'(after\s*noon|nach\s*mittags?)')
 def rulePODAfterNoon(ts, m):
     return Time(POD='afternoon')
 
@@ -570,6 +570,16 @@ def ruleDOMDate(ts, d1, _, d2):
     if d1.day >= d2.day:
         return
     return Interval(t_from=Time(year=d2.year, month=d2.month, day=d1.day),
+                    t_to=d2)
+
+
+@rule(predicate('isDOY'), _regex_to_join, predicate('isDate'))
+def ruleDOYDate(ts, d1, _, d2):
+    if d1.month > d2.month:
+        return None
+    elif d1.month == d2.month and d1.day >= d2.day:
+        return None
+    return Interval(t_from=Time(year=d2.year, month=d1.month, day=d1.day),
                     t_to=d2)
 
 
