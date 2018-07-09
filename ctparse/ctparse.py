@@ -85,7 +85,7 @@ class StackElement:
             new_s.update_score()
             return new_s
         else:
-            return None
+            return
 
     def __lt__(self, other):
         '''Sort stack elements by (a) the length of text they can
@@ -107,7 +107,8 @@ class CTParse:
         self.score = score
 
     def __repr__(self):
-        return f'CTParse({self.resolution}, {self.production}, {self.score})'
+        return 'CTParse({}, {}, {})'.format(
+            self.resolution, self.production, self.score)
 
     def __str__(self):
         return '{} s={:.3f} p={}'.format(self.resolution,
