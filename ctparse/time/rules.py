@@ -242,25 +242,25 @@ def rulePODNight(ts, m):
     return Time(POD='night')
 
 
-@rule(r'(?!<\d|\.)(?P<day>(?&_day))\.?(?!\d)')
+@rule(r'(?<!\d|\.)(?P<day>(?&_day))\.?(?!\d)')
 def ruleDOM1(ts, m):
     # Ordinal day "5."
     return Time(day=int(m.match.group('day')))
 
 
-@rule(r'(?!<\d|\.)(?P<month>(?&_month))\.?(?!\d)')
+@rule(r'(?<!\d|\.)(?P<month>(?&_month))\.?(?!\d)')
 def ruleMonthOrdinal(ts, m):
     # Ordinal day "5."
     return Time(month=int(m.match.group('month')))
 
 
-@rule(r'(?!<\d|\.)(?P<day>(?&_day))\s*(?:st|rd|th|ten|ter)')
+@rule(r'(?<!\d|\.)(?P<day>(?&_day))\s*(?:st|rd|th|ten|ter)')
 # a "[0-31]" followed by a th/st
 def ruleDOM2(ts, m):
     return Time(day=int(m.match.group('day')))
 
 
-@rule(r'(?!<\d|\.)(?P<year>(?&_year))(?!\d)')
+@rule(r'(?<!\d|\.)(?P<year>(?&_year))(?!\d)')
 def ruleYear(ts, m):
     y = int(m.match.group('year'))
     if y < 1900:
@@ -426,13 +426,13 @@ def ruleLatentPOD(ts, pod):
     # return Interval(t_from=t_from, t_to=t_to, POD=pod.POD)
 
 
-@rule(r'(?!<\d|\.)(?P<day>(?&_day))[\./\-](?P<month>(?&_month))\.?(?!\d)')
+@rule(r'(?<!\d|\.)(?P<day>(?&_day))[\./\-](?P<month>(?&_month))\.?(?!\d)')
 def ruleDDMM(ts, m):
     return Time(month=int(m.match.group('month')),
                 day=int(m.match.group('day')))
 
 
-@rule(r'(?!<\d|\.)(?P<day>(?&_day))[-/\.](?P<month>(?&_month))[-/\.]'
+@rule(r'(?<!\d|\.)(?P<day>(?&_day))[-/\.](?P<month>(?&_month))[-/\.]'
       '(?P<year>(?&_year))(?!\d)')
 def ruleDDMMYYYY(ts, m):
     y = int(m.match.group('year'))
@@ -443,7 +443,7 @@ def ruleDDMMYYYY(ts, m):
                 day=int(m.match.group('day')))
 
 
-@rule(r'(?!<\d|\.)(?P<hour>(?&_hour))((:|uhr|h|\.)?'
+@rule(r'(?<!\d|\.)(?P<hour>(?&_hour))((:|uhr|h|\.)?'
       '(?P<minute>(?&_minute))?\s*(uhr|h)?)(?P<ampm>\s*[ap]\.?m\.?)?(?!\d)')
 def ruleHHMM(ts, m):
     # hh [am|pm]
@@ -463,7 +463,7 @@ def ruleHHMM(ts, m):
         return t
 
 
-@rule(r'(?!<\d|\.)(?P<hour>(?&_hour))\s*(uhr|h|o\'?clock)')
+@rule(r'(?<!\d|\.)(?P<hour>(?&_hour))\s*(uhr|h|o\'?clock)')
 def ruleHHOClock(ts, m):
     return Time(hour=int(m.match.group('hour')))
 
