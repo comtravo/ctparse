@@ -366,7 +366,10 @@ corpus = [
     ('Interval[]{2018-11-26 08:00 (X/X) - None}',
      '2018-03-07T12:43',
      ('26.11.2018 ab 08:00 Uhr',
-      '26.11. ab 08:00 Uhr')),
+      '26.11. ab 08:00 Uhr',
+      '26.11. frühestens um 08:00 Uhr',
+      'November 26th earliest 08:00 Uhr',
+      '26.11. nicht vor 08:00 Uhr')),
     # ruleBeforeTime
     ('Interval[]{None - 2017-11-26 08:00 (X/X)}',
      '2018-03-07T12:43',
@@ -374,7 +377,8 @@ corpus = [
     ('Interval[]{None - 2018-11-26 08:00 (X/X)}',
      '2018-03-07T12:43',
      ('26.11.2018 vor 08:00 Uhr',
-      '26.11. vor 08:00 Uhr')),
+      '26.11. vor 08:00 Uhr',
+      '26.11. not after 08:00')),
     # ruleHHMM
     ('Time[]{2018-03-07 08:00 (X/X)}',
      '2018-03-07T00:00',
