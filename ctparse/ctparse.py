@@ -131,6 +131,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
         stack = [StackElement(prod=s, txt_len=len(txt)) for s in stack]
+        logger.debug('initial stack length: {}'.format(len(stack)))
         # sort stack by length of covered string and - if that is equal - score
         # --> last element is longest coverage and highest scored
         stack.sort()
@@ -139,8 +140,10 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
         # scored/covering stack element does cover
         stack = [s for s in stack
                  if s.max_covered_chars >= stack[-1].max_covered_chars * relative_match_len]
+        logger.debug('stack length after relative match length: {}'.format(len(stack)))
         # limit depth of stack
         stack = stack[-max_stack_depth:]
+        logger.debug('stack length after max stack depth limit: {}'.format(len(stack)))
         # track what has been added to the stack and do not add again
         # if the score is not better
         stack_prod = {}
@@ -156,8 +159,12 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
                     new_s = s.apply_rule(ts, r, r_name, r_match)
                     if new_s and stack_prod.get(new_s.prod, new_s.score - 1) < new_s.score:
                         new_stack.append(new_s)
+                        logger.debug('append stack element (depth={}) from rule {}: {}'.format(
+                            len(stack), r_name, new_s.prod))
                         stack_prod[new_s.prod] = new_s.score
             if not new_stack:
+                logger.debug('emit on (depth={}): {}'.format(
+                    len(stack), s.prod))
                 # no new productions were generated from this stack element.
                 # emit all (probably partial) production
                 for x in s.prod:
@@ -250,14 +257,15 @@ def _match_rule(seq, rule):
     r_len = len(rule)
     s_len = len(seq)
     while i_s < s_len:
-        while i_s < s_len and i_r < r_len and rule[i_r](seq[i_s]):
-            i_r += 1
-            i_s += 1
-        if i_r == r_len:
-            yield i_s - r_len, i_s
-        else:
-            i_s += 1
-        i_r = 0
+        if rule[0](seq[i_s]):
+            i_start = i_s + 1
+            i_r = 1
+            while i_start < s_len and i_r < r_len and rule[i_r](seq[i_start]):
+                i_r += 1
+                i_start += 1
+            if i_r == r_len:
+                yield i_s, i_start
+        i_s += 1
 
 
 def _match_regex(txt):
