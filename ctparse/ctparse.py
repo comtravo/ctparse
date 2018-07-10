@@ -125,8 +125,12 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
     try:
         if ts is None:
             ts = datetime.now()
+        logger.debug('='*80)
+        logger.debug('-> matching regular expressions')
         p, _tp = _timeit(_match_regex)(txt)
         logger.debug('time in _match_regex: {:.0f}ms'.format(1000*_tp))
+        logger.debug('='*80)
+        logger.debug('-> building initial stack')
         stack, _ts = _timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
@@ -144,6 +148,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
         # limit depth of stack
         stack = stack[-max_stack_depth:]
         logger.debug('stack length after max stack depth limit: {}'.format(len(stack)))
+        logger.debug('='*80)
         # track what has been added to the stack and do not add again
         # if the score is not better
         stack_prod = {}
@@ -152,6 +157,8 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
         while stack:
             t_fun()
             s = stack.pop()
+            logger.debug('-'*80)
+            logger.debug('producing on {}, score={:.2f}'.format(s.prod, s.score))
             new_stack = []
             for r_name, r in rules.items():
                 for r_match in _match_rule(s.prod, r[1]):
@@ -159,12 +166,12 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
                     new_s = s.apply_rule(ts, r, r_name, r_match)
                     if new_s and stack_prod.get(new_s.prod, new_s.score - 1) < new_s.score:
                         new_stack.append(new_s)
-                        logger.debug('append stack element (depth={}) from rule {}: {}'.format(
-                            len(stack), r_name, new_s.prod))
+                        logger.debug('  {} -> {}, score={:.2f}'.format(
+                            r_name, new_s.prod, new_s.score))
                         stack_prod[new_s.prod] = new_s.score
             if not new_stack:
-                logger.debug('emit on (depth={}): {}'.format(
-                    len(stack), s.prod))
+                logger.debug('~'*80)
+                logger.debug('no rules applicable: emitting')
                 # no new productions were generated from this stack element.
                 # emit all (probably partial) production
                 for x in s.prod:
@@ -178,9 +185,8 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
                         # productions emitted before but scored higher
                         if parse_prod.get(x, score_x - 1) < score_x:
                             parse_prod[x] = score_x
-                            logger.debug('New parse (len stack {} {:6.2f})'
-                                         ': {} -> {}'.format(
-                                             len(stack), score_x, txt, x.__repr__()))
+                            logger.debug(' => score={:6.2f}, {}'.format(
+                                score_x, x.__repr__()))
                             yield CTParse(x, s.rules, score_x)
             else:
                 # new productions generated, put on stack and sort
@@ -188,6 +194,8 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
                 stack.extend(new_stack)
                 stack.sort()
                 stack = stack[-max_stack_depth:]
+                logger.debug('added {} new stack elements, depth after trunc: {}'.format(
+                    len(new_stack), len(stack)))
     except TimeoutError as e:
         logger.debug('Timeout on "{}"'.format(txt))
         yield None
@@ -281,7 +289,7 @@ def _match_regex(txt):
                for name, re in _regex.items()
                for m in re.finditer(txt, overlapped=False, concurrent=True)}
     for m in matches:
-        logger.debug('regex: {} -> {}'.format(txt, m.__repr__()))
+        logger.debug('regex: {}'.format(txt, m.__repr__()))
     return sorted(matches, key=lambda x: (x.mstart, x.mend))
 
 
@@ -313,7 +321,7 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
       * if no new productions could be generated for s, this is one
         result sequence.
     """
-
+    prods = []
     n_rm = len(regex_matches)
     # Calculate the upper triangle of an n_rm x n_rm matrix M where
     # M[i, j] == 1 (for i<j) iff the expressions i and j are
@@ -358,8 +366,9 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
                 new_prod = True
         if not new_prod:
             prod = tuple(regex_matches[i] for i in s)
-            logger.debug(' -> sub sequence {}'.format(prod))
-            yield prod
+            logger.debug('regex stack {}'.format(prod))
+            prods.append(prod)
+    return prods
 
 
 def run_corpus(corpus):
