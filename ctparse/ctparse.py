@@ -185,8 +185,8 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
                         # productions emitted before but scored higher
                         if parse_prod.get(x, score_x - 1) < score_x:
                             parse_prod[x] = score_x
-                            logger.debug(' => score={:6.2f}, {}'.format(
-                                score_x, x.__repr__()))
+                            logger.debug(' => {}, score={:.2f}, '.format(
+                                x.__repr__(), score_x))
                             yield CTParse(x, s.rules, score_x)
             else:
                 # new productions generated, put on stack and sort
@@ -289,7 +289,7 @@ def _match_regex(txt):
                for name, re in _regex.items()
                for m in re.finditer(txt, overlapped=False, concurrent=True)}
     for m in matches:
-        logger.debug('regex: {}'.format(txt, m.__repr__()))
+        logger.debug('regex: {}'.format(m.__repr__()))
     return sorted(matches, key=lambda x: (x.mstart, x.mend))
 
 

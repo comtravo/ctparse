@@ -1,5 +1,3 @@
-.. highlight:: shell
-
 ============
 Contributing
 ============
@@ -27,6 +25,11 @@ The following steps are a probably helpful guideline
    
     from ctparse.ctparse import regenerate_model
 
+    regenerate_model()
+
+  To avoid issues with reloading, pls. restart the python interpreter
+  after regenerating the model.
+
   If this fixes the issue please commit the updated ``corpus.py`` and
   the updated model as a PR.
 
@@ -34,62 +37,74 @@ The following steps are a probably helpful guideline
 
   .. code:: python
 
-            import logging
-            from ctparse import ctparse
-            from ctparse.ctparse import logger
-            from datetime import datetime
+     import logging
+     from ctparse import ctparse
+     from ctparse.ctparse import logger
+     from datetime import datetime
 
-            logger.addHandler(logging.StreamHandler())
-            logger.setLevel(logging.DEBUG)
+     logger.addHandler(logging.StreamHandler())
+     logger.setLevel(logging.DEBUG)
 
-            # Set reference time
-            ts = datetime(2018, 3, 12, 14, 30)
-            r = list(ctparse('May 5th', ts=ts, debug=True))
+     # Set reference time
+     ts = datetime(2018, 3, 12, 14, 30)
+     r = list(ctparse('May 5th', ts=ts, debug=True))
 
 
   This gives you plenty of debugging output. First you will see
   the individual regular expressions that were matched (and the time
-  this took):
+  this took)::
 
-  .. code:: python
-
-            regex: May 5th -> RegexMatch[4-5]{145:5}
-            regex: May 5th -> RegexMatch[0-3]{114:May}
-            regex: May 5th -> RegexMatch[4-7]{147:5th}
-            regex: May 5th -> RegexMatch[4-5]{146:5}
-            regex: May 5th -> RegexMatch[4-5]{160:5}
-            time in _match_regex: 1ms
+    ================================================================================
+    -> matching regular expressions
+    regex: RegexMatch[0-3]{114:May}
+    regex: RegexMatch[4-5]{133:5}
+    regex: RegexMatch[4-7]{135:5th}
+    regex: RegexMatch[4-5]{134:5}
+    regex: RegexMatch[4-5]{148:5}
+    time in _match_regex: 1ms
+    ================================================================================
 
   If relevant parts of your expression were not picked up, this is an
   indicator that you should either modify an existing regular
   expression or need to add a new rule (see below).
 
   Next you see the unique sub-sequences constructed based on these
-  regular expressions (plus again the time used to build them)
-
-  .. code:: python
+  regular expressions (plus again the time used to build them)::
             
-            time in _regex_stack: 0ms
-            -> sub sequence (RegexMatch[0-3]{114:May}, RegexMatch[4-7]{147:5th})
-            -> sub sequence (RegexMatch[0-3]{114:May}, RegexMatch[4-5]{160:5})
-            -> sub sequence (RegexMatch[0-3]{114:May}, RegexMatch[4-5]{146:5})
-            -> sub sequence (RegexMatch[0-3]{114:May}, RegexMatch[4-5]{145:5})
+    ================================================================================
+    -> building initial stack
+    regex stack (RegexMatch[0-3]{114:May}, RegexMatch[4-7]{135:5th})
+    regex stack (RegexMatch[0-3]{114:May}, RegexMatch[4-5]{148:5})
+    regex stack (RegexMatch[0-3]{114:May}, RegexMatch[4-5]{134:5})
+    regex stack (RegexMatch[0-3]{114:May}, RegexMatch[4-5]{133:5})
+    time in _regex_stack: 0ms
+    initial stack length: 4
+    stack length after relative match length: 1
+    stack length after max stack depth limit: 1
+    ================================================================================
 
   Again, if you do not see any sequence that captures all relevant
   parts of your input, you may need to modify the regular expressions
   or add new ones via rules.
 
-  Finally you see a list of all generated resolutions and the order in which they were produces
+  Finally you see a list of productions that are applied to stack
+  elements, where for each applicable rule the rule name and the new
+  stack sequence are printed, e.g.::
 
-  .. code:: python
+    --------------------------------------------------------------------------------
+    producing on (RegexMatch[0-3]{114:May}, RegexMatch[4-7]{135:5th}), score=-0.13
+      ruleMonthMay -> (Time[0-3]{X-05-X X:X (X/X)}, RegexMatch[4-7]{135:5th}), score=1.41
+      ruleDOM2 -> (RegexMatch[0-3]{114:May}, Time[4-7]{X-X-05 X:X (X/X)}), score=1.38
+    added 2 new stack elements, depth after trunc: 2
+    --------------------------------------------------------------------------------
 
-            New parse (len stack 3  14.91): May 5th -> Time[0-7]{2018-05-05 X:X (X/X)}
-            2018-05-05 X:X (X/X) s=14.906 p=(114, 147, 'ruleDOM2', 'ruleMonthMay', 'ruleMonthDOM', 'ruleLatentDOY')
-            New parse (len stack 2   5.88): May 5th -> Time[0-3]{X-05-X X:X (X/X)}
-            X-05-X X:X (X/X) s=5.885 p=(114, 147, 'ruleDOM2', 'ruleMonthMay', 'ruleLatentDOM')
-            New parse (len stack 2   5.88): May 5th -> Time[4-7]{2018-04-05 X:X (X/X)}
-            2018-04-05 X:X (X/X) s=5.885 p=(114, 147, 'ruleDOM2', 'ruleMonthMay', 'ruleLatentDOM')
+  If no productions could be applied to a stack element the emitted
+  results are printed::
 
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    no rules applicable: emitting
+    => Time[0-7]{2018-05-05 X:X (X/X)}, score=15.91, 
+    --------------------------------------------------------------------------------
 
   If the desired production does not show up, but the regular
   expressions look fine and the initial stack elements as well, try
@@ -114,7 +129,7 @@ When adding rules try to follow these guidelines:
 
    .. code:: python
              
-             @rule(predicate('hasDate'), r'your funky year')
+      @rule(predicate('hasDate'), r'your funky year')
 
 2. Keep your regex as general as possible, but avoid regular
    expressions that are likely to generate many "false positives". Often
