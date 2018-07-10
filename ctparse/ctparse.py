@@ -3,7 +3,6 @@ import regex
 import pickle
 import bz2
 import os
-from copy import deepcopy
 from tqdm import tqdm
 from time import perf_counter
 from datetime import datetime
@@ -55,17 +54,31 @@ class StackElement:
     * rules: the sequence of regular expressions and rules used/applied to produce prod
     * score: the score assigned to this production
     '''
-    def __init__(self, prod, txt_len):
+    @classmethod
+    def from_regex_matches(cls, regex_matches, txt_len):
         '''Create new initial stack element based on a production that has not
-        yet been touched, i.e. it is only a sequence of matchin
+        yet been touched, i.e. it is only a sequence of matching
         regular expressions
         '''
-        self.prod = prod
-        self.rules = tuple(r.id for r in prod)
-        self.txt_len = txt_len
-        self.max_covered_chars = self.prod[-1].mend - self.prod[0].mstart
-        self.len_score = log(self.max_covered_chars/self.txt_len)
-        self.update_score()
+        se = StackElement()
+        se.prod = regex_matches
+        se.rules = tuple(r.id for r in regex_matches)
+        se.txt_len = txt_len
+        se.max_covered_chars = se.prod[-1].mend - se.prod[0].mstart
+        se.len_score = log(se.max_covered_chars/se.txt_len)
+        se.update_score()
+        return se
+
+    @classmethod
+    def from_rule_match(cls, se_old, rule_name, match, prod):
+        se = StackElement()
+        se.prod = se_old.prod[:match[0]] + (prod,) + se_old.prod[match[1]:]
+        se.rules = se_old.rules + (rule_name,)
+        se.txt_len = se_old.txt_len
+        se.max_covered_chars = se.prod[-1].mend - se.prod[0].mstart
+        se.len_score = log(se.max_covered_chars/se.txt_len)
+        se.update_score()
+        return se
 
     def update_score(self):
         self.score = _nb.apply(self.rules) + self.len_score
@@ -79,11 +92,7 @@ class StackElement:
         # prod, prod_name, start, end):
         prod = rule[0](ts, *self.prod[match[0]:match[1]])
         if prod is not None:
-            new_s = deepcopy(self)
-            new_s.prod = self.prod[:match[0]] + (prod,) + self.prod[match[1]:]
-            new_s.rules = self.rules + (rule_name,)
-            new_s.update_score()
-            return new_s
+            return StackElement.from_rule_match(self, rule_name, match, prod)
         else:
             return
 
@@ -125,12 +134,17 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
     try:
         if ts is None:
             ts = datetime.now()
+        logger.debug('='*80)
+        logger.debug('-> matching regular expressions')
         p, _tp = _timeit(_match_regex)(txt)
         logger.debug('time in _match_regex: {:.0f}ms'.format(1000*_tp))
+        logger.debug('='*80)
+        logger.debug('-> building initial stack')
         stack, _ts = _timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
-        stack = [StackElement(prod=s, txt_len=len(txt)) for s in stack]
+        stack = [StackElement.from_regex_matches(s, len(txt)) for s in stack]
+        logger.debug('initial stack length: {}'.format(len(stack)))
         # sort stack by length of covered string and - if that is equal - score
         # --> last element is longest coverage and highest scored
         stack.sort()
@@ -139,8 +153,11 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
         # scored/covering stack element does cover
         stack = [s for s in stack
                  if s.max_covered_chars >= stack[-1].max_covered_chars * relative_match_len]
+        logger.debug('stack length after relative match length: {}'.format(len(stack)))
         # limit depth of stack
         stack = stack[-max_stack_depth:]
+        logger.debug('stack length after max stack depth limit: {}'.format(len(stack)))
+        logger.debug('='*80)
         # track what has been added to the stack and do not add again
         # if the score is not better
         stack_prod = {}
@@ -149,6 +166,8 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
         while stack:
             t_fun()
             s = stack.pop()
+            logger.debug('-'*80)
+            logger.debug('producing on {}, score={:.2f}'.format(s.prod, s.score))
             new_stack = []
             for r_name, r in rules.items():
                 for r_match in _match_rule(s.prod, r[1]):
@@ -156,8 +175,12 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
                     new_s = s.apply_rule(ts, r, r_name, r_match)
                     if new_s and stack_prod.get(new_s.prod, new_s.score - 1) < new_s.score:
                         new_stack.append(new_s)
+                        logger.debug('  {} -> {}, score={:.2f}'.format(
+                            r_name, new_s.prod, new_s.score))
                         stack_prod[new_s.prod] = new_s.score
             if not new_stack:
+                logger.debug('~'*80)
+                logger.debug('no rules applicable: emitting')
                 # no new productions were generated from this stack element.
                 # emit all (probably partial) production
                 for x in s.prod:
@@ -171,9 +194,8 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
                         # productions emitted before but scored higher
                         if parse_prod.get(x, score_x - 1) < score_x:
                             parse_prod[x] = score_x
-                            logger.debug('New parse (len stack {} {:6.2f})'
-                                         ': {} -> {}'.format(
-                                             len(stack), score_x, txt, x.__repr__()))
+                            logger.debug(' => {}, score={:.2f}, '.format(
+                                x.__repr__(), score_x))
                             yield CTParse(x, s.rules, score_x)
             else:
                 # new productions generated, put on stack and sort
@@ -181,6 +203,8 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
                 stack.extend(new_stack)
                 stack.sort()
                 stack = stack[-max_stack_depth:]
+                logger.debug('added {} new stack elements, depth after trunc: {}'.format(
+                    len(new_stack), len(stack)))
     except TimeoutError as e:
         logger.debug('Timeout on "{}"'.format(txt))
         yield None
@@ -250,14 +274,15 @@ def _match_rule(seq, rule):
     r_len = len(rule)
     s_len = len(seq)
     while i_s < s_len:
-        while i_s < s_len and i_r < r_len and rule[i_r](seq[i_s]):
-            i_r += 1
-            i_s += 1
-        if i_r == r_len:
-            yield i_s - r_len, i_s
-        else:
-            i_s += 1
-        i_r = 0
+        if rule[0](seq[i_s]):
+            i_start = i_s + 1
+            i_r = 1
+            while i_start < s_len and i_r < r_len and rule[i_r](seq[i_start]):
+                i_r += 1
+                i_start += 1
+            if i_r == r_len:
+                yield i_s, i_start
+        i_s += 1
 
 
 def _match_regex(txt):
@@ -273,7 +298,7 @@ def _match_regex(txt):
                for name, re in _regex.items()
                for m in re.finditer(txt, overlapped=False, concurrent=True)}
     for m in matches:
-        logger.debug('regex: {} -> {}'.format(txt, m.__repr__()))
+        logger.debug('regex: {}'.format(m.__repr__()))
     return sorted(matches, key=lambda x: (x.mstart, x.mend))
 
 
@@ -305,7 +330,7 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
       * if no new productions could be generated for s, this is one
         result sequence.
     """
-
+    prods = []
     n_rm = len(regex_matches)
     # Calculate the upper triangle of an n_rm x n_rm matrix M where
     # M[i, j] == 1 (for i<j) iff the expressions i and j are
@@ -350,8 +375,9 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
                 new_prod = True
         if not new_prod:
             prod = tuple(regex_matches[i] for i in s)
-            logger.debug(' -> sub sequence {}'.format(prod))
-            yield prod
+            logger.debug('regex stack {}'.format(prod))
+            prods.append(prod)
+    return prods
 
 
 def run_corpus(corpus):

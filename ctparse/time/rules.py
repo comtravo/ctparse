@@ -146,26 +146,26 @@ mkMonths([
     ("December", r"december|dezember|dez\.?|dec\.?")])
 
 
-def mkDDMonths(months):
-    for month_num, (month, month_ex) in enumerate(months):
-        exec('''@rule(r"(?P<day>(?&_day))\.?\s*({})")
-def ruleDDMonth{}(ts, m): return Time(month={}, day=int(m.match.group('day')))'''.format(
-            month_ex, month, month_num + 1))
+# def mkDDMonths(months):
+#     for month_num, (month, month_ex) in enumerate(months):
+#         exec('''@rule(r"(?P<day>(?&_day))\.?\s*({})")
+# def ruleDDMonth{}(ts, m): return Time(month={}, day=int(m.match.group('day')))'''.format(
+#             month_ex, month, month_num + 1))
 
 
-mkDDMonths([
-    ("January", r"january?|jan\.?"),
-    ("February", r"february?|feb\.?"),
-    ("March", r"märz|march|mar\.?|mär\.?"),
-    ("April", r"april|apr\.?"),
-    ("May", r"mai|may\.?"),
-    ("June", r"juni|june|jun\.?"),
-    ("July", r"juli|july|jul\.?"),
-    ("August", r"august|aug\.?"),
-    ("September", r"september|sept?\.?"),
-    ("October", r"oktober|october|oct\.?|okt\.?"),
-    ("November", r"november|nov\.?"),
-    ("December", r"december|dezember|dez\.?|dec\.?")])
+# mkDDMonths([
+#     ("January", r"january?|jan\.?"),
+#     ("February", r"february?|feb\.?"),
+#     ("March", r"märz|march|mar\.?|mär\.?"),
+#     ("April", r"april|apr\.?"),
+#     ("May", r"mai|may\.?"),
+#     ("June", r"juni|june|jun\.?"),
+#     ("July", r"juli|july|jul\.?"),
+#     ("August", r"august|aug\.?"),
+#     ("September", r"september|sept?\.?"),
+#     ("October", r"oktober|october|oct\.?|okt\.?"),
+#     ("November", r"november|nov\.?"),
+#     ("December", r"december|dezember|dez\.?|dec\.?")])
 
 
 @rule(r'(erster?|first|earliest|as early|frühe?st(ens?)?|so früh)'
@@ -540,7 +540,7 @@ def ruleAfter():
     pass
 
 
-@rule(r'((?P<not>not |nicht )?(vor|before))|spätestens|latest', dimension(Time))
+@rule(r'((?P<not>not |nicht )?(vor|before))|(bis )?spätestens( bis)?|bis|latest', dimension(Time))
 def ruleBeforeTime(ts, r, t):
     if r.match.group('not'):
         return Interval(t_from=t, t_to=None)
@@ -548,7 +548,7 @@ def ruleBeforeTime(ts, r, t):
         return Interval(t_from=None, t_to=t)
 
 
-@rule(r'((?P<not>not |nicht )?(nach|after))|ab|frühe?stens|earliest', dimension(Time))
+@rule(r'((?P<not>not |nicht )?(nach|after))|ab|frühe?stens|earliest( after)?', dimension(Time))
 def ruleAfterTime(ts, r, t):
     if r.match.group('not'):
         return Interval(t_from=None, t_to=t)

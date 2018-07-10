@@ -369,11 +369,15 @@ corpus = [
       '26.11. ab 08:00 Uhr',
       '26.11. frühestens um 08:00 Uhr',
       'November 26th earliest 08:00 Uhr',
+      'November 26th earliest after 08:00 Uhr',
+      'November 26th from earliest 08:00 Uhr'
       '26.11. nicht vor 08:00 Uhr')),
     # ruleBeforeTime
     ('Interval[]{None - 2017-11-26 08:00 (X/X)}',
      '2018-03-07T12:43',
-     ('26.11.2017 vor 08:00 Uhr',)),
+     ('26.11.2017 vor 08:00 Uhr',
+      '26.11.2017 bis spätestens 08:00 Uhr',
+      '26.11.2017 spätestens bis 08:00 Uhr')),
     ('Interval[]{None - 2018-11-26 08:00 (X/X)}',
      '2018-03-07T12:43',
      ('26.11.2018 vor 08:00 Uhr',
