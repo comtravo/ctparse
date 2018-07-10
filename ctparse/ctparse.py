@@ -3,7 +3,6 @@ import regex
 import pickle
 import bz2
 import os
-from copy import deepcopy
 from tqdm import tqdm
 from time import perf_counter
 from datetime import datetime
@@ -55,17 +54,31 @@ class StackElement:
     * rules: the sequence of regular expressions and rules used/applied to produce prod
     * score: the score assigned to this production
     '''
-    def __init__(self, prod, txt_len):
+    @classmethod
+    def from_regex_matches(cls, regex_matches, txt_len):
         '''Create new initial stack element based on a production that has not
-        yet been touched, i.e. it is only a sequence of matchin
+        yet been touched, i.e. it is only a sequence of matching
         regular expressions
         '''
-        self.prod = prod
-        self.rules = tuple(r.id for r in prod)
-        self.txt_len = txt_len
-        self.max_covered_chars = self.prod[-1].mend - self.prod[0].mstart
-        self.len_score = log(self.max_covered_chars/self.txt_len)
-        self.update_score()
+        se = StackElement()
+        se.prod = regex_matches
+        se.rules = tuple(r.id for r in regex_matches)
+        se.txt_len = txt_len
+        se.max_covered_chars = se.prod[-1].mend - se.prod[0].mstart
+        se.len_score = log(se.max_covered_chars/se.txt_len)
+        se.update_score()
+        return se
+
+    @classmethod
+    def from_rule_match(cls, se_old, rule_name, match, prod):
+        se = StackElement()
+        se.prod = se_old.prod[:match[0]] + (prod,) + se_old.prod[match[1]:]
+        se.rules = se_old.rules + (rule_name,)
+        se.txt_len = se_old.txt_len
+        se.max_covered_chars = se.prod[-1].mend - se.prod[0].mstart
+        se.len_score = log(se.max_covered_chars/se.txt_len)
+        se.update_score()
+        return se
 
     def update_score(self):
         self.score = _nb.apply(self.rules) + self.len_score
@@ -79,11 +92,7 @@ class StackElement:
         # prod, prod_name, start, end):
         prod = rule[0](ts, *self.prod[match[0]:match[1]])
         if prod is not None:
-            new_s = deepcopy(self)
-            new_s.prod = self.prod[:match[0]] + (prod,) + self.prod[match[1]:]
-            new_s.rules = self.rules + (rule_name,)
-            new_s.update_score()
-            return new_s
+            return StackElement.from_rule_match(self, rule_name, match, prod)
         else:
             return
 
@@ -134,7 +143,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
         stack, _ts = _timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
-        stack = [StackElement(prod=s, txt_len=len(txt)) for s in stack]
+        stack = [StackElement.from_regex_matches(s, len(txt)) for s in stack]
         logger.debug('initial stack length: {}'.format(len(stack)))
         # sort stack by length of covered string and - if that is equal - score
         # --> last element is longest coverage and highest scored
