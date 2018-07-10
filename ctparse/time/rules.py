@@ -453,9 +453,9 @@ def ruleHHMM(ts, m):
              minute=int(m.match.group('minute') or 0))
     if m.match.group('ampm') is None:
         return t
-    elif m.match.group('ampm').startswith('a') and t.hour <= 12:
+    elif m.match.group('ampm').lower().startswith('a') and t.hour <= 12:
         return t
-    elif m.match.group('ampm').startswith('p') and t.hour <= 12:
+    elif m.match.group('ampm').lower().startswith('p') and t.hour <= 12:
         return Time(hour=t.hour+12, minute=t.minute)
     else:
         # the case m.match.group('ampm').startswith('a') and t.hour >
