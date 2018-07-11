@@ -175,7 +175,7 @@ def rulePODFirst(ts, m):
 
 
 @rule(r'(letzter?|last|latest|as late as possible|spätest möglich(er?)?|so spät wie möglich(er?)?)')
-def rulePODFLast(ts, m):
+def rulePODLast(ts, m):
     return Time(POD='last')
 
 
