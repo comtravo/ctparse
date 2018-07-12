@@ -175,7 +175,7 @@ def rulePODFirst(ts, m):
 
 
 @rule(r'(letzter?|last|latest|as late as possible|spätest möglich(er?)?|so spät wie möglich(er?)?)')
-def rulePODFLast(ts, m):
+def rulePODLast(ts, m):
     return Time(POD='last')
 
 
@@ -274,8 +274,8 @@ def ruleToday(ts, _):
     return Time(year=ts.year, month=ts.month, day=ts.day)
 
 
-@rule(r'(genau)? ?jetzt|diesen moment|in diesem moment|gerade eben|'
-      '((just|right)\s*)now|immediately')
+@rule(r'(genau\s*)?jetzt|diesen moment|in diesem moment|gerade eben|'
+      '((just|right)\s*)?now|immediately')
 def ruleNow(ts, _):
     return Time(year=ts.year, month=ts.month, day=ts.day, hour=ts.hour, minute=ts.minute)
 

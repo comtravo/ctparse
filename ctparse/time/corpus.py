@@ -13,7 +13,7 @@ corpus = [
     ('Time[]{2018-03-07 12:43 (X/X)}',
      '2018-03-07T12:43',
      ('jetzt',
-      'genau jetzt'
+      'genau jetzt',
       'gerade eben',
       'rightnow',
       'just now')),
