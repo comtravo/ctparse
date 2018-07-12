@@ -15,6 +15,10 @@ class NB:
     def __init__(self):
         self._model = None
 
+    @property
+    def hasModel(self):
+        return self._model is not None
+
     def fit(self, X, y):
         # X, y = self._prepare_data(X, y)
         self._model = make_pipeline(

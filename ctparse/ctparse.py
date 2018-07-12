@@ -81,7 +81,10 @@ class StackElement:
         return se
 
     def update_score(self):
-        self.score = _nb.apply(self.rules) + self.len_score
+        if _nb.hasModel:
+            self.score = _nb.apply(self.rules) + self.len_score
+        else:
+            self.score = 0.0
 
     def apply_rule(self, ts, rule, rule_name, match):
         '''Check whether the production in rule can be applied to this stack
@@ -125,9 +128,12 @@ class CTParse:
                                          self.production)
 
 
-def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10):
+def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
     def get_score(seq, len_match):
-        return _nb.apply(seq) + log(len_match/len(txt))
+        if _nb.hasModel:
+            return _nb.apply(seq) + log(len_match/len(txt))
+        else:
+            return 0.0
 
     t_fun = _timeout(timeout)
 
@@ -192,6 +198,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=1.0, max_stack_depth=10
                         score_x = get_score(s.rules, len(x))
                         # only emit productions not emitted before or
                         # productions emitted before but scored higher
+                        # if True:
                         if parse_prod.get(x, score_x - 1) < score_x:
                             parse_prod[x] = score_x
                             logger.debug(' => {}, score={:.2f}, '.format(
@@ -228,7 +235,7 @@ def _preprocess_string(txt):
     return _repl1.sub(' ', txt, concurrent=True).strip()
 
 
-def ctparse(txt, ts=None, timeout=0, debug=False, relative_match_len=1.0, max_stack_depth=10):
+def ctparse(txt, ts=None, timeout=1.0, debug=False, relative_match_len=1.0, max_stack_depth=10):
     '''Parse a string *txt* into a time expression
 
     :param ts: reference time
@@ -402,6 +409,8 @@ def run_corpus(corpus):
     the final production was correct, -1 otherwise.
 
     """
+    model_old = _nb._model
+    _nb._model = None
     at_least_one_failed = False
     # pos_parses: number of parses that are correct
     # neg_parses: number of parses that are wrong
@@ -418,9 +427,10 @@ def run_corpus(corpus):
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for prod in ctparse(test, ts, max_stack_depth=0, debug=True):
-                if prod is None:
-                    continue
+            for prod in _ctparse(_preprocess_string(test), ts, relative_match_len=1.0):
+                # Should never happen - None is only yielded on timeout
+                # if prod is None:
+                #    continue
                 y = prod.resolution.nb_str() == target
                 # Build data set, one sample for each applied rule in
                 # the sequence of rules applied in this production
@@ -454,6 +464,7 @@ def run_corpus(corpus):
         pos_best_scored/total_tests))
     if at_least_one_failed:
         raise Exception('ctparse corpus has errors')
+    _nb._model = model_old
     return Xs, ys
 
 
@@ -468,6 +479,8 @@ def build_model(X, y, save=False):
 def regenerate_model():
     from . time.corpus import corpus as corpus_time
     global _nb
+    logger.info('Regenerating model')
     _nb = NB()
     X, y = run_corpus(corpus_time)
+    logger.info('Got {} training samples'.format(len(y)))
     build_model(X, y, save=True)
