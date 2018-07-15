@@ -15,11 +15,11 @@ If you find an expressions that ``ctparse`` can not resolve correctly
 but you feel it should do, you can adjust the existing rules or add a
 new one.
 
-The following steps are a probably helpful guideline
+The following steps are probably a helpful guideline.
 
-* Add your case to the ``corpus.py`` file and run the corpus tests
-  using ``py.test tests/test_run_corpus.py``. If the tests do not
-  fail, rebuild the model and try again:
+* Add your case to the ``ctparse/time/corpus.py`` file and run the corpus
+  tests using ``py.test tests/test_run_corpus.py``. If the tests pass
+  rebuild the model and try again:
 
   .. code:: python
    
@@ -27,11 +27,13 @@ The following steps are a probably helpful guideline
 
     regenerate_model()
 
-  To avoid issues with reloading, pls. restart the python interpreter
+  To avoid issues with reloading, please restart the python interpreter
   after regenerating the model.
 
   If this fixes the issue please commit the updated ``corpus.py`` and
-  the updated model as a PR.
+  the updated model as a pull request (PR) on GitHub, see this guide for
+  more information on what pull requests are and how to create them 
+  https://help.github.com/articles/creating-a-pull-request/.
 
 * If the tests fail, run ``ctparse`` in debug mode to see what goes wrong:
 
