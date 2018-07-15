@@ -66,6 +66,10 @@ The following steps are probably a helpful guideline.
     time in _match_regex: 1ms
     ================================================================================
 
+  Each line has the form ``regex: RegexMatch[0-3]{114:May}`` and describes
+  the matched span in the text ``[0-3]``, the ID of the matching expression
+  ``114`` and the surface string that the expression matched ``May``.
+
   If relevant parts of your expression were not picked up, this is an
   indicator that you should either modify an existing regular
   expression or need to add a new rule (see below).
