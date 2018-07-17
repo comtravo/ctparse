@@ -89,14 +89,6 @@ The following steps are a probably helpful guideline
   indicator that you should either modify an existing regular
   expression or need to add a new rule (see below).
 
-  Next you see how many of the total rules are applicable in this parse at all::
-
-    ================================================================================
-    -> check rule applicability
-    of 75 total rules 23 are applicable
-    time in _filter_rules: 0ms
-    ================================================================================
-
   Next you see the unique sub-sequences constructed based on these
   regular expressions (plus again the time used to build them)::
             
@@ -111,6 +103,21 @@ The following steps are a probably helpful guideline
     stack length after relative match length: 1
     stack length after max stack depth limit: 1
     ================================================================================
+
+  This is followed by a summary of how many applicable rules there are
+  per initial stack element::
+
+    ================================================================================
+    -> checking rule applicability
+    of 75 total rules 20 are applicable in (RegexMatch[0-3]{114:May}, RegexMatch[4-7]{135:5th})
+    time in _filter_rules: 0ms
+    ================================================================================
+    ================================================================================
+    -> checking rule applicability
+    of 75 total rules 20 are applicable in (RegexMatch[0-3]{114:May}, RegexMatch[4-5]{148:5})
+    time in _filter_rules: 0ms
+    ================================================================================
+    ...
 
   Again, if you do not see any sequence that captures all relevant
   parts of your input, you may need to modify the regular expressions
