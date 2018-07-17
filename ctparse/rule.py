@@ -62,7 +62,7 @@ def rule(*patterns):
         else:
             return p
 
-    patterns = [_map(p) for p in patterns]
+    mapped_patterns = [_map(p) for p in patterns]
 
     def fwrapper(f):
         def wrapper(ts, *args):
@@ -75,7 +75,12 @@ def rule(*patterns):
             except ValueError:
                 return
             return res
-        rules[f.__name__] = (wrapper, patterns)
+        # check that in rules we never have a regex followed by a regex -
+        # that must be merged into one regex
+        if _has_consequtive_regex(patterns):
+            raise ValueError('rule {} contains consequtive regular expressions'.format(
+                f.__name__))
+        rules[f.__name__] = (wrapper, mapped_patterns)
         return wrapper
     return fwrapper
 

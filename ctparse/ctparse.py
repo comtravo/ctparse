@@ -144,6 +144,13 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
         logger.debug('-> matching regular expressions')
         p, _tp = _timeit(_match_regex)(txt)
         logger.debug('time in _match_regex: {:.0f}ms'.format(1000*_tp))
+
+        logger.debug('='*80)
+        logger.debug('-> check rule applicability')
+        applicable_rules, _ts = _timeit(_filter_rules)(p)
+        logger.debug('of {} total rules {} are applicable'.format(len(rules), len(applicable_rules)))
+        logger.debug('time in _filter_rules: {:.0f}ms'.format(1000*_ts))
+
         logger.debug('='*80)
         logger.debug('-> building initial stack')
         stack, _ts = _timeit(_regex_stack)(txt, p, t_fun)
@@ -175,7 +182,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
             logger.debug('-'*80)
             logger.debug('producing on {}, score={:.2f}'.format(s.prod, s.score))
             new_stack = []
-            for r_name, r in rules.items():
+            for r_name, r in applicable_rules.items():
                 for r_match in _match_rule(s.prod, r[1]):
                     # apply production part of rule
                     new_s = s.apply_rule(ts, r, r_name, r_match)
@@ -290,6 +297,77 @@ def _match_rule(seq, rule):
             if i_r == r_len:
                 yield i_s, i_start
         i_s += 1
+
+
+def _filter_rules(seq):
+    def _hasNext(it):
+        try:
+            next(it)
+            return True
+        except StopIteration as e:
+            return False
+
+    return {rule_name: r for rule_name, r in rules.items()
+            if _hasNext(_seq_match(seq, r[1]))}
+
+
+def _seq_match(seq, pat, offset=0):
+    # :param seq: a list of intermediate productions, either of type
+    # RegexMatch or some other Artifact
+    #
+    # :param pat: a list of rule patterns to be matched, i.e. either a
+    # RegexMatch or a callable
+    #
+    # Determine whether the pattern pat matches the sequence seq and
+    # return a list of lists, where each sub-list contains those
+    # indices where the RegexMatch objects in pat are located in seq.
+    #
+    # A pattern pat only matches seq, iff each RegexMatch in pat is in
+    # seq in the same order and iff between two RegexMatches aligned
+    # to seq there is at least one additional element in seq. Reason:
+    #
+    # * Rule patterns never have two consequitive RegexMatch objects.
+    #
+    # * Hence there must be some predicate/dimension between two
+    # * RegexMatch objects.
+    #
+    # * For the whole pat to match there must then be at least one
+    #  element in seq that can product this intermediate bit
+    #
+    # If pat does not start with a RegexMatch then there must be at
+    # least one element in seq before the first RegexMatch in pat that
+    # is alignes on seq. Likewise, if pat does not end with a
+    # RegexMatch, then there must be at least one additional element
+    # in seq to match the last non-RegexMatch element in pat.
+    #
+    # STRONG ASSUMPTIONS ON ARGUMENTS: seq and pat do not contain
+    # consequiteve elements which are both of type RegexMatch! Callers
+    # obligation to ensure this!
+
+    if not seq or not pat:
+        # if either seq or pat is empty there will be no match
+        yield []
+    elif pat[-1].__name__ != '_regex_match':
+        # there must be at least one additional element in seq at the
+        # end
+        yield from _seq_match(seq[:-1], pat[:-1], offset)
+    elif len(pat) > len(seq):
+        # if pat is longer than seq it cannot match
+        yield []
+    else:
+        p1 = pat[0]
+        # if p1 is not a RegexMatch, then continue on next pat and
+        # advance sequence by one
+        if p1.__name__ != '_regex_match':
+            yield from _seq_match(seq[1:], pat[1:], offset+1)
+        else:
+            # For each occurance of RegexMatch pat[0] in seq
+            for iseq, s in enumerate(seq):
+                # apply _regex_match check
+                if p1(s):
+                    # for each match of pat[1:] in seq[iseq+1:], yield a result
+                    for subm in _seq_match(seq[iseq+1:], pat[1:], offset+iseq+1):
+                        yield [iseq+offset+1] + subm
 
 
 def _match_regex(txt):
