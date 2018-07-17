@@ -379,7 +379,7 @@ def _seq_match(seq, pat, offset=0):
                         if len(subm) == n_regex - 1:
                             # only yield if all subsequent RegexMatch
                             # have been aligned!
-                            yield [iseq+offset+1] + subm
+                            yield [iseq+offset] + subm
 
 
 def _match_regex(txt):
