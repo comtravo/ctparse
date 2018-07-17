@@ -18,20 +18,41 @@ new one.
 The following steps are a probably helpful guideline
 
 * Add your case to the ``corpus.py`` file and run the corpus tests
-  using ``py.test tests/test_run_corpus.py``. If the tests do not
-  fail, rebuild the model and try again:
+  using ``py.test tests/test_run_corpus.py``. Now basically two things can happen:
 
-  .. code:: python
+  #. **The tests pass**, which means ``ctparse`` can correctly resolve
+     the expression. It might not score it highest. To check this,
+     rebuild the model and try parsing the expression again:
+
+     .. code:: python
+
+            from ctparse.ctparse import regenerate_model
+
+            regenerate_model()
+
+     To avoid issues with reloading, pls. restart the python
+     interpreter after regenerating the model.
+
+     If this fixes the issue please commit the updated ``corpus.py``
+     and the updated model as a PR. The scoring can be influenced by
+     adding more structurally identical examples to the corpus. Seeing
+     more samples where a specific sequence of rule applications leads
+     to the correct ranking will drive the model to favor these. This
+     comes, however, at the potential price of downranking certain
+     other production sequences. Although it would generally be
+     considered more favorable to add varying test cases (e.g. in
+     different languages, slight variation) to the corpus, the same
+     string can also just be duplicated to achive this *implict
+     up-weightning* effect.
    
-    from ctparse.ctparse import regenerate_model
+  #. **The tests fail**: if this is because not all tests in the
+     corpus pass, i.e. you get an error message like the following::
 
-    regenerate_model()
+       ctparse.py 527 WARNING  failure: target "Time[]{2019-X-X X:X (X/X)}" never produced in "2019"
+       ctparse.py 532 WARNING  failure: "Time[]{2019-X-X X:X (X/X)}" not always produced
 
-  To avoid issues with reloading, pls. restart the python interpreter
-  after regenerating the model.
+     then you need to adjust the rules.
 
-  If this fixes the issue please commit the updated ``corpus.py`` and
-  the updated model as a PR.
 
 * If the tests fail, run ``ctparse`` in debug mode to see what goes wrong:
 
@@ -67,6 +88,14 @@ The following steps are a probably helpful guideline
   If relevant parts of your expression were not picked up, this is an
   indicator that you should either modify an existing regular
   expression or need to add a new rule (see below).
+
+  Next you see how many of the total rules are applicable in this parse at all::
+
+    ================================================================================
+    -> check rule applicability
+    of 75 total rules 23 are applicable
+    time in _filter_rules: 0ms
+    ================================================================================
 
   Next you see the unique sub-sequences constructed based on these
   regular expressions (plus again the time used to build them)::
