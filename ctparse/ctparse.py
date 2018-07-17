@@ -67,6 +67,15 @@ class StackElement:
         se.max_covered_chars = se.prod[-1].mend - se.prod[0].mstart
         se.len_score = log(se.max_covered_chars/se.txt_len)
         se.update_score()
+
+        logger.debug('='*80)
+        logger.debug('-> checking rule applicability')
+        se.applicable_rules, _ts = _timeit(_filter_rules)(se.prod)
+        logger.debug('of {} total rules {} are applicable in {}'.format(
+            len(rules), len(se.applicable_rules), se.prod))
+        logger.debug('time in _filter_rules: {:.0f}ms'.format(1000*_ts))
+        logger.debug('='*80)
+
         return se
 
     @classmethod
@@ -74,6 +83,7 @@ class StackElement:
         se = StackElement()
         se.prod = se_old.prod[:match[0]] + (prod,) + se_old.prod[match[1]:]
         se.rules = se_old.rules + (rule_name,)
+        se.applicable_rules = se_old.applicable_rules
         se.txt_len = se_old.txt_len
         se.max_covered_chars = se.prod[-1].mend - se.prod[0].mstart
         se.len_score = log(se.max_covered_chars/se.txt_len)
@@ -146,13 +156,6 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
         logger.debug('time in _match_regex: {:.0f}ms'.format(1000*_tp))
 
         logger.debug('='*80)
-        logger.debug('-> check rule applicability')
-        applicable_rules, _ts = _timeit(_filter_rules)(p)
-        logger.debug('of {} total rules {} are applicable'.format(
-            len(rules), len(applicable_rules)))
-        logger.debug('time in _filter_rules: {:.0f}ms'.format(1000*_ts))
-
-        logger.debug('='*80)
         logger.debug('-> building initial stack')
         stack, _ts = _timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
@@ -171,7 +174,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
         # limit depth of stack
         stack = stack[-max_stack_depth:]
         logger.debug('stack length after max stack depth limit: {}'.format(len(stack)))
-        logger.debug('='*80)
+
         # track what has been added to the stack and do not add again
         # if the score is not better
         stack_prod = {}
@@ -183,7 +186,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
             logger.debug('-'*80)
             logger.debug('producing on {}, score={:.2f}'.format(s.prod, s.score))
             new_stack = []
-            for r_name, r in applicable_rules.items():
+            for r_name, r in s.applicable_rules.items():
                 for r_match in _match_rule(s.prod, r[1]):
                     # apply production part of rule
                     new_s = s.apply_rule(ts, r, r_name, r_match)
@@ -345,16 +348,19 @@ def _seq_match(seq, pat, offset=0):
     # consequiteve elements which are both of type RegexMatch! Callers
     # obligation to ensure this!
 
-    if not seq or not pat:
-        # if either seq or pat is empty there will be no match
+    if not pat:
+        # if pat is empty yield the empty match
         yield []
+    elif not seq or not pat:
+        # if either seq or pat is empty there will be no match
+        return
     elif pat[-1].__name__ != '_regex_match':
         # there must be at least one additional element in seq at the
         # end
         yield from _seq_match(seq[:-1], pat[:-1], offset)
     elif len(pat) > len(seq):
         # if pat is longer than seq it cannot match
-        yield []
+        return
     else:
         p1 = pat[0]
         # if p1 is not a RegexMatch, then continue on next pat and
@@ -362,13 +368,18 @@ def _seq_match(seq, pat, offset=0):
         if p1.__name__ != '_regex_match':
             yield from _seq_match(seq[1:], pat[1:], offset+1)
         else:
+            # Get number of RegexMatch in p
+            n_regex = sum(1 for p in pat if p.__name__ == '_regex_match')
             # For each occurance of RegexMatch pat[0] in seq
             for iseq, s in enumerate(seq):
                 # apply _regex_match check
                 if p1(s):
                     # for each match of pat[1:] in seq[iseq+1:], yield a result
                     for subm in _seq_match(seq[iseq+1:], pat[1:], offset+iseq+1):
-                        yield [iseq+offset+1] + subm
+                        if len(subm) == n_regex - 1:
+                            # only yield if all subsequent RegexMatch
+                            # have been aligned!
+                            yield [iseq+offset+1] + subm
 
 
 def _match_regex(txt):
