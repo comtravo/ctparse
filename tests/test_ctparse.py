@@ -58,3 +58,20 @@ class TestCTParse(TestCase):
         self.assertEqual(list(_seq_match([1, 2], [make_rm(1), make_rm(2), lambda x: x])), [])
         self.assertEqual(list(_seq_match([1, 2, 'a'], [make_rm(1), make_rm(2), lambda x: x])),
                          [[0, 1]])
+        # repeated pattern
+        self.assertEqual(list(_seq_match([1, 2, 1, 2, 2], [make_rm(1), make_rm(2)])),
+                         [[0, 1], [0, 3], [0, 4], [2, 3], [2, 4]])
+        self.assertEqual(list(_seq_match([1, 2, 1, 2, 2], [make_rm(1), lambda x: x, make_rm(2)])),
+                         [[0, 3], [0, 4], [2, 4]])
+        self.assertEqual(list(_seq_match([1, 2, 1, 2, 2], [lambda x: x, make_rm(1), make_rm(2)])),
+                         [[2, 3], [2, 4]])
+        self.assertEqual(list(_seq_match([1, 2, 1, 2, 2], [make_rm(1), make_rm(2), lambda x: x])),
+                         [[0, 1], [0, 3], [2, 3]])
+        self.assertEqual(list(_seq_match(
+            [1, 2, 1, 2, 2],
+            [lambda x: x, make_rm(1), lambda x: x, make_rm(2), lambda x: x])),
+                         [])
+        self.assertEqual(list(_seq_match(
+            [1, 2, 1, 2, 2, 3],
+            [lambda x: x, make_rm(1), lambda x: x, make_rm(2), lambda x: x])),
+                         [[2, 4]])
