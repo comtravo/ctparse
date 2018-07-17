@@ -148,7 +148,8 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
         logger.debug('='*80)
         logger.debug('-> check rule applicability')
         applicable_rules, _ts = _timeit(_filter_rules)(p)
-        logger.debug('of {} total rules {} are applicable'.format(len(rules), len(applicable_rules)))
+        logger.debug('of {} total rules {} are applicable'.format(
+            len(rules), len(applicable_rules)))
         logger.debug('time in _filter_rules: {:.0f}ms'.format(1000*_ts))
 
         logger.debug('='*80)

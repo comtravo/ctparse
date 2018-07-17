@@ -62,6 +62,12 @@ def rule(*patterns):
         else:
             return p
 
+    def _has_consequtive_regex(ps):
+        for p0, p1 in zip(ps[:-1], ps[1:]):
+            if isinstance(p0, str) and isinstance(p1, str):
+                return True
+        return False
+
     mapped_patterns = [_map(p) for p in patterns]
 
     def fwrapper(f):
