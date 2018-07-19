@@ -191,6 +191,9 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
                     # apply production part of rule
                     new_s = s.apply_rule(ts, r, r_name, r_match)
                     if new_s and stack_prod.get(new_s.prod, new_s.score - 1) < new_s.score:
+                        # either new_s.prod has never been produced
+                        # before or the score of new_s is higher than
+                        # a previous identical production
                         new_stack.append(new_s)
                         logger.debug('  {} -> {}, score={:.2f}'.format(
                             r_name, new_s.prod, new_s.score))

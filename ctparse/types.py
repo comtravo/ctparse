@@ -244,7 +244,7 @@ class Time(Artifact):
     @property
     def dt(self):
         return datetime(self.year, self.month, self.day,
-                        self.hour, self.minute)
+                        self.hour or 0, self.minute or 0)
 
 
 class Interval(Artifact):
