@@ -70,7 +70,10 @@ class StackElement:
 
         logger.debug('='*80)
         logger.debug('-> checking rule applicability')
-        se.applicable_rules, _ts = _timeit(_filter_rules)(se.prod)
+        # Reducing rules to only those applicable has no effect for
+        # small stacks, but on larger there is a 10-20% speed
+        # improvement
+        se.applicable_rules, _ts = _timeit(se._filter_rules)(rules)
         logger.debug('of {} total rules {} are applicable in {}'.format(
             len(rules), len(se.applicable_rules), se.prod))
         logger.debug('time in _filter_rules: {:.0f}ms'.format(1000*_ts))
@@ -78,11 +81,27 @@ class StackElement:
 
         return se
 
+    def _filter_rules(self, rules):
+        """find all rules that can be applied to the current prod sequence"""
+        def _hasNext(it):
+            try:
+                next(it)
+                return True
+            except StopIteration as e:
+                return False
+
+        return {rule_name: r for rule_name, r in rules.items()
+                if _hasNext(_seq_match(self.prod, r[1]))}
+
     @classmethod
     def from_rule_match(cls, se_old, rule_name, match, prod):
         se = StackElement()
         se.prod = se_old.prod[:match[0]] + (prod,) + se_old.prod[match[1]:]
         se.rules = se_old.rules + (rule_name,)
+        # Refiltering does not give a speedup - actually rather 10%
+        # speed loss se.applicable_rules =
+        #
+        # se._filter_rules(se_old.applicable_rules)
         se.applicable_rules = se_old.applicable_rules
         se.txt_len = se_old.txt_len
         se.max_covered_chars = se.prod[-1].mend - se.prod[0].mstart
@@ -305,18 +324,6 @@ def _match_rule(seq, rule):
             if i_r == r_len:
                 yield i_s, i_start
         i_s += 1
-
-
-def _filter_rules(seq):
-    def _hasNext(it):
-        try:
-            next(it)
-            return True
-        except StopIteration as e:
-            return False
-
-    return {rule_name: r for rule_name, r in rules.items()
-            if _hasNext(_seq_match(seq, r[1]))}
 
 
 def _seq_match(seq, pat, offset=0):
