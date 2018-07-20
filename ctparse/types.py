@@ -239,12 +239,13 @@ class Time(Artifact):
         else:
             hour = self.hour or 23
         return Time(year=self.year, month=self.month, day=self.day,
-                    hour=hour, minute=self.minute or 59)
+                    hour=hour, minute=self.minute is not None or 59)
 
     @property
     def dt(self):
         return datetime(self.year, self.month, self.day,
-                        self.hour or 0, self.minute or 0)
+                        self.hour or 0,
+                        self.minute or 0)
 
 
 class Interval(Artifact):
@@ -268,17 +269,11 @@ class Interval(Artifact):
         if self.t_from is not None:
             return self.t_from.start
         else:
-            end = self.t_to.end
-            end.hour = 0
-            end.minute = 0
-            return end
+            return None
 
     @property
     def end(self):
         if self.t_to is not None:
             return self.t_to.end
         else:
-            start = self.t_from.start
-            start.hour = 23
-            start.minute = 59
-            return start
+            return None
