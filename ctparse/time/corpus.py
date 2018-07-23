@@ -216,7 +216,8 @@ corpus = [
       '8.5.',
       '8th May',
       '8th of May',
-      'May 8th')),
+      'May 8th',
+      'may 8')),
     # ruleDOWDOM
     ('Time[]{2018-05-08 X:X (X/X)}',
      '2018-03-07T12:43',
@@ -327,6 +328,8 @@ corpus = [
      '2018-03-07T12:43',
      ('5. August um 8',
       'August 5th at 8',
+      'august 5 at 8am',
+      '5. Aug gegen 8',
       '05.08.2018 8Uhr',
       '05.08.2018 (8 Uhr)')),
     # ruleTODDate
@@ -406,6 +409,27 @@ corpus = [
       '20:00',
       '20pm',
       '20am')),  # <-- ignore am, since this makes no sense
+    # ruleMonthDOM
+    ('Time[]{2018-04-07 X:X (X/X)}',
+     '2018-03-07T00:00',
+     ('april 7',
+      'april 7th',
+      '7. April')),
+    # ruleAbsorbOnTime
+    ('Time[]{2018-03-07 20:00 (X/X)}',
+     '2018-03-07T00:00',
+     ('at 8pm',
+      'um 20h',
+      'gegen 20:00',
+      'about 8pm')),
+    # ruleAbsorbOnTime + X
+    ('Time[]{2018-06-21 08:00 (X/X)}',
+     '2018-03-07T00:00',
+     ('Jun 21 at 8am',
+      'Jun 21 about 8am',
+      'Jun 21 on 8am',
+      '21. Juni um 8')),
+    # rule
     #
     # -----------------------------------------------------------------------------
     # OLD CORPUS
