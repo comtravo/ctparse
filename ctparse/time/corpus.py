@@ -45,148 +45,46 @@ corpus = [
      ('ende des Jahres',
       'eoy',
       'end of the year')),
-    # ruleDOWMonday
+    # ruleNamedDOW
     ('Time[]{2018-03-12 X:X (X/X)}',
      '2018-03-07T12:43',
      ('Montag',
       'Mo.',
       'mondays')),
-    # ruleDOWTuesday
     ('Time[]{2018-03-13 X:X (X/X)}',
      '2018-03-07T12:43',
      ('Dienstags',
       'Die.',
       'tuesday',
       'tue')),
-    # ruleDOWWednesday
-    ('Time[]{2018-03-14 X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('Mittwoch',
-      'Mi.',
-      'wednesday',
-      'Wed.')),
-    # ruleDOWThursday
-    ('Time[]{2018-03-08 X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('Donnerstags',
-      'Do',
-      'thursdays',
-      'Thu')),
-    # ruleDOWFriday
-    ('Time[]{2018-03-09 X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('Freitag',
-      'Fr.',
-      'friday',
-      'Fri.')),
-    # ruleDOWSaturday
-    ('Time[]{2018-03-10 X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('Sonnabend',
-      'Samstag',
-      'Sa.',
-      'saturday',
-      'sat')),
-    # ruleDOWSunday
-    ('Time[]{2018-03-11 X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('Sonntags',
-      'So.',
-      'sunday',
-      'Sun.')),
-    # ruleDOWMonday + POD
+    # ruleNamedDOW + POD
     ('Time[]{2018-03-12 X:X (X/morning)}',
      '2018-03-07T12:43',
      ('Montagmorgen',)),
-    # ruleDOWTuesday + POD
-    ('Time[]{2018-03-13 X:X (X/evening)}',
-     '2018-03-07T12:43',
-     ('Dienstagabend',)),
-    # ruleDOWWednesday + POD
     ('Time[]{2018-03-14 X:X (X/beforenoon)}',
      '2018-03-07T12:43',
      ('Mittwochvormittag',)),
-    # ruleDOWThursday + POD
-    ('Time[]{2018-03-08 X:X (X/noon)}',
-     '2018-03-07T12:43',
-     ('Donnerstagmittag',)),
-    # ruleDOWFriday + POD
-    ('Time[]{2018-03-09 X:X (X/afternoon)}',
-     '2018-03-07T12:43',
-     ('Freitagnachmittag',)),
-    # ruleDOWSaturday + POD
     ('Time[]{2018-03-10 X:X (X/morning)}',
      '2018-03-07T12:43',
      ('Samstagfrüh',)),
-    # ruleDOWSunday + POD
-    ('Time[]{2018-03-11 X:X (X/evening)}',
-     '2018-03-07T12:43',
-     ('Sonntagabends',)),
     ('Time[]{2018-03-11 X:X (X/night)}',
      '2018-03-07T12:43',
      ('sunday night',
       'Sonntagnacht')),
-    # ruleMonthJanuary
+    # ruleNamedMonth
     ('Time[]{X-01-X X:X (X/X)}',
      '2018-03-07T12:43',
      ('Januar',
       'Jan.')),
-    # ruleMonthFebruary
-    ('Time[]{X-02-X X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('February',
-      'Feb')),
-    # ruleMonthMarch
-    ('Time[]{X-03-X X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('März',
-      'March',
-      'mar.')),
-    # ruleMonthApril
     ('Time[]{X-04-X X:X (X/X)}',
      '2018-03-07T12:43',
      ('April',
       'apr.')),
-    # ruleMonthMay
-    ('Time[]{X-05-X X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('May',
-      'mai')),
-    # ruleMonthJune
-    ('Time[]{X-06-X X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('June',
-      'Juni',
-      'Jun.')),
-    # ruleMonthJuli
     ('Time[]{X-07-X X:X (X/X)}',
      '2018-03-07T12:43',
      ('Juli',
       'July',
       'Jul.')),
-    # ruleMonthAugust
-    ('Time[]{X-08-X X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('August',
-      'Aug.')),
-    # ruleMonthSeptember
-    ('Time[]{X-09-X X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('September',
-      'Sep.',
-      'Sept.')),
-    # ruleMonthOctober
-    ('Time[]{X-10-X X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('Oktober',
-      'Oct',
-      'Okt.')),
-    # ruleMonthNovember
-    ('Time[]{X-11-X X:X (X/X)}',
-     '2018-03-07T12:43',
-     ('November',
-      'Nov.')),
-    # ruleMonthDecember
     ('Time[]{X-12-X X:X (X/X)}',
      '2018-03-07T12:43',
      ('Dezember',
