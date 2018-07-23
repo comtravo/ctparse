@@ -157,44 +157,23 @@ def ruleEarlyLatePOD(ts, m, p):
     return Time(POD=_pod_from_match(p.POD, m))
 
 
-@rule(r'(very early|sehr früh)')
-def rulePODEarlyMorning(ts, m):
-    return Time(POD='earlymorning')
+_pods = [('earlymorning', r'very early|sehr früh'),
+         ('lateevening', r'very late|sehr spät'),
+         ('morning', r'morning|morgend?s?|(in der )?frühe?|early'),
+         ('beforenoon', r'before\s*noon|vor\s*mittags?'),
+         ('afternoon', r'after\s*noon|nach\s*mittags?'),
+         ('noon', r'noon|mittags?'),
+         ('evening', r'evening|tonight|late|abend?s?|spät'),
+         ('night', r'night|nachts?')]
+
+_rule_pods = '|'.join('(?P<{}>{})'.format(pod, expr) for pod, expr in _pods)
 
 
-@rule(r'(morning|morgend?s?|(in der )?frühe?|early)')
-def rulePODMorning(ts, m):
-    return Time(POD='morning')
-
-
-@rule(r'(before\s*noon|vor\s*mittags?)')
-def rulePODBeforeNoon(ts, m):
-    return Time(POD='beforenoon')
-
-
-@rule(r'(noon|mittags?)')
-def rulePODNoon(ts, m):
-    return Time(POD='noon')
-
-
-@rule(r'(after\s*noon|nach\s*mittags?)')
-def rulePODAfterNoon(ts, m):
-    return Time(POD='afternoon')
-
-
-@rule(r'(evening|tonight|late|abend?s?|spät)')
-def rulePODEvening(ts, m):
-    return Time(POD='evening')
-
-
-@rule(r'(very late|sehr spät)')
-def rulePODLateEvening(ts, m):
-    return Time(POD='lateevening')
-
-
-@rule(r'(night|nachts?)')
-def rulePODNight(ts, m):
-    return Time(POD='night')
+@rule(_rule_pods)
+def rulePOD(ts, m):
+    for i, (pod, _) in enumerate(_pods):
+        if m.match.group(pod):
+            return Time(POD=pod)
 
 
 @rule(r'(?<!\d|\.)(?P<day>(?&_day))\.?(?!\d)')
