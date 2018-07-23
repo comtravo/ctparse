@@ -57,12 +57,21 @@ def ruleAbsorbDOWComma(ts, dow, _):
     return dow
 
 
+_dows = [('mon', r'montags?|mondays?|mon?\.?'),
+         ('tue', r'die?nstags?|die?\.?|tuesdays?|tue?\.?'),
+         ('wed', r'mittwochs?|mi\.?|wednesday?|wed\.?'),
+         ('thu', r'donn?erstags?|don?\.?|thursdays?|thur?\.?'),
+         ('fri', r'freitags?|fridays?|fri?\.?'),
+         ('sat', r'samstags?|sonnabends?|saturdays?|sat?\.?'),
+         ('sun', r'sonntags?|so\.?|sundays?|sun?\.?')]
 _wd_mod_re = (r'((?P<morning>morning|morgend?s?|früh)'
               r'|(?P<beforenoon>vormittags?)'
               r'|(?P<noon>noon|mittags?)'
               r'|(?P<afternoon>afternoon|nachmittags?)'
               r'|(?P<evening>evening|abends?)'
               r'|(?P<night>nights?|nachts?))?')
+_rule_dows = r'|'.join(r'(?P<{}>{})'.format(dow, expr) for dow, expr in _dows)
+_rule_dows = r'({})\s*'.format(_rule_dows) + _wd_mod_re
 
 
 def _get_wd_pod(m):
@@ -82,90 +91,36 @@ def _get_wd_pod(m):
         return
 
 
-@rule(r'(montags?|mondays?|mon?\.?)\s*' + _wd_mod_re)
-def ruleMonday(ts, m):
+@rule(_rule_dows)
+def ruleNamedDOW(ts, m):
     pod = _get_wd_pod(m)
-    return Time(DOW=0, POD=pod)
+    for i, (name, _) in enumerate(_dows):
+        if m.match.group(name):
+            return Time(DOW=i, POD=pod)
 
 
-@rule(r'(die?nstags?|die?\.?|tuesdays?|tue?\.?)\s*' + _wd_mod_re)
-def ruleTuesday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=1, POD=pod)
+_months = [("january", r"january?|jan\.?)"),
+           ("february", r"february?|feb\.?)"),
+           ("march", r"märz|march|mar\.?|mär\.?)"),
+           ("april", r"april|apr\.?)"),
+           ("may", r"mai|may\.?)"),
+           ("june", r"juni|june|jun\.?)"),
+           ("july", r"juli|july|jul\.?)"),
+           ("august", r"august|aug\.?)"),
+           ("september", r"september|sept?\.?)"),
+           ("october", r"oktober|october|oct\.?|okt\.?)"),
+           ("november", r"november|nov\.?)"),
+           ("december", r"december|dezember|dez\.?|dec\.?)")]
+
+_rule_months = '|'.join(r'(?P<{}>{}'.format(name, expr) for name, expr in _months)
 
 
-@rule(r'(mittwochs?|mi\.?|wednesday?|wed\.?)\s*' + _wd_mod_re)
-def ruleWednesday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=2, POD=pod)
-
-
-@rule(r'(donn?erstags?|don?\.?|thursdays?|thur?\.?)\s*' + _wd_mod_re)
-def ruleThursday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=3, POD=pod)
-
-
-@rule(r'(freitags?|fridays?|fri?\.?)\s*' + _wd_mod_re)
-def ruleFriday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=4, POD=pod)
-
-
-@rule(r'(samstags?|sonnabends?|saturdays?|sat?\.?)\s*' + _wd_mod_re)
-def ruleSaturday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=5, POD=pod)
-
-
-@rule(r'(sonntags?|so\.?|sundays?|sun?\.?)\s*' + _wd_mod_re)
-def ruleSunday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=6, POD=pod)
-
-
-def mkMonths(months):
-    for month_num, (month, month_ex) in enumerate(months):
-        exec('''@rule(r"({})")
-def ruleMonth{}(ts, m): return Time(month={})'''.format(
-            month_ex, month, month_num + 1))
-
-
-mkMonths([
-    ("January", r"january?|jan\.?"),
-    ("February", r"february?|feb\.?"),
-    ("March", r"märz|march|mar\.?|mär\.?"),
-    ("April", r"april|apr\.?"),
-    ("May", r"mai|may\.?"),
-    ("June", r"juni|june|jun\.?"),
-    ("July", r"juli|july|jul\.?"),
-    ("August", r"august|aug\.?"),
-    ("September", r"september|sept?\.?"),
-    ("October", r"oktober|october|oct\.?|okt\.?"),
-    ("November", r"november|nov\.?"),
-    ("December", r"december|dezember|dez\.?|dec\.?")])
-
-
-# def mkDDMonths(months):
-#     for month_num, (month, month_ex) in enumerate(months):
-#         exec('''@rule(r"(?P<day>(?&_day))\.?\s*({})")
-# def ruleDDMonth{}(ts, m): return Time(month={}, day=int(m.match.group('day')))'''.format(
-#             month_ex, month, month_num + 1))
-
-
-# mkDDMonths([
-#     ("January", r"january?|jan\.?"),
-#     ("February", r"february?|feb\.?"),
-#     ("March", r"märz|march|mar\.?|mär\.?"),
-#     ("April", r"april|apr\.?"),
-#     ("May", r"mai|may\.?"),
-#     ("June", r"juni|june|jun\.?"),
-#     ("July", r"juli|july|jul\.?"),
-#     ("August", r"august|aug\.?"),
-#     ("September", r"september|sept?\.?"),
-#     ("October", r"oktober|october|oct\.?|okt\.?"),
-#     ("November", r"november|nov\.?"),
-#     ("December", r"december|dezember|dez\.?|dec\.?")])
+@rule(_rule_months)
+def ruleNamedMonth(ts, m):
+    match = m.match
+    for i, (name, _) in enumerate(_months):
+        if match.group(name):
+            return Time(month=i+1)
 
 
 @rule(r'(erster?|first|earliest|as early|frühe?st(ens?)?|so früh)'
