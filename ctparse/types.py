@@ -240,10 +240,10 @@ class Time(Artifact):
         if self.hasPOD:
             hour = pod_hours[self.POD][1]
         else:
-            hour = self.hour or 23
+            hour = self.hour if self.hour is not None else 23
         return Time(year=self.year, month=self.month, day=self.day,
                     hour=hour,
-                    minute=self.minute or 59)
+                    minute=self.minute if self.minute is not None else 59)
 
     @property
     def dt(self):

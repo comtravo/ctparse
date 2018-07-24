@@ -64,39 +64,15 @@ _dows = [('mon', r'montags?|mondays?|mon?\.?'),
          ('fri', r'freitags?|fridays?|fri?\.?'),
          ('sat', r'samstags?|sonnabends?|saturdays?|sat?\.?'),
          ('sun', r'sonntags?|so\.?|sundays?|sun?\.?')]
-_wd_mod_re = (r'((?P<morning>morning|morgend?s?|früh)'
-              r'|(?P<beforenoon>vormittags?)'
-              r'|(?P<noon>noon|mittags?)'
-              r'|(?P<afternoon>afternoon|nachmittags?)'
-              r'|(?P<evening>evening|abends?)'
-              r'|(?P<night>nights?|nachts?))?')
 _rule_dows = r'|'.join(r'(?P<{}>{})'.format(dow, expr) for dow, expr in _dows)
-_rule_dows = r'({})\s*'.format(_rule_dows) + _wd_mod_re
-
-
-def _get_wd_pod(m):
-    if m.match.group('morning'):
-        return 'morning'
-    elif m.match.group('beforenoon'):
-        return 'beforenoon'
-    elif m.match.group('noon'):
-        return 'noon'
-    elif m.match.group('afternoon'):
-        return 'afternoon'
-    elif m.match.group('evening'):
-        return 'evening'
-    elif m.match.group('night'):
-        return 'night'
-    else:
-        return
+_rule_dows = r'({})\s*'.format(_rule_dows)
 
 
 @rule(_rule_dows)
 def ruleNamedDOW(ts, m):
-    pod = _get_wd_pod(m)
     for i, (name, _) in enumerate(_dows):
         if m.match.group(name):
-            return Time(DOW=i, POD=pod)
+            return Time(DOW=i)
 
 
 _months = [("january", r"january?|jan\.?)"),
@@ -188,7 +164,7 @@ def ruleMonthOrdinal(ts, m):
     return Time(month=int(m.match.group('month')))
 
 
-@rule(r'(?<!\d|\.)(?P<day>(?&_day))\s*(?:st|rd|th|ten|ter)')
+@rule(r'(?<!\d|\.)(?P<day>(?&_day))\s*(?:st|rd|th|s?ten|ter)')
 # a "[0-31]" followed by a th/st
 def ruleDOM2(ts, m):
     return Time(day=int(m.match.group('day')))
@@ -347,7 +323,7 @@ def ruleLatentPOD(ts, pod):
     # other rules - keep the POD information. The date is chosen based
     # on what ever is the next possible slot for these times)
     h_from, h_to = pod_hours[pod.POD]
-    t_from = ts + relativedelta(hour=h_from)
+    t_from = ts + relativedelta(hour=h_from, minute=0)
     if t_from <= ts:
         t_from += relativedelta(days=1)
     return Time(year=t_from.year, month=t_from.month, day=t_from.day,
