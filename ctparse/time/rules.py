@@ -389,11 +389,12 @@ def ruleHHMM(ts, m):
         return t
     elif m.match.group('ampm').lower().startswith('a') and t.hour <= 12:
         return t
-    elif m.match.group('ampm').lower().startswith('p') and t.hour <= 12:
+    elif m.match.group('ampm').lower().startswith('p') and t.hour < 12:
         return Time(hour=t.hour+12, minute=t.minute)
     else:
         # the case m.match.group('ampm').startswith('a') and t.hour >
         # 12 (e.g. 13:30am) makes no sense, lets ignore the ampm
+        # likewise if hour >= 12 no 'pm' action is needed
         return t
 
 

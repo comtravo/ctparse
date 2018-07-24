@@ -15,6 +15,9 @@ class Artifact:
     def __len__(self):
         return self.mend - self.mstart
 
+    def __bool__(self):
+        return True
+
     def __str__(self):
         return ''
 
@@ -239,7 +242,8 @@ class Time(Artifact):
         else:
             hour = self.hour or 23
         return Time(year=self.year, month=self.month, day=self.day,
-                    hour=hour, minute=self.minute is not None or 59)
+                    hour=hour,
+                    minute=self.minute or 59)
 
     @property
     def dt(self):
