@@ -579,9 +579,10 @@ def build_model(X, y, save=False):
 
 def regenerate_model():
     from . time.corpus import corpus as corpus_time
+    from . time.auto_corpus import corpus as auto_corpus
     global _nb
     logger.info('Regenerating model')
     _nb = NB()
-    X, y = run_corpus(corpus_time)
+    X, y = run_corpus(corpus_time + auto_corpus)
     logger.info('Got {} training samples'.format(len(y)))
     build_model(X, y, save=True)

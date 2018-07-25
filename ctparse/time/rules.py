@@ -57,126 +57,46 @@ def ruleAbsorbDOWComma(ts, dow, _):
     return dow
 
 
-_wd_mod_re = (r'((?P<morning>morning|morgend?s?|früh)'
-              r'|(?P<beforenoon>vormittags?)'
-              r'|(?P<noon>noon|mittags?)'
-              r'|(?P<afternoon>afternoon|nachmittags?)'
-              r'|(?P<evening>evening|abends?)'
-              r'|(?P<night>nights?|nachts?))?')
+_dows = [('mon', r'montags?|mondays?|mon?\.?'),
+         ('tue', r'die?nstags?|die?\.?|tuesdays?|tue?\.?'),
+         ('wed', r'mittwochs?|mi\.?|wednesday?|wed\.?'),
+         ('thu', r'donn?erstags?|don?\.?|thursdays?|thur?\.?'),
+         ('fri', r'freitags?|fridays?|fri?\.?'),
+         ('sat', r'samstags?|sonnabends?|saturdays?|sat?\.?'),
+         ('sun', r'sonntags?|so\.?|sundays?|sun?\.?')]
+_rule_dows = r'|'.join(r'(?P<{}>{})'.format(dow, expr) for dow, expr in _dows)
+_rule_dows = r'({})\s*'.format(_rule_dows)
 
 
-def _get_wd_pod(m):
-    if m.match.group('morning'):
-        return 'morning'
-    elif m.match.group('beforenoon'):
-        return 'beforenoon'
-    elif m.match.group('noon'):
-        return 'noon'
-    elif m.match.group('afternoon'):
-        return 'afternoon'
-    elif m.match.group('evening'):
-        return 'evening'
-    elif m.match.group('night'):
-        return 'night'
-    else:
-        return
+@rule(_rule_dows)
+def ruleNamedDOW(ts, m):
+    for i, (name, _) in enumerate(_dows):
+        if m.match.group(name):
+            return Time(DOW=i)
 
 
-@rule(r'(montags?|mondays?|mon?\.?)\s*' + _wd_mod_re)
-def ruleMonday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=0, POD=pod)
+_months = [("january", r"january?|jan\.?)"),
+           ("february", r"february?|feb\.?)"),
+           ("march", r"märz|march|mar\.?|mär\.?)"),
+           ("april", r"april|apr\.?)"),
+           ("may", r"mai|may\.?)"),
+           ("june", r"juni|june|jun\.?)"),
+           ("july", r"juli|july|jul\.?)"),
+           ("august", r"august|aug\.?)"),
+           ("september", r"september|sept?\.?)"),
+           ("october", r"oktober|october|oct\.?|okt\.?)"),
+           ("november", r"november|nov\.?)"),
+           ("december", r"december|dezember|dez\.?|dec\.?)")]
+
+_rule_months = '|'.join(r'(?P<{}>{}'.format(name, expr) for name, expr in _months)
 
 
-@rule(r'(die?nstags?|die?\.?|tuesdays?|tue?\.?)\s*' + _wd_mod_re)
-def ruleTuesday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=1, POD=pod)
-
-
-@rule(r'(mittwochs?|mi\.?|wednesday?|wed\.?)\s*' + _wd_mod_re)
-def ruleWednesday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=2, POD=pod)
-
-
-@rule(r'(donn?erstags?|don?\.?|thursdays?|thur?\.?)\s*' + _wd_mod_re)
-def ruleThursday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=3, POD=pod)
-
-
-@rule(r'(freitags?|fridays?|fri?\.?)\s*' + _wd_mod_re)
-def ruleFriday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=4, POD=pod)
-
-
-@rule(r'(samstags?|sonnabends?|saturdays?|sat?\.?)\s*' + _wd_mod_re)
-def ruleSaturday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=5, POD=pod)
-
-
-@rule(r'(sonntags?|so\.?|sundays?|sun?\.?)\s*' + _wd_mod_re)
-def ruleSunday(ts, m):
-    pod = _get_wd_pod(m)
-    return Time(DOW=6, POD=pod)
-
-
-def mkMonths(months):
-    for month_num, (month, month_ex) in enumerate(months):
-        exec('''@rule(r"({})")
-def ruleMonth{}(ts, m): return Time(month={})'''.format(
-            month_ex, month, month_num + 1))
-
-
-mkMonths([
-    ("January", r"january?|jan\.?"),
-    ("February", r"february?|feb\.?"),
-    ("March", r"märz|march|mar\.?|mär\.?"),
-    ("April", r"april|apr\.?"),
-    ("May", r"mai|may\.?"),
-    ("June", r"juni|june|jun\.?"),
-    ("July", r"juli|july|jul\.?"),
-    ("August", r"august|aug\.?"),
-    ("September", r"september|sept?\.?"),
-    ("October", r"oktober|october|oct\.?|okt\.?"),
-    ("November", r"november|nov\.?"),
-    ("December", r"december|dezember|dez\.?|dec\.?")])
-
-
-# def mkDDMonths(months):
-#     for month_num, (month, month_ex) in enumerate(months):
-#         exec('''@rule(r"(?P<day>(?&_day))\.?\s*({})")
-# def ruleDDMonth{}(ts, m): return Time(month={}, day=int(m.match.group('day')))'''.format(
-#             month_ex, month, month_num + 1))
-
-
-# mkDDMonths([
-#     ("January", r"january?|jan\.?"),
-#     ("February", r"february?|feb\.?"),
-#     ("March", r"märz|march|mar\.?|mär\.?"),
-#     ("April", r"april|apr\.?"),
-#     ("May", r"mai|may\.?"),
-#     ("June", r"juni|june|jun\.?"),
-#     ("July", r"juli|july|jul\.?"),
-#     ("August", r"august|aug\.?"),
-#     ("September", r"september|sept?\.?"),
-#     ("October", r"oktober|october|oct\.?|okt\.?"),
-#     ("November", r"november|nov\.?"),
-#     ("December", r"december|dezember|dez\.?|dec\.?")])
-
-
-@rule(r'(erster?|first|earliest|as early|frühe?st(ens?)?|so früh)'
-      '( (as )?possible| (wie )?möglich(er?)?)?')
-def rulePODFirst(ts, m):
-    return Time(POD='first')
-
-
-@rule(r'(letzter?|last|latest|as late as possible|spätest möglich(er?)?|so spät wie möglich(er?)?)')
-def rulePODLast(ts, m):
-    return Time(POD='last')
+@rule(_rule_months)
+def ruleNamedMonth(ts, m):
+    match = m.match
+    for i, (name, _) in enumerate(_months):
+        if match.group(name):
+            return Time(month=i+1)
 
 
 def _pod_from_match(pod, m):
@@ -202,44 +122,27 @@ def ruleEarlyLatePOD(ts, m, p):
     return Time(POD=_pod_from_match(p.POD, m))
 
 
-@rule(r'(very early|sehr früh)')
-def rulePODEarlyMorning(ts, m):
-    return Time(POD='earlymorning')
+_pods = [('first', (r'(erster?|first|earliest|as early|frühe?st(ens?)?|so früh)'
+                    '( (as )?possible| (wie )?möglich(er?)?)?')),
+         ('last', (r'(letzter?|last|latest|as late as possible|spätest möglich(er?)?|'
+                   'so spät wie möglich(er?)?)')),
+         ('earlymorning', r'very early|sehr früh'),
+         ('lateevening', r'very late|sehr spät'),
+         ('morning', r'morning|morgend?s?|(in der )?frühe?|early'),
+         ('beforenoon', r'before\s*noon|vor\s*mittags?'),
+         ('afternoon', r'after\s*noon|nach\s*mittags?'),
+         ('noon', r'noon|mittags?'),
+         ('evening', r'evening|tonight|late|abend?s?|spät'),
+         ('night', r'night|nachts?')]
+
+_rule_pods = '|'.join('(?P<{}>{})'.format(pod, expr) for pod, expr in _pods)
 
 
-@rule(r'(morning|morgend?s?|(in der )?frühe?|early)')
-def rulePODMorning(ts, m):
-    return Time(POD='morning')
-
-
-@rule(r'(before\s*noon|vor\s*mittags?)')
-def rulePODBeforeNoon(ts, m):
-    return Time(POD='beforenoon')
-
-
-@rule(r'(noon|mittags?)')
-def rulePODNoon(ts, m):
-    return Time(POD='noon')
-
-
-@rule(r'(after\s*noon|nach\s*mittags?)')
-def rulePODAfterNoon(ts, m):
-    return Time(POD='afternoon')
-
-
-@rule(r'(evening|tonight|late|abend?s?|spät)')
-def rulePODEvening(ts, m):
-    return Time(POD='evening')
-
-
-@rule(r'(very late|sehr spät)')
-def rulePODLateEvening(ts, m):
-    return Time(POD='lateevening')
-
-
-@rule(r'(night|nachts?)')
-def rulePODNight(ts, m):
-    return Time(POD='night')
+@rule(_rule_pods)
+def rulePOD(ts, m):
+    for i, (pod, _) in enumerate(_pods):
+        if m.match.group(pod):
+            return Time(POD=pod)
 
 
 @rule(r'(?<!\d|\.)(?P<day>(?&_day))\.?(?!\d)')
@@ -254,7 +157,7 @@ def ruleMonthOrdinal(ts, m):
     return Time(month=int(m.match.group('month')))
 
 
-@rule(r'(?<!\d|\.)(?P<day>(?&_day))\s*(?:st|rd|th|ten|ter)')
+@rule(r'(?<!\d|\.)(?P<day>(?&_day))\s*(?:st|rd|th|s?ten|ter)')
 # a "[0-31]" followed by a th/st
 def ruleDOM2(ts, m):
     return Time(day=int(m.match.group('day')))
@@ -413,7 +316,7 @@ def ruleLatentPOD(ts, pod):
     # other rules - keep the POD information. The date is chosen based
     # on what ever is the next possible slot for these times)
     h_from, h_to = pod_hours[pod.POD]
-    t_from = ts + relativedelta(hour=h_from)
+    t_from = ts + relativedelta(hour=h_from, minute=0)
     if t_from <= ts:
         t_from += relativedelta(days=1)
     return Time(year=t_from.year, month=t_from.month, day=t_from.day,
@@ -455,11 +358,12 @@ def ruleHHMM(ts, m):
         return t
     elif m.match.group('ampm').lower().startswith('a') and t.hour <= 12:
         return t
-    elif m.match.group('ampm').lower().startswith('p') and t.hour <= 12:
+    elif m.match.group('ampm').lower().startswith('p') and t.hour < 12:
         return Time(hour=t.hour+12, minute=t.minute)
     else:
         # the case m.match.group('ampm').startswith('a') and t.hour >
         # 12 (e.g. 13:30am) makes no sense, lets ignore the ampm
+        # likewise if hour >= 12 no 'pm' action is needed
         return t
 
 
