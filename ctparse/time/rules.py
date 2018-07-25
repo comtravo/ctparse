@@ -99,17 +99,6 @@ def ruleNamedMonth(ts, m):
             return Time(month=i+1)
 
 
-@rule(r'(erster?|first|earliest|as early|frühe?st(ens?)?|so früh)'
-      '( (as )?possible| (wie )?möglich(er?)?)?')
-def rulePODFirst(ts, m):
-    return Time(POD='first')
-
-
-@rule(r'(letzter?|last|latest|as late as possible|spätest möglich(er?)?|so spät wie möglich(er?)?)')
-def rulePODLast(ts, m):
-    return Time(POD='last')
-
-
 def _pod_from_match(pod, m):
     mod = ''
     if m.match.group('mod_early'):
@@ -133,7 +122,11 @@ def ruleEarlyLatePOD(ts, m, p):
     return Time(POD=_pod_from_match(p.POD, m))
 
 
-_pods = [('earlymorning', r'very early|sehr früh'),
+_pods = [('first', (r'(erster?|first|earliest|as early|frühe?st(ens?)?|so früh)'
+                    '( (as )?possible| (wie )?möglich(er?)?)?')),
+         ('last', (r'(letzter?|last|latest|as late as possible|spätest möglich(er?)?|'
+                   'so spät wie möglich(er?)?)')),
+         ('earlymorning', r'very early|sehr früh'),
          ('lateevening', r'very late|sehr spät'),
          ('morning', r'morning|morgend?s?|(in der )?frühe?|early'),
          ('beforenoon', r'before\s*noon|vor\s*mittags?'),
