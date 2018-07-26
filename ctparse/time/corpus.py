@@ -22,6 +22,10 @@ corpus = [
      '2018-12-31T12:43',
      ('morgen',
       'tomorrow')),
+    # ruleAfterTomorrow
+    ('Time[]{2019-01-02 X:X (X/X)}',
+     '2018-12-31T12:43',
+     ('übermorgen',)),
     # ruleTomorrow + time
     ('Time[]{2019-01-01 19:25 (X/X)}',
      '2018-12-31T12:43',
@@ -33,6 +37,11 @@ corpus = [
      '2020-03-01T12:43',
      ('gestern',
       'yesterday')),
+    # ruleBeforeYesterday
+    # test on a leap-year
+    ('Time[]{2020-02-28 X:X (X/X)}',
+     '2020-03-01T12:43',
+     ('vorgestern',)),
     # ruleEOM
     ('Time[]{2018-03-31 X:X (X/X)}',
      '2018-03-07T12:43',
@@ -279,7 +288,7 @@ corpus = [
       '26.11. frühestens um 08:00 Uhr',
       'November 26th earliest 08:00 Uhr',
       'November 26th earliest after 08:00 Uhr',
-      'November 26th from earliest 08:00 Uhr'
+      'November 26th from earliest 08:00 Uhr',
       '26.11. nicht vor 08:00 Uhr')),
     # ruleBeforeTime
     ('Interval[]{None - 2017-11-26 08:00 (X/X)}',
@@ -332,6 +341,56 @@ corpus = [
      '2018-03-07T00:00',
      ('Mon, Nov 13 1:30 PM - 3:35 PM',
       'Nov 13 13:30 - 15:35')),
+    # ruleAbsorbDOWComma -- deleted, comma should be removed by caller
+    ('Time[]{2018-07-27 X:X (X/X)}',
+     '2018-07-26T00:00',
+     ('Freitag, dem 27.',
+      'Freitag, 27ter',
+      'Fri, the 27th')),
+    # ruleNamedHour
+    ('Time[]{2018-07-26 09:00 (X/X)}',
+     '2018-07-26T00:00',
+     ('neun',
+      'nine')),
+    # ruleQuarterBeforeHH
+    ('Time[]{2018-07-26 07:45 (X/X)}',
+     '2018-07-26T00:00',
+     ('viertel vor acht',
+      'viertel vor 8',
+      'quarter to eight')),
+    # ruleQuarterBeforeHH midnight wrap
+    ('Time[]{2018-07-26 23:45 (X/X)}',
+     '2018-07-26T00:00',
+     ('viertel vor 0',)),
+    # ruleQuarterAfterHH
+    ('Time[]{2018-07-26 08:15 (X/X)}',
+     '2018-07-26T00:00',
+     ('viertel nach acht',
+      'viertel nach 8',
+      'quarter past eight')),
+    # ruleHalfBeforeHH
+    ('Time[]{2018-07-26 07:30 (X/X)}',
+     '2018-07-26T00:00',
+     ('halb acht',
+      'halb 8',
+      'half eight')),
+    # ruleHalfBeforeHH not when minutes are present
+    ('Time[]{2018-07-26 07:35 (X/X)}',
+     '2018-07-26T00:00',
+     ('halb 7:35',)),
+    # ruleHalfBeforeHH midnight wrap
+    ('Time[]{2018-07-26 23:30 (X/X)}',
+     '2018-07-26T00:00',
+     ('halb mitternacht',)),
+    # ruleHalfAfterHH
+    ('Time[]{2018-07-26 08:30 (X/X)}',
+     '2018-07-26T00:00',
+     ('halb nach acht',
+      'halfe past eight')),
+    # ruleHalfAfterHH not when minutes are present
+    ('Time[]{2018-07-26 08:32 (X/X)}',
+     '2018-07-26T00:00',
+     ('halb nach 8:32',)),
     # rule
     #
     # -----------------------------------------------------------------------------

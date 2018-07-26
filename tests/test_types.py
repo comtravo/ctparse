@@ -1,5 +1,6 @@
 from unittest import TestCase
 import regex
+from datetime import datetime
 from ctparse.types import Artifact, RegexMatch, Time, Interval
 
 
@@ -9,6 +10,24 @@ class TestArtifact(TestCase):
         self.assertEqual(a.mstart, 0)
         self.assertEqual(a.mend, 0)
         self.assertEqual(len(a), 0)
+        self.assertTrue(a)
+
+    def test_eq(self):
+        a = Artifact()
+        b = Artifact()
+        self.assertEqual(a, b)
+
+        a = Time(2017, 12, 12, 12, 12, 4, 'morning')
+        b = Time(2017, 12, 12, 12, 12, 4, 'morning')
+        self.assertEqual(a, b)
+
+        a = Time(2017, 12, 12, 12, 12, 4, 'morning')
+        b = Time(2017, 12, 12, 12, 12, 3, 'morning')
+        self.assertNotEqual(a, b)
+
+        a = Time()
+        b = Interval()
+        self.assertNotEqual(a, b)
 
     def test_update_span(self):
         a1 = Artifact()
@@ -53,6 +72,11 @@ class TestTime(TestCase):
     def test_isDOM(self):
         self.assertTrue(Time(day=1).isDOM)
         self.assertFalse(Time(month=1).isDOM)
+
+    def test_isHour(self):
+        self.assertTrue(Time(hour=1).isHour)
+        self.assertFalse(Time(hour=1, minute=1).isHour)
+        self.assertFalse(Time(hour=1, month=1).isHour)
 
     def test_isDOW(self):
         self.assertTrue(Time(DOW=1).isDOW)
@@ -101,10 +125,50 @@ class TestTime(TestCase):
         self.assertTrue(Time(hour=1, day=1, month=1, year=1).hasTime)
         self.assertFalse(Time(day=1, month=1, year=1).hasTime)
 
+    def test_hasPOD(self):
+        self.assertTrue(Time(POD='pod').hasPOD)
+        self.assertFalse(Time(day=1, month=1, year=1).hasPOD)
+
     def test_repr(self):
         t = Time(year=1, month=1, day=1, hour=1, minute=1, DOW=1, POD='pod')
         self.assertEqual(repr(t),
                          'Time[0-0]{0001-01-01 01:01 (1/pod)}')
+
+    def test_start(self):
+        t = Time()
+        self.assertEqual(t.start, Time(hour=0, minute=0))
+        t = Time(year=2012, month=1, day=1)
+        self.assertEqual(t.start, Time(2012, 1, 1, 0, 0))
+        t = Time(year=2012, month=1, day=1, hour=12)
+        self.assertEqual(t.start, Time(2012, 1, 1, 12, 0))
+        t = Time(year=2012, month=1, day=1, hour=12, minute=20)
+        self.assertEqual(t.start, Time(2012, 1, 1, 12, 20))
+        t = Time(year=2012, month=1, day=1, POD='last')
+        self.assertEqual(t.start, Time(2012, 1, 1, 23, 00))
+
+    def test_end(self):
+        t = Time()
+        self.assertEqual(t.end, Time(hour=23, minute=59))
+        t = Time(year=2012, month=1, day=1)
+        self.assertEqual(t.end, Time(2012, 1, 1, 23, 59))
+        t = Time(year=2012, month=1, day=1, hour=12)
+        self.assertEqual(t.end, Time(2012, 1, 1, 12, 59))
+        t = Time(year=2012, month=1, day=1, hour=12, minute=20)
+        self.assertEqual(t.end, Time(2012, 1, 1, 12, 20))
+        t = Time(year=2012, month=1, day=1, POD='last')
+        self.assertEqual(t.end, Time(2012, 1, 1, 23, 59))
+
+    def test_dt(self):
+        t = Time(2015, 12, 12, 12, 12)
+        self.assertEqual(t.dt, datetime(2015, 12, 12, 12, 12))
+        t = Time(2015, 12, 12, 12)
+        self.assertEqual(t.dt, datetime(2015, 12, 12, 12))
+        t = Time(2015, 12, 12)
+        self.assertEqual(t.dt, datetime(2015, 12, 12))
+
+        with self.assertRaises(TypeError):
+            t = Time(year=2012, month=12, hour=12, minute=12)
+            t.dt
 
 
 class TestInterval(TestCase):
@@ -119,3 +183,29 @@ class TestInterval(TestCase):
     def test_repr(self):
         self.assertEqual(repr(Interval(Time(), Time())),
                          'Interval[0-0]{X-X-X X:X (X/X) - X-X-X X:X (X/X)}')
+
+    def test_start(self):
+        i = Interval(Time(2013, 1, 1),
+                     Time(2013, 1, 2))
+        self.assertEqual(i.start, Time(2013, 1, 1, 0, 0))
+
+        i = Interval(Time(2013, 1, 1),
+                     None)
+        self.assertEqual(i.start, Time(2013, 1, 1, 0, 0))
+
+        i = Interval(None,
+                     Time(2013, 1, 2))
+        self.assertIsNone(i.start)
+
+    def test_end(self):
+        i = Interval(Time(2013, 1, 1),
+                     Time(2013, 1, 2))
+        self.assertEqual(i.end, Time(2013, 1, 2, 23, 59))
+
+        i = Interval(None,
+                     Time(2013, 1, 2))
+        self.assertEqual(i.end, Time(2013, 1, 2, 23, 59))
+
+        i = Interval(Time(2013, 1, 1),
+                     None)
+        self.assertIsNone(i.end)

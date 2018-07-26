@@ -1,4 +1,4 @@
-corpus = [
+corpus = [  # pragma: no cover
     [
         "Time[]{2018-01-04 X:X (X/X)}",
         "2017-12-20T20:34",

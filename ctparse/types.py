@@ -157,6 +157,11 @@ class Time(Artifact):
         return self._hasOnly('POD')
 
     @property
+    def isHour(self):
+        '''only has an hour'''
+        return self._hasOnly('hour')
+
+    @property
     def isTOD(self):
         '''isTimeOfDay - only a time, not date'''
         return self._hasOnly('hour') or self._hasOnly('hour', 'minute')

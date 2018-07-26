@@ -62,30 +62,27 @@ def rule(*patterns):
         else:
             return p
 
+    # check that in rules we never have a regex followed by a regex -
+    # that must be merged into one regex
     def _has_consequtive_regex(ps):
         for p0, p1 in zip(ps[:-1], ps[1:]):
             if isinstance(p0, str) and isinstance(p1, str):
                 return True
         return False
 
+    if _has_consequtive_regex(patterns):
+        raise ValueError('rule which contains consequtive regular expressions found')
+
     mapped_patterns = [_map(p) for p in patterns]
 
     def fwrapper(f):
         def wrapper(ts, *args):
-            try:
-                res = f(ts, *args)
-                if res is not None:
-                    # upon a successful production, update the span
-                    # information by expanding it to that of all args
-                    res.update_span(*args)
-            except ValueError:
-                return
+            res = f(ts, *args)
+            if res is not None:
+                # upon a successful production, update the span
+                # information by expanding it to that of all args
+                res.update_span(*args)
             return res
-        # check that in rules we never have a regex followed by a regex -
-        # that must be merged into one regex
-        if _has_consequtive_regex(patterns):
-            raise ValueError('rule {} contains consequtive regular expressions'.format(
-                f.__name__))
         rules[f.__name__] = (wrapper, mapped_patterns)
         return wrapper
     return fwrapper

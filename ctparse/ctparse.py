@@ -247,7 +247,6 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
                     len(new_stack), len(stack)))
     except TimeoutError as e:
         logger.debug('Timeout on "{}"'.format(txt))
-        yield None
         return
 
 
@@ -297,7 +296,7 @@ def ctparse(txt, ts=None, timeout=1.0, debug=False, relative_match_len=1.0, max_
     if debug:
         return parsed
     else:
-        parsed = [p for p in parsed if p]
+        parsed = [p for p in parsed]
         if not parsed or (len(parsed) == 1 and not parsed[0]):
             logger.warning('Failed to produce result for "{}"'.format(txt))
             return
@@ -529,9 +528,6 @@ def run_corpus(corpus):
             first_prod = True
             y_score = []
             for prod in _ctparse(_preprocess_string(test), ts, relative_match_len=1.0):
-                # Should never happen - None is only yielded on timeout
-                # if prod is None:
-                #    continue
                 y = prod.resolution.nb_str() == target
                 # Build data set, one sample for each applied rule in
                 # the sequence of rules applied in this production
@@ -569,7 +565,11 @@ def run_corpus(corpus):
     return Xs, ys
 
 
-def build_model(X, y, save=False):
+#
+# Not unittested - would take very long time to run these
+#
+
+def build_model(X, y, save=False):  # pragma: no cover
     nb = NB()
     nb.fit(X, y)
     if save:
@@ -577,7 +577,7 @@ def build_model(X, y, save=False):
     return nb
 
 
-def regenerate_model():
+def regenerate_model():  # pragma: no cover
     from . time.corpus import corpus as corpus_time
     from . time.auto_corpus import corpus as auto_corpus
     global _nb
