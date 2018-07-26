@@ -1,7 +1,8 @@
 from unittest import TestCase
+from unittest.mock import patch
 from time import sleep
 from datetime import datetime
-from ctparse.ctparse import _timeout, ctparse, _seq_match
+from ctparse.ctparse import _timeout, ctparse, _seq_match, _match_rule
 from ctparse.types import Time
 
 
@@ -18,12 +19,22 @@ class TestCTParse(TestCase):
         txt = '12.12.2020'
         res = ctparse(txt)
         self.assertEqual(res.resolution, Time(year=2020, month=12, day=12))
+        self.assertIsNotNone(str(res))
+        self.assertIsNotNone(repr(res))
+        # non sense gives no result
+        self.assertIsNone(ctparse('gargelbabel'))
         txt = '12.12.'
         res = ctparse(txt, ts=datetime(2020, 12, 1))
         self.assertEqual(res.resolution, Time(year=2020, month=12, day=12))
         res = ctparse(txt, ts=datetime(2020, 12, 1), debug=True)
         self.assertEqual(next(res).resolution, Time(year=2020, month=12, day=12))
 
+    def test_ctparse_timeout(self):
+        # timeout in ctparse: should rather mock the logger and see
+        # whether the timeout was hit, but cannot get it mocked
+        txt = 'tomorrow 8 yesterday Sep 9 9 12 2023 1923'
+        ctparse(txt, timeout=0.0001)
+    
     def test_seq_match(self):
         def make_rm(i):
             def _regex_match(s):
@@ -75,3 +86,7 @@ class TestCTParse(TestCase):
             [1, 2, 1, 2, 2, 3],
             [lambda x: x, make_rm(1), lambda x: x, make_rm(2), lambda x: x])),
                          [[2, 4]])
+
+    def test_match_rule(self):
+        self.assertEqual(list(_match_rule([], ['not empty'])), [])
+        self.assertEqual(list(_match_rule(['not empty'], [])), [])
