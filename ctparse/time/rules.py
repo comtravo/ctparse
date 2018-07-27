@@ -117,7 +117,7 @@ _pods = [('first', (r'(erster?|first|earliest|as early|frühe?st(ens?)?|so früh
          ('earlymorning', r'very early|sehr früh'),
          ('lateevening', r'very late|sehr spät'),
          ('morning', r'morning|morgend?s?|(in der )?frühe?|early'),
-         ('forenoon', r'before\s*noon|vor\s*mittags?'),
+         ('forenoon', r'forenoon|vormittags?'),
          ('afternoon', r'afternoon|nachmittags?'),
          ('noon', r'noon|mittags?'),
          ('evening', r'evening|tonight|late|abend?s?|spät'),
@@ -312,7 +312,7 @@ def ruleLatentTimeInterval(ts, ti):
 
 @rule(predicate('isPOD'))
 def ruleLatentPOD(ts, pod):
-    # Set the time to the prededined POD values, but keep the POD
+    # Set the time to the pre-defined POD values, but keep the POD
     # information. The date is chosen based on what ever is the next
     # possible slot for these times
     h_from, h_to = pod_hours[pod.POD]

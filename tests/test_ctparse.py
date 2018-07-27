@@ -1,5 +1,4 @@
 from unittest import TestCase
-from unittest.mock import patch
 from time import sleep
 from datetime import datetime
 from ctparse.ctparse import _timeout, ctparse, _seq_match, _match_rule
@@ -34,7 +33,7 @@ class TestCTParse(TestCase):
         # whether the timeout was hit, but cannot get it mocked
         txt = 'tomorrow 8 yesterday Sep 9 9 12 2023 1923'
         ctparse(txt, timeout=0.0001)
-    
+
     def test_seq_match(self):
         def make_rm(i):
             def _regex_match(s):
