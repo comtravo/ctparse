@@ -117,7 +117,7 @@ _pods = [('first', (r'(erster?|first|earliest|as early|frühe?st(ens?)?|so früh
          ('earlymorning', r'very early|sehr früh'),
          ('lateevening', r'very late|sehr spät'),
          ('morning', r'morning|morgend?s?|(in der )?frühe?|early'),
-         ('beforenoon', r'before\s*noon|vor\s*mittags?'),
+         ('forenoon', r'before\s*noon|vor\s*mittags?'),
          ('afternoon', r'after\s*noon|nach\s*mittags?'),
          ('noon', r'noon|mittags?'),
          ('evening', r'evening|tonight|late|abend?s?|spät'),
@@ -411,7 +411,7 @@ def ruleTODPOD(ts, tod, pod):
                           'night' in pod.POD or
                           'last' in pod.POD):
         h = tod.hour + 12
-    elif tod.hour > 12 and ('beforenoon' in pod.POD or
+    elif tod.hour > 12 and ('forenoon' in pod.POD or
                             'morning' in pod.POD or
                             'first' in pod.POD):
         # 17Uhr morgen -> do not merge

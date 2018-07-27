@@ -73,7 +73,7 @@ class RegexMatch(Artifact):
 def _mk_pod_hours():
     raw_pod_hours = {
         'morning': [6, 9],
-        'beforenoon': [9, 12],
+        'forenoon': [9, 12],
         'noon': [11, 13],
         'afternoon': [12, 17],
         'evening': [17, 20],
@@ -83,7 +83,7 @@ def _mk_pod_hours():
     }
 
     ph = {}
-    for pod in ['morning', 'beforenoon', 'noon', 'afternoon', 'evening', 'night']:
+    for pod in ['morning', 'forenoon', 'noon', 'afternoon', 'evening', 'night']:
         for very in ['', 'very']:
             for mod in ['', 'early', 'late']:
                 if very == 'very' and mod == '':
