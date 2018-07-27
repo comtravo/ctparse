@@ -4747,8 +4747,8 @@ corpus = [  # pragma: no cover
         "Interval[]{2017-12-13 16:00 (X/X) - None}",
         "2017-12-04T09:06",
         [
-            "am 13.12. ab fr\u00fchestens 16:00 h",
-            "am 13.12. ab fr\u00fchestens 16:00 h"
+            "am 13.12. ab frühestens 16:00 h",
+            "am 13.12. ab frühestens 16:00 h"
         ]
     ],
     [

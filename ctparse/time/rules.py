@@ -117,8 +117,8 @@ _pods = [('first', (r'(erster?|first|earliest|as early|frühe?st(ens?)?|so früh
          ('earlymorning', r'very early|sehr früh'),
          ('lateevening', r'very late|sehr spät'),
          ('morning', r'morning|morgend?s?|(in der )?frühe?|early'),
-         ('beforenoon', r'before\s*noon|vor\s*mittags?'),
-         ('afternoon', r'after\s*noon|nach\s*mittags?'),
+         ('forenoon', r'forenoon|vormittags?'),
+         ('afternoon', r'afternoon|nachmittags?'),
          ('noon', r'noon|mittags?'),
          ('evening', r'evening|tonight|late|abend?s?|spät'),
          ('night', r'night|nachts?')]
@@ -312,21 +312,15 @@ def ruleLatentTimeInterval(ts, ti):
 
 @rule(predicate('isPOD'))
 def ruleLatentPOD(ts, pod):
-    # Set the time to the prededined POD values, but - contrary to
-    # other rules - keep the POD information. The date is chosen based
-    # on what ever is the next possible slot for these times)
+    # Set the time to the pre-defined POD values, but keep the POD
+    # information. The date is chosen based on what ever is the next
+    # possible slot for these times
     h_from, h_to = pod_hours[pod.POD]
     t_from = ts + relativedelta(hour=h_from, minute=0)
     if t_from <= ts:
         t_from += relativedelta(days=1)
     return Time(year=t_from.year, month=t_from.month, day=t_from.day,
                 POD=pod.POD)
-    # t_to = t_from + relativedelta(hour=h_to)
-    # t_from = Time(year=t_from.year, month=t_from.month, day=t_from.day,
-    #               hour=t_from.hour, minute=0)
-    # t_to = Time(year=t_to.year, month=t_to.month, day=t_to.day,
-    #             hour=t_to.hour, minute=0)
-    # return Interval(t_from=t_from, t_to=t_to, POD=pod.POD)
 
 
 @rule(r'(?<!\d|\.)(?P<day>(?&_day))[\./\-](?P<month>(?&_month))\.?(?!\d)')
@@ -417,7 +411,7 @@ def ruleTODPOD(ts, tod, pod):
                           'night' in pod.POD or
                           'last' in pod.POD):
         h = tod.hour + 12
-    elif tod.hour > 12 and ('beforenoon' in pod.POD or
+    elif tod.hour > 12 and ('forenoon' in pod.POD or
                             'morning' in pod.POD or
                             'first' in pod.POD):
         # 17Uhr morgen -> do not merge
@@ -450,7 +444,8 @@ def ruleDatePOD(ts, d, pod):
                 POD=pod.POD)
 
 
-@rule(r'((?P<not>not |nicht )?(vor|before))|(bis )?spätestens( bis)?|bis|latest', dimension(Time))
+@rule(r'((?P<not>not |nicht )?(vor|before))|(bis )?spätestens( bis)?|bis|latest',
+      dimension(Time))
 def ruleBeforeTime(ts, r, t):
     if r.match.group('not'):
         return Interval(t_from=t, t_to=None)
@@ -458,7 +453,8 @@ def ruleBeforeTime(ts, r, t):
         return Interval(t_from=None, t_to=t)
 
 
-@rule(r'((?P<not>not |nicht )?(nach|after))|ab|frühe?stens|earliest( after)?', dimension(Time))
+@rule(r'((?P<not>not |nicht )?(nach|after))|(ab )?frühe?stens( ab)?|ab|'
+      '(from )?earliest( after)?|from', dimension(Time))
 def ruleAfterTime(ts, r, t):
     if r.match.group('not'):
         return Interval(t_from=None, t_to=t)
@@ -513,35 +509,63 @@ def ruleDateTimeDateTime(ts, d1, _, d2):
 
 @rule(predicate('isTOD'), _regex_to_join, predicate('isTOD'))
 def ruleTODTOD(ts, t1, _, t2):
-    if t1.hour > t2.hour:
-        return
-    if t1.hour == t2.hour:
-        if t1.minute is not None and t2.minute is not None and t1.minute >= t2.minute:
-            # 6:30 - 6:30?
-            return
-        if t1.minute is not None and t2.minute is None:
-            # 6:30 - 6?
-            return
-        if t1.minute is None and t2.minute is None:
-            # 6 - 6?
-            return
     return Interval(t_from=t1, t_to=t2)
 
 
 @rule(predicate('isDate'), dimension(Interval))
 def ruleDateInterval(ts, d, i):
+    if not ((i.t_from is None or i.t_from.isTOD or i.t_from.isPOD) and
+            (i.t_to is None or i.t_to.isTOD or i.t_to.isPOD)):
+        return
+    t_from = t_to = None
+    if i.t_from is not None:
+        t_from = Time(year=d.year, month=d.month, day=d.day,
+                      hour=i.t_from.hour, minute=i.t_from.minute,
+                      POD=i.t_from.POD)
+    if i.t_to is not None:
+        t_to = Time(year=d.year, month=d.month, day=d.day,
+                    hour=i.t_to.hour, minute=i.t_to.minute,
+                    POD=i.t_to.POD)
+    if t_from and t_to and t_from.dt >= t_to.dt:
+        t_to = t_to.dt + relativedelta(days=1)
+        t_to = Time(year=t_to.year, month=t_to.month, day=t_to.day,
+                    hour=t_to.hour, minute=t_to.minute)
+    return Interval(t_from=t_from, t_to=t_to)
+
+
+@rule(predicate('isPOD'), dimension(Interval))
+def rulePODInterval(ts, p, i):
+    def _adjust_h(t):
+        if t.hour < 12 and ('afternoon' in p.POD or
+                            'evening' in p.POD or
+                            'night' in p.POD or
+                            'last' in p.POD):
+            return t.hour + 12
+        elif t.hour > 12 and ('forenoon' in p.POD or
+                              'morning' in p.POD or
+                              'first' in p.POD):
+            # 17Uhr morgen -> do not merge
+            return
+        else:
+            return t.hour
+
     # only makes sense if i is a time interval
     if not ((i.t_from is None or i.t_from.isTOD) and
             (i.t_to is None or i.t_to.isTOD)):
         return
     if i.t_from is None:
-        return Interval(t_to=Time(year=d.year, month=d.month, day=d.day,
-                                  hour=i.t_to.hour, minute=i.t_to.minute))
+        h = _adjust_h(i.t_to)
+        if not h:
+            return
+        else:
+            return Interval(t_to=Time(hour=h, minute=i.t_to.minute))
     elif i.t_to is None:
-        return Interval(t_from=Time(year=d.year, month=d.month, day=d.day,
-                                    hour=i.t_from.hour, minute=i.t_from.minute))
+        h = _adjust_h(i.t_from)
+        if not h:
+            return
+        else:
+            return Interval(t_from=Time(hour=h, minute=i.t_from.minute))
     else:
-        return Interval(t_from=Time(year=d.year, month=d.month, day=d.day,
-                                    hour=i.t_from.hour, minute=i.t_from.minute),
-                        t_to=Time(year=d.year, month=d.month, day=d.day,
-                                  hour=i.t_to.hour, minute=i.t_to.minute))
+        t_from = Time(hour=i.t_from.hour, minute=i.t_from.minute)
+        t_to = Time(hour=i.t_to.hour, minute=i.t_to.minute)
+        return Interval(t_from=t_from, t_to=t_to)

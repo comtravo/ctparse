@@ -16,5 +16,3 @@ class TestRunCorpus(TestCase):
         ]
         with self.assertRaises(Exception):
             run_corpus(fail_corpus)
-    
-              

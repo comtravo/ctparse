@@ -24,7 +24,7 @@ class TestRule(TestCase):
     def test_consequtive_regex_not_allowed(self):
         with self.assertRaises(ValueError):
             rule(r'one', r'two')
-        
+
     def test_regex_match(self):
         m = next(regex.finditer('(?P<R1>x)', 'x'))
         r = RegexMatch(1, m)
