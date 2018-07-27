@@ -157,10 +157,13 @@ corpus = [
       'before noon')),
     ('Time[]{2018-03-08 X:X (X/afternoon)}',
      '2018-03-07T12:43',
-     ('nach mittags',
-      'nachmittag',
-      'after noon',
+     ('nachmittag',
       'afternoon')),
+    # past noon case
+    ('Interval[]{2018-03-08 X:X (X/noon) - None}',
+     '2018-03-07T12:43',
+     ('nach mittag',
+      'after noon')),
     ('Time[]{2018-03-08 X:X (X/noon)}',
      '2018-03-07T12:43',
      ('mittags',
@@ -346,7 +349,15 @@ corpus = [
     ('Interval[]{2018-11-13 13:30 (X/X) - 2018-11-13 15:35 (X/X)}',
      '2018-03-07T00:00',
      ('Mon, Nov 13 1:30 PM - 3:35 PM',
-      'Nov 13 13:30 - 15:35')),
+      'Nov 13 13:30 - 15:35',)),
+    ('Interval[]{2018-11-13 13:30 (X/X) - None}',
+     '2018-03-07T00:00',
+     ('Mon, Nov 13 after 1:30 PM',
+      '13.11. ab 13:30',)),
+    ('Interval[]{2018-03-11 X:X (X/noon) - None}',
+     '2018-03-07T00:00',
+     ('Sunday after noon',
+      'Sonntag ab Mittag',)),
     # ruleAbsorbDOWComma -- deleted, comma should be removed by caller
     ('Time[]{2018-07-27 X:X (X/X)}',
      '2018-07-26T00:00',
@@ -397,6 +408,11 @@ corpus = [
     ('Time[]{2018-07-26 08:32 (X/X)}',
      '2018-07-26T00:00',
      ('halb nach 8:32',)),
+    # rulePODInterval
+    ('Interval[]{None - 2018-09-17 22:00 (X/X)}',
+     '2018-07-26T00:00',
+     ('am 17.9. abends vor 10',
+      'at Sep 17th in the evening before 10')),
     # rule
     #
     # -----------------------------------------------------------------------------
