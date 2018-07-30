@@ -362,6 +362,11 @@ corpus = [
      '2018-03-07T00:00',
      ('Sunday after noon',
       'Sonntag ab Mittag',)),
+    # ruleDateInterval - day wrap
+    ('Interval[]{2018-11-13 23:30 (X/X) - 2018-11-14 03:35 (X/X)}',
+     '2018-03-07T00:00',
+     ('Mon, Nov 13 11:30 PM - 3:35 AM',
+      'Nov 13 23:30 - 3:35',)),
     # ruleAbsorbDOWComma -- deleted, comma should be removed by caller
     ('Time[]{2018-07-27 X:X (X/X)}',
      '2018-07-26T00:00',
@@ -417,6 +422,14 @@ corpus = [
      '2018-07-26T00:00',
      ('am 17.9. abends vor 10',
       'at Sep 17th in the evening before 10')),
+    ('Interval[]{2018-07-26 22:00 (X/X) - None}',
+     '2018-07-26T00:00',
+     ('abends nach 10',
+      'in the evening after 10',
+      'in the evening after 22h')),
+    ('Interval[]{2018-07-26 20:00 (X/X) - 2018-07-26 21:00 (X/X)}',
+     '2018-07-26T00:00',
+     ('in the evening between 8 and 9',)),
     # rule
     #
     # -----------------------------------------------------------------------------
