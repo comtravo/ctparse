@@ -13,7 +13,7 @@ def ruleAbsorbOnTime(ts, _, t):
     return t
 
 
-@rule(r'von|vom|from', dimension(Interval))
+@rule(r'von|vom|from|between', dimension(Interval))
 def ruleAbsorbFromInterval(ts, _, i):
     return i
 
@@ -541,31 +541,19 @@ def rulePODInterval(ts, p, i):
                             'night' in p.POD or
                             'last' in p.POD):
             return t.hour + 12
-        elif t.hour > 12 and ('forenoon' in p.POD or
-                              'morning' in p.POD or
-                              'first' in p.POD):
-            # 17Uhr morgen -> do not merge
-            return
         else:
             return t.hour
-
     # only makes sense if i is a time interval
-    if not ((i.t_from is None or i.t_from.isTOD) and
-            (i.t_to is None or i.t_to.isTOD)):
+    if not ((i.t_from is None or i.t_from.hasTime) and
+            (i.t_to is None or i.t_to.hasTime)):
         return
-    if i.t_from is None:
-        h = _adjust_h(i.t_to)
-        if not h:
-            return
-        else:
-            return Interval(t_to=Time(hour=h, minute=i.t_to.minute))
-    elif i.t_to is None:
-        h = _adjust_h(i.t_from)
-        if not h:
-            return
-        else:
-            return Interval(t_from=Time(hour=h, minute=i.t_from.minute))
-    else:
-        t_from = Time(hour=i.t_from.hour, minute=i.t_from.minute)
-        t_to = Time(hour=i.t_to.hour, minute=i.t_to.minute)
-        return Interval(t_from=t_from, t_to=t_to)
+    t_to = t_from = None
+    if i.t_to is not None:
+        t_to = Time(year=i.t_to.year, month=i.t_to.month, day=i.t_to.day,
+                    hour=_adjust_h(i.t_to), minute=i.t_to.minute,
+                    DOW=i.t_to.DOW)
+    if i.t_from is not None:
+        t_from = Time(year=i.t_from.year, month=i.t_from.month, day=i.t_from.day,
+                      hour=_adjust_h(i.t_from), minute=i.t_from.minute,
+                      DOW=i.t_from.DOW)
+    return Interval(t_from=t_from, t_to=t_to)

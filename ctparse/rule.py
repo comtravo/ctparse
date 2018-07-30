@@ -20,7 +20,7 @@ _regex_year = r'(?:19\d\d)|(?:20[0-2]\d)|(?:\d\d)'
 
 # used in many places in rules
 _regex_to_join = (r'(\-|to( the)?|(un)?til|bis( zum)?|zum|auf( den)?|und|'
-                  'no later than|spätestens?|at latest( at)?)')
+                  'no later than|spätestens?|at latest( at)?|and)')
 
 _defines = (r'(?(DEFINE)(?<_hour>{regex_hour})(?P<_minute>{regex_minute})'
             '(?P<_day>{regex_day})(?P<_month>{regex_month})'
