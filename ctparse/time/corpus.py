@@ -257,11 +257,15 @@ corpus = [
      '2018-03-07T12:43',
      ('um 8 am 5. August',
       'at 8 on August 5th')),
-    # ruleDateDate, ruleDOMDate
+    # ruleDateDate, ruleDOMDate, ruleDateDOM
     ('Interval[]{2018-08-05 X:X (X/X) - 2018-08-16 X:X (X/X)}',
      '2018-03-07T12:43',
      ('5.8. - 16.8.',
       'August 5th - August 16th',
+      'Aug 5 - 16',
+      'from Aug 5 to 16',
+      '5 to 16 Aug',
+      'from 5 to 16 Aug',
       '5. - 16.8.',
       '5.8. - 16.8.2018',
       '5.8. bis 16.8.2018',

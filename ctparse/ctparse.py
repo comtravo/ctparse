@@ -231,7 +231,6 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
                         score_x = get_score(s.rules, len(x))
                         # only emit productions not emitted before or
                         # productions emitted before but scored higher
-                        # if True:
                         if parse_prod.get(x, score_x - 1) < score_x:
                             parse_prod[x] = score_x
                             logger.debug(' => {}, score={:.2f}, '.format(
