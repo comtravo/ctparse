@@ -81,7 +81,7 @@ def _mk_pod_hours():
         'first': [0, 0],
         'last': [23, 23]
     }
-
+    # ToDo: earlyfirst, earlylateafternoon
     ph = {}
     for pod in ['morning', 'forenoon', 'noon', 'afternoon', 'evening', 'night']:
         for very in ['', 'very']:
@@ -186,6 +186,11 @@ class Time(Artifact):
     def hasDate(self):
         '''at least a date'''
         return self._hasAtLeast('year', 'month', 'day')
+
+    @property
+    def hasDOY(self):
+        '''at least a day of year'''
+        return self._hasAtLeast('month', 'day')
 
     @property
     def hasDOW(self):
