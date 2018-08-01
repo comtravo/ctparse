@@ -41,7 +41,7 @@ class NB:
         """given one production, transform it into all sub-sequences of len 1 - len(prod)"""
         Xs = []
         ys = []
-        for i in range(1, len(prod)):
+        for i in range(1, len(prod)+1):
             Xs.append([str(w) for w in prod[:i]])
             ys.append(1 if y else -1)
         if not Xs:
