@@ -482,6 +482,14 @@ def ruleDOMDate(ts, d1, _, d2):
                     t_to=d2)
 
 
+@rule(predicate('isDate'), _regex_to_join, predicate('isDOM'))
+def ruleDateDOM(ts, d1, _, d2):
+    if d1.day >= d2.day:
+        return
+    return Interval(t_from=d1,
+                    t_to=Time(year=d1.year, month=d1.month, day=d2.day))
+
+
 @rule(predicate('isDOY'), _regex_to_join, predicate('isDate'))
 def ruleDOYDate(ts, d1, _, d2):
     if d1.month > d2.month:
