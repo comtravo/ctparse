@@ -1,11 +1,7 @@
-import logging
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY
 from .. rule import rule, predicate, dimension, _regex_to_join
 from .. types import Time, Interval, pod_hours
-
-
-logger = logging.getLogger(__name__)
 
 
 @rule(r'at|on|am|um|gegen|den|dem|der|the|ca\.?|approx\.?|about|in( the)?', dimension(Time))
@@ -38,7 +34,7 @@ def ruleNamedDOW(ts, m):
 
 _months = [("january", r"january?|jan\.?"),
            ("february", r"february?|feb\.?"),
-           ("march", r"märz|march|mar\.?|mär\.?"),
+           ("march", r"märz|march|mar\.?|mrz\.?|mär\.?"),
            ("april", r"april|apr\.?"),
            ("may", r"mai|may\.?"),
            ("june", r"juni|june|jun\.?"),
@@ -258,7 +254,7 @@ def ruleDOWDOM(ts, dow, dom):
 
 @rule(predicate('hasDOW'), predicate('isDate'))
 def ruleDOWDate(ts, dow, date):
-    # Monday 5th December - ignore DOW
+    # Monday 5th December - ignore DOW, but carry over e.g. POD from dow
     return Time.intersect(date, dow, exclude='DOW')
 
 
@@ -406,7 +402,6 @@ def ruleHalfAfterHH(ts, _, t):
 def ruleTODPOD(ts, tod, pod):
     # time of day may only be an hour as in "3 in the afternoon"; this
     # is only relevant for time <= 12
-    # logger.warning('check ruleTODPOD - there might be more cases that need special handling')
     if tod.hour < 12 and ('afternoon' in pod.POD or
                           'evening' in pod.POD or
                           'night' in pod.POD or
