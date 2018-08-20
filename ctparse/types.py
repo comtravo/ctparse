@@ -257,6 +257,9 @@ class Time(Artifact):
 
     @property
     def dt(self):
+        if self.year is None or self.month is None or self.day is None:
+            raise ValueError('cannot convert underspecified Time into datetime'
+                             ', missing at least one of year, month or day')
         return datetime(self.year, self.month, self.day,
                         self.hour or 0,
                         self.minute or 0)

@@ -114,12 +114,14 @@ corpus = [
      '2018-03-07T12:43',
      ('am nächsten Freitag',
       'on the following Friday')),
-    # ruleDOYYear, ruleDDMM
+    # ruleDOYYear, ruleDDMM, ruleDDMMYYYY
     ('Time[]{2018-05-08 X:X (X/X)}',
      '2018-03-07T12:43',
      ('8.5.2018',
       '8. Mai 2018',
       '8. Mai 18',
+      '8/May/2018',
+      '8/May',
       '8.5.',
       'am 8. Mai 2018',
       'diesen 8. Mai 18',
