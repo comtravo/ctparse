@@ -323,21 +323,36 @@ def ruleLatentPOD(ts, pod):
                 POD=pod.POD)
 
 
-@rule(r'(?<!\d|\.)(?P<day>(?&_day))[\./\-](?P<month>(?&_month))\.?(?!\d|am|\s*pm)')
+@rule(r'(?<!\d|\.)(?P<day>(?&_day))[\./\-]'
+      '((?P<month>(?&_month))|(?P<named_month>({})))\.?'
+      '(?!\d|am|\s*pm)'.format(_rule_months))
 # do not allow dd.ddam, dd.ddpm, but allow dd.dd am - e.g. in the German "13.06 am Nachmittag"
 def ruleDDMM(ts, m):
-    return Time(month=int(m.match.group('month')),
+    if m.match.group('month'):
+        month = int(m.match.group('month'))
+    else:
+        for i, (name, _) in enumerate(_months):
+            if m.match.group(name):
+                month = i+1
+    return Time(month=month,
                 day=int(m.match.group('day')))
 
 
-@rule(r'(?<!\d|\.)(?P<day>(?&_day))[-/\.](?P<month>(?&_month))[-/\.]'
-      '(?P<year>(?&_year))(?!\d)')
+@rule(r'(?<!\d|\.)(?P<day>(?&_day))[-/\.]'
+      '((?P<month>(?&_month))|(?P<named_month>({})))[-/\.]'
+      '(?P<year>(?&_year))(?!\d)'.format(_rule_months))
 def ruleDDMMYYYY(ts, m):
     y = int(m.match.group('year'))
     if y < 100:
         y += 2000
+    if m.match.group('month'):
+        month = int(m.match.group('month'))
+    else:
+        for i, (name, _) in enumerate(_months):
+            if m.match.group(name):
+                month = i+1
     return Time(year=y,
-                month=int(m.match.group('month')),
+                month=month,
                 day=int(m.match.group('day')))
 
 
