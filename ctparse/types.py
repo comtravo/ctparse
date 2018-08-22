@@ -207,25 +207,6 @@ class Time(Artifact):
         '''at least a part of day'''
         return self._hasAtLeast('POD')
 
-    @classmethod
-    def intersect(cls, a, b, exclude=[]):
-        params = {}
-        if type(a) != type(b):
-            return None
-        for attr in a._attrs:
-            if attr in exclude:
-                continue
-            if getattr(a, attr) is not None and getattr(b, attr) is not None:
-                if getattr(a, attr) == getattr(b, attr):
-                    params[attr] = getattr(a, attr)
-                else:
-                    return None
-            elif getattr(a, attr) is not None:
-                params[attr] = getattr(a, attr)
-            elif getattr(b, attr) is not None:
-                params[attr] = getattr(b, attr)
-        return Time(**params)
-
     def __str__(self):
         return '{}-{}-{} {}:{} ({}/{})'.format(
             '{:04d}'.format(self.year) if self.year is not None else 'X',

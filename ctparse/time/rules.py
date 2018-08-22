@@ -250,19 +250,19 @@ def ruleDOWPOD(ts, dow, pod):
     return Time(DOW=dow.DOW, POD=pod.POD)
 
 
-@rule(predicate('hasDOW'), predicate('isDOM'))
+@rule(predicate('isDOW'), predicate('isDOM'))
 def ruleDOWDOM(ts, dow, dom):
     # Monday 5th
     # Find next date at this day of week and day of month
     dm = rrule(MONTHLY, dtstart=ts,
                byweekday=dow.DOW, bymonthday=dom.day, count=1)[0]
-    return Time.intersect(Time(year=dm.year, month=dm.month, day=dm.day), dow, exclude='DOW')
+    return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
 @rule(predicate('hasDOW'), predicate('isDate'))
 def ruleDOWDate(ts, dow, date):
     # Monday 5th December - ignore DOW, but carry over e.g. POD from dow
-    return Time.intersect(date, dow, exclude='DOW')
+    return Time(date.year, date.month, date.day, POD=dow.POD)
 
 
 # LatentX: handle time entities that are not grounded to a date yet
@@ -275,12 +275,12 @@ def ruleLatentDOM(ts, dom):
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
-@rule(predicate('hasDOW'))
+@rule(predicate('isDOW'))
 def ruleLatentDOW(ts, dow):
     dm = ts + relativedelta(weekday=dow.DOW)
     if dm <= ts:
         dm += relativedelta(weeks=1)
-    return Time.intersect(Time(year=dm.year, month=dm.month, day=dm.day), dow, exclude='DOW')
+    return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
 @rule(predicate('isDOY'))
