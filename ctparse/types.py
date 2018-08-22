@@ -219,7 +219,7 @@ class Time(Artifact):
 
     @property
     def start(self):
-        if self.hasPOD:
+        if self.hour is None and self.hasPOD:
             hour = pod_hours[self.POD][0]
         else:
             hour = self.hour or 0
@@ -228,7 +228,7 @@ class Time(Artifact):
 
     @property
     def end(self):
-        if self.hasPOD:
+        if self.hour is None and self.hasPOD:
             hour = pod_hours[self.POD][1]
         else:
             hour = self.hour if self.hour is not None else 23
