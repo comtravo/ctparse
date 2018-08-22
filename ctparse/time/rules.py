@@ -4,7 +4,8 @@ from .. rule import rule, predicate, dimension, _regex_to_join
 from .. types import Time, Interval, pod_hours
 
 
-@rule(r'at|on|am|um|gegen|den|dem|der|the|ca\.?|approx\.?|about|(in|of)( the)?', dimension(Time))
+@rule(r'at|on|am|um|gegen|den|dem|der|the|ca\.?|approx\.?|about|(in|of)( the)?|around',
+      dimension(Time))
 def ruleAbsorbOnTime(ts, _, t):
     return t
 
