@@ -218,19 +218,26 @@ def ruleMonthDOM(ts, m, dom):
     return Time(month=m.month, day=dom.day)
 
 
-@rule(r'am|diese(n|m)|at|on|this', predicate('hasDOW'))
+@rule(r'am|diese(n|m)|at|on|this', predicate('isDOW'))
 def ruleAtDOW(ts, _, dow):
     dm = ts + relativedelta(weekday=dow.DOW)
     if dm.date() == ts.date():
         dm += relativedelta(weeks=1)
-    return Time.intersect(Time(year=dm.year, month=dm.month, day=dm.day), dow, exclude='DOW')
+    return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
-@rule(r'((am )?(dem |den )?(kommenden|nächsten))|((on |at )?(the )?(next|following))',
-      predicate('hasDOW'))
+@rule(r'((am )?(dem |den )?((kommenden?|nächsten?)( Woche)?))|'
+      '((on |at )?(the )?((next|following)( week)?))',
+      predicate('isDOW'))
 def ruleNextDOW(ts, _, dow):
     dm = ts + relativedelta(weekday=dow.DOW, weeks=1)
-    return Time.intersect(Time(year=dm.year, month=dm.month, day=dm.day), dow, exclude='DOW')
+    return Time(year=dm.year, month=dm.month, day=dm.day)
+
+
+@rule(predicate('isDOW'), r'((kommende|nächste) Woche)|((next|following) week)')
+def ruleDOWNextWeek(ts, dow, _):
+    dm = ts + relativedelta(weekday=dow.DOW, weeks=1)
+    return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
 @rule(predicate('isDOY'), predicate('isYear'))
@@ -324,6 +331,20 @@ def ruleLatentPOD(ts, pod):
       '(?!\d|am|\s*pm)'.format(_rule_months))
 # do not allow dd.ddam, dd.ddpm, but allow dd.dd am - e.g. in the German "13.06 am Nachmittag"
 def ruleDDMM(ts, m):
+    if m.match.group('month'):
+        month = int(m.match.group('month'))
+    else:
+        for i, (name, _) in enumerate(_months):
+            if m.match.group(name):
+                month = i+1
+    return Time(month=month,
+                day=int(m.match.group('day')))
+
+
+@rule(r'(?<!\d|\.)((?P<month>(?&_month))|(?P<named_month>({})))[/\-]'
+      '(?P<day>(?&_day))'
+      '(?!\d|am|\s*pm)'.format(_rule_months))
+def ruleMMDD(ts, m):
     if m.match.group('month'):
         month = int(m.match.group('month'))
     else:
