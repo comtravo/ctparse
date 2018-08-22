@@ -4,7 +4,7 @@ from .. rule import rule, predicate, dimension, _regex_to_join
 from .. types import Time, Interval, pod_hours
 
 
-@rule(r'at|on|am|um|gegen|den|dem|der|the|ca\.?|approx\.?|about|in( the)?', dimension(Time))
+@rule(r'at|on|am|um|gegen|den|dem|der|the|ca\.?|approx\.?|about|(in|of)( the)?', dimension(Time))
 def ruleAbsorbOnTime(ts, _, t):
     return t
 
@@ -472,6 +472,12 @@ def ruleTODDate(ts, tod, date):
 
 @rule(predicate('isDate'), predicate('isPOD'))
 def ruleDatePOD(ts, d, pod):
+    return Time(year=d.year, month=d.month, day=d.day,
+                POD=pod.POD)
+
+
+@rule(predicate('isPOD'), predicate('isDate'))
+def rulePODDate(ts, pod, d):
     return Time(year=d.year, month=d.month, day=d.day,
                 POD=pod.POD)
 
