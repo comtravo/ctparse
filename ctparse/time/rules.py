@@ -100,8 +100,8 @@ def _pod_from_match(pod, m):
 
 
 @rule(r'(?P<mod_very>(sehr|very)\s+)?'
-      '((?P<mod_early>früh(er)?|early)'
-      '|(?P<mod_late>(spät(er)?|late)))',
+      '((?P<mod_early>früh(e(r|n|m))?|early)'
+      '|(?P<mod_late>(spät(e(r|n|m))?|late)))',
       predicate('isPOD'))
 def ruleEarlyLatePOD(ts, m, p):
     return Time(POD=_pod_from_match(p.POD, m))
