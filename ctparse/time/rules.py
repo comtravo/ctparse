@@ -292,7 +292,7 @@ def ruleLatentDOW(ts, dow):
 @rule(predicate('isDOY'))
 def ruleLatentDOY(ts, doy):
     dm = ts + relativedelta(month=doy.month, day=doy.day)
-    if dm <= ts:
+    if dm < ts:
         dm += relativedelta(years=1)
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
