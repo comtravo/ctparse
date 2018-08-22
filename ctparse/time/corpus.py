@@ -144,6 +144,15 @@ corpus = [
      ('Tuesday 8th',
       'Tuesday the 8th',
       'Dienstag der 8.')),
+    # ruleDOWDate, ruleDateDOW
+    ('Time[]{2018-05-08 X:X (X/X)}',
+     '2018-03-07T12:43',
+     ('Tuesday, 8.5.',
+      '8.5. Tuesday',)),
+    ('Time[]{2018-05-08 X:X (X/morning)}',
+     '2018-03-07T12:43',
+     ('Dienstagmorgen 8.5.',
+      '8.5. Dienstagmorgen',)),
     # rulePOD, ruleLatentPOD
     ('Time[]{2018-03-08 X:X (X/morning)}',
      '2018-03-07T12:43',

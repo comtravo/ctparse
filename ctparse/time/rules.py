@@ -265,6 +265,12 @@ def ruleDOWDate(ts, dow, date):
     return Time(date.year, date.month, date.day, POD=dow.POD)
 
 
+@rule(predicate('isDate'), predicate('hasDOW'))
+def ruleDateDOW(ts, date, dow):
+    # Monday 5th December - ignore DOW, but carry over e.g. POD from dow
+    return Time(date.year, date.month, date.day, POD=dow.POD)
+
+
 # LatentX: handle time entities that are not grounded to a date yet
 # and assume the next date+time in the future
 @rule(predicate('isDOM'))
