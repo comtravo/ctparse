@@ -70,42 +70,120 @@ class RegexMatch(Artifact):
         return '{}:{}'.format(self.id, self._text)
 
 
+_pod_hours = {
+    'earlymorning': {'offset': (4, 7),
+                     'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                               'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                               'very': {'offset': (0, 0)},
+                               'offset': (-1, -1)},
+                     'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                              'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                              'very': {'offset': (0, 0)},
+                              'offset': (1, 1)}},
+    'morning': {'offset': (6, 9),
+                'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                          'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                          'very': {'offset': (0, 0)},
+                          'offset': (-1, -1)},
+                'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                         'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                         'very': {'offset': (0, 0)},
+                         'offset': (1, 1)}},
+    'forenoon': {'offset': (9, 12),
+                 'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                           'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                           'very': {'offset': (0, 0)},
+                           'offset': (-1, -1)},
+                 'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                          'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                          'very': {'offset': (0, 0)},
+                          'offset': (1, 1)}},
+    'noon': {'offset': (11, 13),
+             'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                       'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                       'very': {'offset': (0, 0)},
+                       'offset': (-1, -1)},
+             'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                      'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                      'very': {'offset': (0, 0)},
+                      'offset': (1, 1)}},
+    'afternoon': {'offset': (12, 17),
+                  'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                            'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                            'very': {'offset': (0, 0)},
+                            'offset': (-1, -1)},
+                  'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                           'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                           'very': {'offset': (0, 0)},
+                           'offset': (1, 1)}},
+    'evening': {'offset': (17, 20),
+                'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                          'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                          'very': {'offset': (0, 0)},
+                          'offset': (-1, -1)},
+                'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                         'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                         'very': {'offset': (0, 0)},
+                         'offset': (1, 1)}},
+    'lateevening': {'offset': (18, 21),
+                    'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                              'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                              'very': {'offset': (0, 0)},
+                              'offset': (-1, -1)},
+                    'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                             'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                             'very': {'offset': (0, 0)},
+                             'offset': (1, 1)}},
+    'night': {'offset': (19, 22),
+              'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                        'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                        'very': {'offset': (0, 0)},
+                        'offset': (-1, -1)},
+              'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                       'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                       'very': {'offset': (0, 0)},
+                       'offset': (1, 1)}},
+    'first': {'offset': (0, 0),
+              'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                        'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                        'very': {'offset': (0, 0)},
+                        'offset': (0, 0)},
+              'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                       'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                       'very': {'offset': (0, 0)},
+                       'offset': (0, 0)}},
+    'last': {'offset': (23, 23),
+             'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                       'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                       'very': {'offset': (0, 0)},
+                       'offset': (0, 0)},
+             'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                      'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
+                      'very': {'offset': (0, 0)},
+                      'offset': (0, 0)}}}
+
+
 def _mk_pod_hours():
-    raw_pod_hours = {
-        'morning': [6, 9],
-        'forenoon': [9, 12],
-        'noon': [11, 13],
-        'afternoon': [12, 17],
-        'evening': [17, 20],
-        'night': [19, 22],
-        'first': [0, 0],
-        'last': [23, 23]
-    }
-    # ToDo: earlyfirst, earlylateafternoon
-    ph = {}
-    for pod in ['morning', 'forenoon', 'noon', 'afternoon', 'evening', 'night']:
-        for very in ['', 'very']:
-            for mod in ['', 'early', 'late']:
-                if very == 'very' and mod == '':
-                    continue
-                pod_hours = list(raw_pod_hours[pod])
-                if mod == 'early':
-                    pod_hours[0] -= 2
-                    if very:
-                        pod_hours[0] -= 1
-                elif mod == 'late':
-                    pod_hours[1] += 2
-                    if very:
-                        pod_hours[1] += 1
-                pod_hours[0] = max(pod_hours[0], 0)
-                pod_hours[1] = min(pod_hours[1], 23)
-                ph[very + mod + pod] = tuple(pod_hours)
-    return ph
+    def _add_ts(t1, t2):
+        return (t1[0]+t2[0], t1[1] + t2[1])
+
+    def _mk(pod, pod_data, t):
+        r = {pod: _add_ts(t, pod_data['offset'])}
+        for k, v in pod_data.items():
+            if k == 'offset':
+                continue
+            r.update(_mk(k + pod, v, r[pod]))
+        return r
+
+    res = {}
+    for k, v in _pod_hours.items():
+        if k == 'offset':
+            continue
+        res.update(_mk(k, v, (0, 0)))
+    return res
 
 
 pod_hours = _mk_pod_hours()
-pod_hours['first'] = (0, 0)
-pod_hours['last'] = (23, 23)
 
 
 class Time(Artifact):

@@ -87,15 +87,11 @@ def ruleMidnight(ts, _):
 def _pod_from_match(pod, m):
     mod = ''
     if m.match.group('mod_early'):
-        if m.match.group('mod_very'):
-            mod = 'veryearly'
-        else:
-            mod = 'early'
+        mod = 'early'
     elif m.match.group('mod_late'):
-        if m.match.group('mod_very'):
-            mod = 'verylate'
-        else:
-            mod = 'late'
+        mod = 'late'
+    if m.match.group('mod_very'):
+        mod = 'very' + mod
     return mod + pod
 
 
