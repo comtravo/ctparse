@@ -274,7 +274,8 @@ corpus = [
     ('Time[]{2018-03-07 16:30 (X/X)}',
      '2018-03-07T12:43',
      ('nachmittags um 16:30',
-      'afternoon at 16:30')),
+      'afternoon at 16:30',
+      'afternoon at around 16:30')),
     # ruleDateTOD
     ('Time[]{2018-08-05 08:00 (X/X)}',
      '2018-03-07T12:43',
@@ -377,12 +378,14 @@ corpus = [
      ('at 8pm',
       'um 20h',
       'gegen 20:00',
-      'about 8pm')),
+      'about 8pm',
+      'at around 8pm')),
     # ruleAbsorbOnTime + X
     ('Time[]{2018-06-21 08:00 (X/X)}',
      '2018-03-07T00:00',
      ('Jun 21 at 8am',
       'Jun 21 about 8am',
+      'Jun 21 at about 8am',
       'Jun 21 on 8am',
       '21. Juni um 8')),
     # ruleDateInterval
