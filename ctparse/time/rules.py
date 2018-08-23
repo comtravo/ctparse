@@ -138,7 +138,7 @@ def ruleMonthOrdinal(ts, m):
     return Time(month=int(m.match.group('month')))
 
 
-@rule(r'(?<!\d|\.)(?P<day>(?&_day))\s*(?:st|rd|th|s?ten|ter)')
+@rule(r'(?<!\d|\.)(?P<day>(?&_day))\s*(?:st|nd|rd|th|s?ten|ter)')
 # a "[0-31]" followed by a th/st
 def ruleDOM2(ts, m):
     return Time(day=int(m.match.group('day')))
