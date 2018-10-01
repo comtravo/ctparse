@@ -159,7 +159,7 @@ def ruleToday(ts, _):
 
 
 @rule(r'(genau\s*)?jetzt|diesen moment|in diesem moment|gerade eben|'
-      '((just|right)\s*)?now|immediately')
+      r'((just|right)\s*)?now|immediately')
 def ruleNow(ts, _):
     return Time(year=ts.year, month=ts.month, day=ts.day, hour=ts.hour, minute=ts.minute)
 
@@ -330,8 +330,8 @@ def ruleLatentPOD(ts, pod):
 
 
 @rule(r'(?<!\d|\.)(?P<day>(?&_day))[\./\-]'
-      '((?P<month>(?&_month))|(?P<named_month>({})))\.?'
-      '(?!\d|am|\s*pm)'.format(_rule_months))
+      r'((?P<month>(?&_month))|(?P<named_month>({})))\.?'
+      r'(?!\d|am|\s*pm)'.format(_rule_months))
 # do not allow dd.ddam, dd.ddpm, but allow dd.dd am - e.g. in the German "13.06 am Nachmittag"
 def ruleDDMM(ts, m):
     if m.match.group('month'):
@@ -345,8 +345,8 @@ def ruleDDMM(ts, m):
 
 
 @rule(r'(?<!\d|\.)((?P<month>(?&_month))|(?P<named_month>({})))[/\-]'
-      '(?P<day>(?&_day))'
-      '(?!\d|am|\s*pm)'.format(_rule_months))
+      r'(?P<day>(?&_day))'
+      r'(?!\d|am|\s*pm)'.format(_rule_months))
 def ruleMMDD(ts, m):
     if m.match.group('month'):
         month = int(m.match.group('month'))
@@ -359,8 +359,8 @@ def ruleMMDD(ts, m):
 
 
 @rule(r'(?<!\d|\.)(?P<day>(?&_day))[-/\.]'
-      '((?P<month>(?&_month))|(?P<named_month>({})))[-/\.]'
-      '(?P<year>(?&_year))(?!\d)'.format(_rule_months))
+      r'((?P<month>(?&_month))|(?P<named_month>({})))[-/\.]'
+      r'(?P<year>(?&_year))(?!\d)'.format(_rule_months))
 def ruleDDMMYYYY(ts, m):
     y = int(m.match.group('year'))
     if y < 100:
@@ -377,7 +377,7 @@ def ruleDDMMYYYY(ts, m):
 
 
 @rule(r'(?<!\d|\.)(?P<hour>(?&_hour))((:|uhr|h|\.)?'
-      '(?P<minute>(?&_minute))?\s*(uhr|h)?)(?P<ampm>\s*[ap]\.?m\.?)?(?!\d)')
+      r'(?P<minute>(?&_minute))?\s*(uhr|h)?)(?P<ampm>\s*[ap]\.?m\.?)?(?!\d)')
 def ruleHHMM(ts, m):
     # hh [am|pm]
     # hh:mm

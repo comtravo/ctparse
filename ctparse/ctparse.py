@@ -260,7 +260,7 @@ else:
 
 # replace all comma, semicolon, whitespace, invisible control, opening and closing brackets
 _repl1 = regex.compile(r'[,;\pZ\pC\p{Ps}\p{Pe}]+', regex.VERSION1)
-_repl2 = regex.compile('(\p{Pd}|[\u2010-\u2015]|\u2043)+', regex.VERSION1)
+_repl2 = regex.compile(r'(\p{Pd}|[\u2010-\u2015]|\u2043)+', regex.VERSION1)
 
 
 def _preprocess_string(txt):
