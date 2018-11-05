@@ -166,7 +166,7 @@ class TestTime(TestCase):
         t = Time(2015, 12, 12)
         self.assertEqual(t.dt, datetime(2015, 12, 12))
 
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             t = Time(year=2012, month=12, hour=12, minute=12)
             t.dt
 
