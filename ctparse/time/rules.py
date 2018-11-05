@@ -1,14 +1,11 @@
-import logging
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY
 from .. rule import rule, predicate, dimension, _regex_to_join
 from .. types import Time, Interval, pod_hours
 
 
-logger = logging.getLogger(__name__)
-
-
-@rule(r'at|on|am|um|gegen|den|dem|der|the|ca\.?|approx\.?|about|in( the)?', dimension(Time))
+@rule(r'at|on|am|um|gegen|den|dem|der|the|ca\.?|approx\.?|about|(in|of)( the)?|around',
+      dimension(Time))
 def ruleAbsorbOnTime(ts, _, t):
     return t
 
@@ -38,7 +35,7 @@ def ruleNamedDOW(ts, m):
 
 _months = [("january", r"january?|jan\.?"),
            ("february", r"february?|feb\.?"),
-           ("march", r"märz|march|mar\.?|mär\.?"),
+           ("march", r"märz|march|mar\.?|mrz\.?|mär\.?"),
            ("april", r"april|apr\.?"),
            ("may", r"mai|may\.?"),
            ("june", r"juni|june|jun\.?"),
@@ -90,21 +87,17 @@ def ruleMidnight(ts, _):
 def _pod_from_match(pod, m):
     mod = ''
     if m.match.group('mod_early'):
-        if m.match.group('mod_very'):
-            mod = 'veryearly'
-        else:
-            mod = 'early'
+        mod = 'early'
     elif m.match.group('mod_late'):
-        if m.match.group('mod_very'):
-            mod = 'verylate'
-        else:
-            mod = 'late'
+        mod = 'late'
+    if m.match.group('mod_very'):
+        mod = 'very' + mod
     return mod + pod
 
 
 @rule(r'(?P<mod_very>(sehr|very)\s+)?'
-      '((?P<mod_early>früh(er)?|early)'
-      '|(?P<mod_late>(spät(er)?|late)))',
+      '((?P<mod_early>früh(e(r|n|m))?|early)'
+      '|(?P<mod_late>(spät(e(r|n|m))?|late)))',
       predicate('isPOD'))
 def ruleEarlyLatePOD(ts, m, p):
     return Time(POD=_pod_from_match(p.POD, m))
@@ -145,7 +138,7 @@ def ruleMonthOrdinal(ts, m):
     return Time(month=int(m.match.group('month')))
 
 
-@rule(r'(?<!\d|\.)(?P<day>(?&_day))\s*(?:st|rd|th|s?ten|ter)')
+@rule(r'(?<!\d|\.)(?P<day>(?&_day))\s*(?:st|nd|rd|th|s?ten|ter)')
 # a "[0-31]" followed by a th/st
 def ruleDOM2(ts, m):
     return Time(day=int(m.match.group('day')))
@@ -166,7 +159,7 @@ def ruleToday(ts, _):
 
 
 @rule(r'(genau\s*)?jetzt|diesen moment|in diesem moment|gerade eben|'
-      '((just|right)\s*)?now|immediately')
+      r'((just|right)\s*)?now|immediately')
 def ruleNow(ts, _):
     return Time(year=ts.year, month=ts.month, day=ts.day, hour=ts.hour, minute=ts.minute)
 
@@ -222,19 +215,26 @@ def ruleMonthDOM(ts, m, dom):
     return Time(month=m.month, day=dom.day)
 
 
-@rule(r'am|diese(n|m)|at|on|this', predicate('hasDOW'))
+@rule(r'am|diese(n|m)|at|on|this', predicate('isDOW'))
 def ruleAtDOW(ts, _, dow):
     dm = ts + relativedelta(weekday=dow.DOW)
     if dm.date() == ts.date():
         dm += relativedelta(weeks=1)
-    return Time.intersect(Time(year=dm.year, month=dm.month, day=dm.day), dow, exclude='DOW')
+    return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
-@rule(r'((am )?(dem |den )?(kommenden|nächsten))|((on |at )?(the )?(next|following))',
-      predicate('hasDOW'))
+@rule(r'((am )?(dem |den )?((kommenden?|nächsten?)( Woche)?))|'
+      '((on |at )?(the )?((next|following)( week)?))',
+      predicate('isDOW'))
 def ruleNextDOW(ts, _, dow):
     dm = ts + relativedelta(weekday=dow.DOW, weeks=1)
-    return Time.intersect(Time(year=dm.year, month=dm.month, day=dm.day), dow, exclude='DOW')
+    return Time(year=dm.year, month=dm.month, day=dm.day)
+
+
+@rule(predicate('isDOW'), r'((kommende|nächste) Woche)|((next|following) week)')
+def ruleDOWNextWeek(ts, dow, _):
+    dm = ts + relativedelta(weekday=dow.DOW, weeks=1)
+    return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
 @rule(predicate('isDOY'), predicate('isYear'))
@@ -247,19 +247,25 @@ def ruleDOWPOD(ts, dow, pod):
     return Time(DOW=dow.DOW, POD=pod.POD)
 
 
-@rule(predicate('hasDOW'), predicate('isDOM'))
+@rule(predicate('isDOW'), predicate('isDOM'))
 def ruleDOWDOM(ts, dow, dom):
     # Monday 5th
     # Find next date at this day of week and day of month
     dm = rrule(MONTHLY, dtstart=ts,
                byweekday=dow.DOW, bymonthday=dom.day, count=1)[0]
-    return Time.intersect(Time(year=dm.year, month=dm.month, day=dm.day), dow, exclude='DOW')
+    return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
 @rule(predicate('hasDOW'), predicate('isDate'))
 def ruleDOWDate(ts, dow, date):
-    # Monday 5th December - ignore DOW
-    return Time.intersect(date, dow, exclude='DOW')
+    # Monday 5th December - ignore DOW, but carry over e.g. POD from dow
+    return Time(date.year, date.month, date.day, POD=dow.POD)
+
+
+@rule(predicate('isDate'), predicate('hasDOW'))
+def ruleDateDOW(ts, date, dow):
+    # Monday 5th December - ignore DOW, but carry over e.g. POD from dow
+    return Time(date.year, date.month, date.day, POD=dow.POD)
 
 
 # LatentX: handle time entities that are not grounded to a date yet
@@ -272,18 +278,18 @@ def ruleLatentDOM(ts, dom):
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
-@rule(predicate('hasDOW'))
+@rule(predicate('isDOW'))
 def ruleLatentDOW(ts, dow):
     dm = ts + relativedelta(weekday=dow.DOW)
     if dm <= ts:
         dm += relativedelta(weeks=1)
-    return Time.intersect(Time(year=dm.year, month=dm.month, day=dm.day), dow, exclude='DOW')
+    return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
 @rule(predicate('isDOY'))
 def ruleLatentDOY(ts, doy):
     dm = ts + relativedelta(month=doy.month, day=doy.day)
-    if dm <= ts:
+    if dm < ts:
         dm += relativedelta(years=1)
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
@@ -323,26 +329,55 @@ def ruleLatentPOD(ts, pod):
                 POD=pod.POD)
 
 
-@rule(r'(?<!\d|\.)(?P<day>(?&_day))[\./\-](?P<month>(?&_month))\.?(?!\d|am|\s*pm)')
+@rule(r'(?<!\d|\.)(?P<day>(?&_day))[\./\-]'
+      r'((?P<month>(?&_month))|(?P<named_month>({})))\.?'
+      r'(?!\d|am|\s*pm)'.format(_rule_months))
 # do not allow dd.ddam, dd.ddpm, but allow dd.dd am - e.g. in the German "13.06 am Nachmittag"
 def ruleDDMM(ts, m):
-    return Time(month=int(m.match.group('month')),
+    if m.match.group('month'):
+        month = int(m.match.group('month'))
+    else:
+        for i, (name, _) in enumerate(_months):
+            if m.match.group(name):
+                month = i+1
+    return Time(month=month,
                 day=int(m.match.group('day')))
 
 
-@rule(r'(?<!\d|\.)(?P<day>(?&_day))[-/\.](?P<month>(?&_month))[-/\.]'
-      '(?P<year>(?&_year))(?!\d)')
+@rule(r'(?<!\d|\.)((?P<month>(?&_month))|(?P<named_month>({})))[/\-]'
+      r'(?P<day>(?&_day))'
+      r'(?!\d|am|\s*pm)'.format(_rule_months))
+def ruleMMDD(ts, m):
+    if m.match.group('month'):
+        month = int(m.match.group('month'))
+    else:
+        for i, (name, _) in enumerate(_months):
+            if m.match.group(name):
+                month = i+1
+    return Time(month=month,
+                day=int(m.match.group('day')))
+
+
+@rule(r'(?<!\d|\.)(?P<day>(?&_day))[-/\.]'
+      r'((?P<month>(?&_month))|(?P<named_month>({})))[-/\.]'
+      r'(?P<year>(?&_year))(?!\d)'.format(_rule_months))
 def ruleDDMMYYYY(ts, m):
     y = int(m.match.group('year'))
     if y < 100:
         y += 2000
+    if m.match.group('month'):
+        month = int(m.match.group('month'))
+    else:
+        for i, (name, _) in enumerate(_months):
+            if m.match.group(name):
+                month = i+1
     return Time(year=y,
-                month=int(m.match.group('month')),
+                month=month,
                 day=int(m.match.group('day')))
 
 
 @rule(r'(?<!\d|\.)(?P<hour>(?&_hour))((:|uhr|h|\.)?'
-      '(?P<minute>(?&_minute))?\s*(uhr|h)?)(?P<ampm>\s*[ap]\.?m\.?)?(?!\d)')
+      r'(?P<minute>(?&_minute))?\s*(uhr|h)?)(?P<ampm>\s*[ap]\.?m\.?)?(?!\d)')
 def ruleHHMM(ts, m):
     # hh [am|pm]
     # hh:mm
@@ -406,7 +441,6 @@ def ruleHalfAfterHH(ts, _, t):
 def ruleTODPOD(ts, tod, pod):
     # time of day may only be an hour as in "3 in the afternoon"; this
     # is only relevant for time <= 12
-    # logger.warning('check ruleTODPOD - there might be more cases that need special handling')
     if tod.hour < 12 and ('afternoon' in pod.POD or
                           'evening' in pod.POD or
                           'night' in pod.POD or
@@ -441,6 +475,12 @@ def ruleTODDate(ts, tod, date):
 
 @rule(predicate('isDate'), predicate('isPOD'))
 def ruleDatePOD(ts, d, pod):
+    return Time(year=d.year, month=d.month, day=d.day,
+                POD=pod.POD)
+
+
+@rule(predicate('isPOD'), predicate('isDate'))
+def rulePODDate(ts, pod, d):
     return Time(year=d.year, month=d.month, day=d.day,
                 POD=pod.POD)
 

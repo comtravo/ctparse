@@ -38,7 +38,7 @@ setup(
         'numpy>=1.14.4,<2.0.0',
         'python-dateutil>=2.7.3,<3.0.0',
         'regex>=2018.6.6',
-        'scikit-learn>=0.19.1,<0.20.0',
+        'scikit-learn>=0.20.0,<0.21.0',
         'scipy>=1.1.0,<2.0.0',
         'tqdm>=4.23.4,<5.0.0'
     ],
@@ -54,6 +54,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/comtravo/ctparse',
-    version='0.0.32',
+    version='0.0.37',
     zip_safe=False,
 )
