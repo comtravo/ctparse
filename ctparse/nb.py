@@ -35,7 +35,7 @@ class NB:
         if self._model is None:
             return [0.0 for x in X]
         pred = self._model.predict_log_proba(X)
-        return pred[:, 1] - pred[:, 0]
+        return pred[:, 1] - pred[:, 0]  # NOTE(glanaro): the prediction is log-odds
 
     def map_prod(self, prod, y=None):
         """given one production, transform it into all sub-sequences of len 1 - len(prod)"""

@@ -8,6 +8,7 @@ from time import perf_counter
 from datetime import datetime
 from math import log
 from functools import wraps
+from typing import List, Tuple
 
 from . types import RegexMatch
 from . nb import NB
@@ -204,7 +205,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
             s = stack.pop()
             logger.debug('-'*80)
             logger.debug('producing on {}, score={:.2f}'.format(s.prod, s.score))
-            new_stack = []
+            new_stack = []  # NOTE(glanaro): new_stack_elements
             for r_name, r in s.applicable_rules.items():
                 for r_match in _match_rule(s.prod, r[1]):
                     # apply production part of rule
@@ -391,7 +392,7 @@ def _seq_match(seq, pat, offset=0):
                             yield [iseq+offset] + subm
 
 
-def _match_regex(txt):
+def _match_regex(txt: str) -> List[RegexMatch]:
     """Match all known regex in txt and return a list of RegxMatch objects
     sorted by the start of the match. Overlapping matches of the same
     expression are returned as well.
@@ -408,7 +409,7 @@ def _match_regex(txt):
     return sorted(matches, key=lambda x: (x.mstart, x.mend))
 
 
-def _regex_stack(txt, regex_matches, t_fun=lambda: None):
+def _regex_stack(txt, regex_matches, t_fun=lambda: None) -> List[Tuple[RegexMatch]]:
     """assumes that regex_matches are sorted by increasing start index
 
     Algo: somewhere on paper, but in a nutshell:
@@ -435,6 +436,9 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
 
       * if no new productions could be generated for s, this is one
         result sequence.
+
+    NOTE(glanaro): This seems to me that outputs a list of sequences of regexes 
+    that are contiguous.
     """
     prods = []
     n_rm = len(regex_matches)
@@ -469,12 +473,14 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
         for j in range(i+1, n_rm):
             M[j][i] = get_m_dist(regex_matches[i], regex_matches[j])
 
+    # NOTE(glanaro): I believe this means that this is a beginning node.
+    # why reversed?
     stack = [(i,) for i in reversed(range(n_rm)) if sum(M[i]) == 0]
     while stack:
         t_fun()
         s = stack.pop()
         i = s[-1]
-        new_prod = False
+        new_prod = False  # NOTE(glanaro): why is this called a production if there is no production rules?
         for j in range(i+1, n_rm):
             if M[j][i] == 1:
                 stack.append(s + (j,))
