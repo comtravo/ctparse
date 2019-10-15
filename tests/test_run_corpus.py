@@ -1,5 +1,7 @@
 from unittest import TestCase
-from ctparse.ctparse import run_corpus, _nb
+
+from ctparse.build_model import run_corpus
+from ctparse.ctparse import _nb
 from ctparse.time.corpus import corpus
 
 

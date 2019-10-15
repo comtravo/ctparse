@@ -8,7 +8,7 @@ from typing import Sequence, Tuple
 from tqdm import tqdm
 
 from .nb import NB
-from .ctparse import _ctparse, _preprocess_string
+from .ctparse import _ctparse, _preprocess_string, _nb
 from .time.corpus import corpus as corpus_time
 from .time.auto_corpus import corpus as auto_corpus
 
