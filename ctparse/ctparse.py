@@ -445,22 +445,21 @@ def _match_regex(txt: str, regexes: Dict[str, regex.Pattern]) -> List[RegexMatch
 
 
 def _regex_stack(txt, regex_matches: List[RegexMatch], t_fun=lambda: None) -> List[Tuple[RegexMatch]]:
-    """Group contiguous RegexMatch objects together.
+    # Group contiguous RegexMatch objects together.
 
-    Assumes that regex_matches are sorted by increasing start index
+    # Assumes that regex_matches are sorted by increasing start index
 
-    For example, say you have those, potentially overlapping sequences
-    with a certain start and end
-    [start=0, end=4]
-    [start=1, end=2]
-    [start=5, end=6]
-    [start=8, end=9]
+    # For example, say you have those, potentially overlapping sequences
+    # with a certain start and end
+    # [start=0, end=4]
+    # [start=1, end=2]
+    # [start=5, end=6]
+    # [start=8, end=9]
 
-    This will group all regexmatches that are contiguous:
-    [start=0, end=4], [start=5, end=6]
-    [start=1, end=2]
-    [start=8, end=9]
-    """
+    # This will group all regexmatches that are contiguous:
+    # [start=0, end=4], [start=5, end=6]
+    # [start=1, end=2]
+    # [start=8, end=9]
 
     # Algo: somewhere on paper, but in a nutshell:
     # * stack empty
