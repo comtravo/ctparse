@@ -444,46 +444,48 @@ def _match_regex(txt: str, regexes: Dict[str, regex.Pattern]) -> List[RegexMatch
     return sorted(matches, key=lambda x: (x.mstart, x.mend))
 
 
-def _regex_stack(txt, regex_matches: List[RegexMatch], t_fun=lambda: None) -> List[Tuple[RegexMatch]]:
+def _regex_stack(txt, regex_matches: List[RegexMatch], on_do_iter=lambda: None) -> List[Tuple[RegexMatch]]:
     # Group contiguous RegexMatch objects together.
-
-    # Assumes that regex_matches are sorted by increasing start index
-
-    # For example, say you have those, potentially overlapping sequences
-    # with a certain start and end
-    # [start=0, end=4]
-    # [start=1, end=2]
-    # [start=5, end=6]
-    # [start=8, end=9]
-
-    # This will group all regexmatches that are contiguous:
-    # [start=0, end=4], [start=5, end=6]
-    # [start=1, end=2]
-    # [start=8, end=9]
-
-    # Algo: somewhere on paper, but in a nutshell:
-    # * stack empty
-
+    #
+    # Assumes that regex_matches are sorted by increasing start index. on_do_iter
+    # is a callback that will be invoked every time the algorithm performs a loop.
+    #
+    # Example:
+    # Say you have the following text, where the regex matches are the
+    # words between square brackets.
+    #
+    # [Tomorrow] I want to go to the movies between [2] [pm] and [5] [pm].
+    #
+    # This function will return the matches that are contiguous (excluding space characters)
+    # [Tomorrow]
+    # [2], [pm]
+    # [5], [pm]
+    #
+    # This also works with overlapping matches.
+    #
+    # Algo:
+    # * initialize an empty stack
+    #
     # * add all sequences of one expression to the stack, excluding
     #   expressions which can be reached from "earlier" expressison
     #   (i.e. there is no gap between them):
-
+    #
     #   - say A and B have no gap inbetween and all sequences starting
     #     at A have already been produced. These by definition(which?: -) include as sub-sequences all sequences starting at B. Any
     #     other sequences starting at B directly will not add valid
     #     variations, as each of them could be prefixed with a sequence
     #     starting at A
-
+    #
     # * while the stack is not empty:
-
+    #
     #   * get top sequence s from stack
-
+    #
     #   * generate all possible continuations for this sequence,
     #     i.e. sequences where expression can be appended to the last
     #     element s[-1] in s and put these extended sequences on the stack
-
-    #   * if no new productions could be generated for s, this is one
-    #     result sequence.
+    #
+    #   * if no new continuation could be generated for s, this sequence of RegexMatch is appended
+    #     to the list of results.
 
     prods = []
     n_rm = len(regex_matches)
@@ -522,10 +524,9 @@ def _regex_stack(txt, regex_matches: List[RegexMatch], t_fun=lambda: None) -> Li
     # why reversed?
     stack = [(i,) for i in reversed(range(n_rm)) if sum(M[i]) == 0]
     while stack:
-        t_fun()
+        on_do_iter()
         s = stack.pop()
         i = s[-1]
-        # NOTE(glanaro): why is this called a production if there is no production rules?
         new_prod = False
         for j in range(i+1, n_rm):
             if M[j][i] == 1:
