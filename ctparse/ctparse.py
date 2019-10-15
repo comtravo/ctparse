@@ -428,7 +428,7 @@ def _seq_match(seq, pat, offset=0):
                             yield [iseq+offset] + subm
 
 
-def _match_regex(txt: str, regexes: Dict[str, regex.Pattern]) -> List[RegexMatch]:
+def _match_regex(txt: str, regexes: Dict[str, regex.Regex]) -> List[RegexMatch]:
     # Match a collection of regexes in *txt*
     #
     # Overlapping matches of the same expression are returned as well. The returened

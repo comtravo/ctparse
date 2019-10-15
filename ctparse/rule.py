@@ -1,5 +1,6 @@
 import regex
 import logging
+from typing import Dict
 from . types import RegexMatch
 
 
@@ -8,7 +9,7 @@ logger = logging.getLogger(__name__)
 rules = {}
 
 _regex_cnt = 100  # leave this much space for ids of production types
-_regex = {}  # compiled regex
+_regex: Dict[str, regex.Regex] = {}  # compiled regex
 _regex_str = {}  # map regex id to original string
 _str_regex = {}  # map regex raw str to regex id
 
@@ -42,9 +43,9 @@ def rule(*patterns):
                 return regex_match(_str_regex[p])
             # test the regex first
             re = r'{defines}(?i)(?P<R{re_key}>{re})'.format(
-                    defines=_defines,
-                    re=p,
-                    re_key=_regex_cnt)
+                defines=_defines,
+                re=p,
+                re_key=_regex_cnt)
             new_rr = regex.compile(
                 # Removed the separator here - leads to more matches,
                 # as now each rule can also match if it is not followed
@@ -86,6 +87,8 @@ def rule(*patterns):
         rules[f.__name__] = (wrapper, mapped_patterns)
         return wrapper
     return fwrapper
+
+# TODO: those can be implemented as classes/inheritance for typing concerns
 
 
 def regex_match(r_id):
