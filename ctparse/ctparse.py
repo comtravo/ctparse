@@ -7,9 +7,9 @@ from time import perf_counter
 from datetime import datetime
 from math import log
 from functools import wraps
-from typing import List, Tuple, Iterator, Optional
+from typing import List, Tuple, Iterator, Optional, Union
 
-from . types import RegexMatch
+from . types import RegexMatch, Time, Interval
 from . nb import NB
 from . rule import rules, _regex
 
@@ -18,12 +18,17 @@ logger = logging.getLogger(__name__)
 
 
 class CTParse:
-    def __init__(self, resolution, production, score):
+    def __init__(self,
+                 resolution: Union[Time, Interval],
+                 production: Tuple[str, ...],
+                 score: float):
         """A possible parse returned by ctparse.
 
-        :param resolution:
-        :param production:
-        :param score:
+        :param resolution: the parsed `Time` or `Interval`
+        :param production: the sequence of rules (productions) used to arrive
+          at the parse
+        :param score: a numerical score used to rank parses. A high score means
+          a more likely parse
         """
         self.resolution = resolution
         self.production = production
@@ -41,7 +46,7 @@ class CTParse:
 
 def ctparse(txt: str, ts=None, timeout: float = 1.0, debug=False, relative_match_len=1.0, max_stack_depth=10) -> Optional[CTParse]:
     '''Parse a string *txt* into a time expression
-§
+
     :param ts: reference time
     :type ts: datetime.datetime
     :param timeout: timeout for parsing in seconds; timeout=0
@@ -83,7 +88,8 @@ def ctparse_gen(txt: str, ts=None, timeout: float = 1.0, relative_match_len=1.0,
                 max_stack_depth=10) -> Iterator[CTParse]:
     """Generate parses for the string *txt*.
 
-    This function is 
+    This function is equivalent to ctparse, with the exeption that it returns an iterator
+    over the matches as soon as they are produced.
     """
     return _ctparse(_preprocess_string(txt), ts, timeout=timeout,
                     relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
@@ -185,6 +191,7 @@ class StackElement:
         return se
 
     def update_score(self):
+        # TODO(glanaro): this doesn't need to be global state
         if _nb.hasModel:
             self.score = _nb.apply(self.rules) + self.len_score
         else:
