@@ -3,12 +3,11 @@ import regex
 import pickle
 import bz2
 import os
-from tqdm import tqdm
 from time import perf_counter
 from datetime import datetime
 from math import log
 from functools import wraps
-from typing import List, Tuple
+from typing import List, Tuple, Iterator, Optional
 
 from . types import RegexMatch
 from . nb import NB
@@ -16,6 +15,78 @@ from . rule import rules, _regex
 
 
 logger = logging.getLogger(__name__)
+
+
+class CTParse:
+    def __init__(self, resolution, production, score):
+        """A possible parse returned by ctparse.
+
+        :param resolution:
+        :param production:
+        :param score:
+        """
+        self.resolution = resolution
+        self.production = production
+        self.score = score
+
+    def __repr__(self):
+        return 'CTParse({}, {}, {})'.format(
+            self.resolution, self.production, self.score)
+
+    def __str__(self):
+        return '{} s={:.3f} p={}'.format(self.resolution,
+                                         self.score,
+                                         self.production)
+
+
+def ctparse(txt: str, ts=None, timeout: float = 1.0, debug=False, relative_match_len=1.0, max_stack_depth=10) -> Optional[CTParse]:
+    '''Parse a string *txt* into a time expression
+§
+    :param ts: reference time
+    :type ts: datetime.datetime
+    :param timeout: timeout for parsing in seconds; timeout=0
+                    indicates no timeout
+    :type timeout: float
+    :param debug: if True do return iterator over all resolution, else
+                  return highest scoring one (default=False)
+    :param relative_match_len: relative minimum share of
+                               characters an initial regex match sequence must
+                               cover compared to the longest such sequence found
+                               to be considered for productions (default=1.0)
+    :type relative_match_len: float
+    :param max_stack_depth: limit the maximal number of highest scored candidate productions
+                            considered for future productions (default=10); set to 0 to not
+                            limit
+    :type max_stack_depth: int
+
+    :returns: Optional[CTParse]
+    '''
+    # TODO(glanaro): for back-compatibility
+    if debug:
+        return ctparse_gen(txt, ts, timeout=timeout,
+                           relative_match_len=relative_match_len,
+                           max_stack_depth=max_stack_depth)
+    parsed = _ctparse(_preprocess_string(txt), ts, timeout=timeout,
+                      relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
+
+    parsed = list(parsed)
+
+    # TODO(glanaro): why not just let it raise TimeoutError?
+    if len(parsed) == 0 or (len(parsed) == 1 and not parsed[0]):
+        logger.warning('Failed to produce result for "{}"'.format(txt))
+        return None
+    parsed.sort(key=lambda p: p.score)
+    return parsed[-1]
+
+
+def ctparse_gen(txt: str, ts=None, timeout: float = 1.0, relative_match_len=1.0,
+                max_stack_depth=10) -> Iterator[CTParse]:
+    """Generate parses for the string *txt*.
+
+    This function is 
+    """
+    return _ctparse(_preprocess_string(txt), ts, timeout=timeout,
+                    relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
 
 
 class TimeoutError(Exception):
@@ -55,6 +126,9 @@ class StackElement:
     * rules: the sequence of regular expressions and rules used/applied to produce prod
     * score: the score assigned to this production
     '''
+    # TODO(glanaro): make a costructor for this class and the classmethod use the constructor
+    # this will avoid code duplication in the classmethods below
+
     @classmethod
     def from_regex_matches(cls, regex_matches, txt_len):
         '''Create new initial stack element based on a production that has not
@@ -88,7 +162,7 @@ class StackElement:
             try:
                 next(it)
                 return True
-            except StopIteration as e:
+            except StopIteration:
                 return False
 
         return {rule_name: r for rule_name, r in rules.items()
@@ -142,23 +216,7 @@ class StackElement:
                  self.score < other.score))
 
 
-class CTParse:
-    def __init__(self, resolution, production, score):
-        self.resolution = resolution
-        self.production = production
-        self.score = score
-
-    def __repr__(self):
-        return 'CTParse({}, {}, {})'.format(
-            self.resolution, self.production, self.score)
-
-    def __str__(self):
-        return '{} s={:.3f} p={}'.format(self.resolution,
-                                         self.score,
-                                         self.production)
-
-
-def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
+def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0) -> Iterator[CTParse]:
     def get_score(seq, len_match):
         if _nb.hasModel:
             return _nb.apply(seq) + log(len_match/len(txt))
@@ -167,6 +225,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
 
     t_fun = _timeout(timeout)
 
+    # TODO(glanaro): you could move the exception handling outside
     try:
         if ts is None:
             ts = datetime.now()
@@ -245,7 +304,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
                 stack = stack[-max_stack_depth:]
                 logger.debug('added {} new stack elements, depth after trunc: {}'.format(
                     len(new_stack), len(stack)))
-    except TimeoutError as e:
+    except TimeoutError:
         logger.debug('Timeout on "{}"'.format(txt))
         return
 
@@ -268,43 +327,8 @@ def _preprocess_string(txt):
     return _repl2.sub('-', _repl1.sub(' ', txt, concurrent=True).strip()).strip()
 
 
-def ctparse(txt, ts=None, timeout=1.0, debug=False, relative_match_len=1.0, max_stack_depth=10):
-    '''Parse a string *txt* into a time expression
-
-    :param ts: reference time
-    :type ts: datetime.datetime
-    :param timeout: timeout for parsing in seconds; timeout=0
-                    indicates no timeout
-    :type timeout: int
-    :param debug: if True do return iterator over all resolution, else
-                  return highest scoring one (default=False)
-    :type debug: bool
-    :param relative_match_len: relative minimum share of
-                               characters an initial regex match sequence must
-                               cover compared to the longest such sequence found
-                               to be considered for productions (default=1.0)
-    :type relative_match_len: float
-    :param max_stack_depth: limit the maximal number of highest scored candidate productions
-                            considered for future productions (default=10); set to 0 to not
-                            limit
-    :type max_stack_depth: int
-
-    :returns: Time or Interval
-    '''
-    parsed = _ctparse(_preprocess_string(txt), ts, timeout=timeout,
-                      relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
-    if debug:
-        return parsed
-    else:
-        parsed = [p for p in parsed]
-        if not parsed or (len(parsed) == 1 and not parsed[0]):
-            logger.warning('Failed to produce result for "{}"'.format(txt))
-            return
-        parsed.sort(key=lambda p: p.score)
-        return parsed[-1]
-
-
 def _match_rule(seq, rule):
+    # Matches a sequence of ??? to a sequence of productions
     if not seq:
         return
     if not rule:
@@ -480,7 +504,8 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None) -> List[Tuple[RegexMatc
         t_fun()
         s = stack.pop()
         i = s[-1]
-        new_prod = False  # NOTE(glanaro): why is this called a production if there is no production rules?
+        # NOTE(glanaro): why is this called a production if there is no production rules?
+        new_prod = False
         for j in range(i+1, n_rm):
             if M[j][i] == 1:
                 stack.append(s + (j,))
@@ -490,104 +515,3 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None) -> List[Tuple[RegexMatc
             logger.debug('regex stack {}'.format(prod))
             prods.append(prod)
     return prods
-
-
-def run_corpus(corpus):
-    """Load the corpus (currently hard coded), run it through ctparse with
-    no timeout and no limit on the stack depth.
-
-    The corpus passes if ctparse generates the desired solution for
-    each test at least once. Otherwise it fails.
-
-    While testing this, a labeled data set (X, y) is generated based
-    on *all* productions. Given a final production p, based on initial
-    regular expression matches r_0, ..., r_n, which are then
-    subsequently transformed using production rules p_0, ..., p_m,
-    will result in the samples
-
-    [r_0, ..., r_n, p_0, 'step_0']
-    [r_0, ..., r_n, p_0, p_1, 'step_1']
-    ...
-    [r_0, ..., r_n, p_0, ..., p_m, 'step_m']
-
-    All samples from one production are given the same label: 1 iff
-    the final production was correct, -1 otherwise.
-
-    """
-    model_old = _nb._model
-    _nb._model = None
-    at_least_one_failed = False
-    # pos_parses: number of parses that are correct
-    # neg_parses: number of parses that are wrong
-    # pos_first_parses: number of first parses generated that are correct
-    # pos_best_scored: number of correct parses that have the best score
-    pos_parses = neg_parses = pos_first_parses = pos_best_scored = 0
-    total_tests = 0
-    Xs = []
-    ys = []
-    for target, ts, tests in tqdm(corpus):
-        ts = datetime.strptime(ts, '%Y-%m-%dT%H:%M')
-        all_tests_pass = True
-        for test in tests:
-            one_prod_passes = False
-            first_prod = True
-            y_score = []
-            for prod in _ctparse(_preprocess_string(test), ts, relative_match_len=1.0):
-                y = prod.resolution.nb_str() == target
-                # Build data set, one sample for each applied rule in
-                # the sequence of rules applied in this production
-                # *after* the matched regular expressions
-                X_prod, y_prod = _nb.map_prod(prod.production, y)
-                Xs.extend(X_prod)
-                ys.extend(y_prod)
-                one_prod_passes |= y
-                pos_parses += int(y)
-                neg_parses += int(not y)
-                pos_first_parses += int(y and first_prod)
-                first_prod = False
-                y_score.append((prod.score, y))
-            if not one_prod_passes:
-                logger.warning('failure: target "{}" never produced in "{}"'.format(target, test))
-            pos_best_scored += int(max(y_score, key=lambda x: x[0])[1])
-            total_tests += len(tests)
-            all_tests_pass &= one_prod_passes
-        if not all_tests_pass:
-            logger.warning('failure: "{}" not always produced'.format(target))
-            at_least_one_failed = True
-    logger.info('run {} tests on {} targets with a total of '
-                '{} positive and {} negative parses (={})'.format(
-                    total_tests, len(corpus), pos_parses, neg_parses,
-                    pos_parses+neg_parses))
-    logger.info('share of correct parses in all parses: {:.2%}'.format(
-        pos_parses/(pos_parses + neg_parses)))
-    logger.info('share of correct parses being produced first: {:.2%}'.format(
-        pos_first_parses/(pos_parses + neg_parses)))
-    logger.info('share of correct parses being scored highest: {:.2%}'.format(
-        pos_best_scored/total_tests))
-    if at_least_one_failed:
-        raise Exception('ctparse corpus has errors')
-    _nb._model = model_old
-    return Xs, ys
-
-
-#
-# Not unittested - would take very long time to run these
-#
-
-def build_model(X, y, save=False):  # pragma: no cover
-    nb = NB()
-    nb.fit(X, y)
-    if save:
-        pickle.dump(nb, bz2.open(_model_file, 'wb'))
-    return nb
-
-
-def regenerate_model():  # pragma: no cover
-    from . time.corpus import corpus as corpus_time
-    from . time.auto_corpus import corpus as auto_corpus
-    global _nb
-    logger.info('Regenerating model')
-    _nb = NB()
-    X, y = run_corpus(corpus_time + auto_corpus)
-    logger.info('Got {} training samples'.format(len(y)))
-    build_model(X, y, save=True)
