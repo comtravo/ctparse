@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 rules = {}
 
 _regex_cnt = 100  # leave this much space for ids of production types
-_regex: Dict[str, regex.Regex] = {}  # compiled regex
+_regex = {}  # compiled regex
 _regex_str = {}  # map regex id to original string
 _str_regex = {}  # map regex raw str to regex id
 
