@@ -113,7 +113,7 @@ def run_corpus(corpus: Sequence[CorpusSchema]):
 
 def regenerate_model():  # pragma: no cover
     global _nb
-    _nb = NB()  # TODO(glanaro) global state there is quite some weird stuff going on here
+    _nb = NB()  # TODO(glanaro) avoid global state
     X, y = run_corpus(corpus_time + auto_corpus)
     logger.info('Got {} training samples'.format(len(y)))
     _nb = build_model(X, y)
