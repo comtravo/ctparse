@@ -44,7 +44,8 @@ class CTParse:
                                          self.production)
 
 
-def ctparse(txt: str, ts=None, timeout: float = 1.0, debug=False, relative_match_len=1.0, max_stack_depth=10) -> Optional[CTParse]:
+def ctparse(txt: str, ts=None, timeout: float = 1.0, debug=False,
+            relative_match_len=1.0, max_stack_depth=10) -> Optional[CTParse]:
     '''Parse a string *txt* into a time expression
 
     :param ts: reference time
@@ -88,8 +89,8 @@ def ctparse_gen(txt: str, ts=None, timeout: float = 1.0, relative_match_len=1.0,
                 max_stack_depth=10) -> Iterator[CTParse]:
     """Generate parses for the string *txt*.
 
-    This function is equivalent to ctparse, with the exeption that it returns an iterator
-    over the matches as soon as they are produced.
+    This function signature is equivalent to that of `ctparse`, with the exeption
+    that it returns an iterator over the matches as soon as they are produced.
     """
     return _ctparse(_preprocess_string(txt), ts, timeout=timeout,
                     relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
@@ -125,6 +126,7 @@ def _timeit(f):
     return _wrapper
 
 
+# TODO: rename this as PartialParse? And the scored is assigned separately?
 class StackElement:
     '''A partial parse result with
 
@@ -146,6 +148,10 @@ class StackElement:
         se.rules = tuple(r.id for r in regex_matches)
         se.txt_len = txt_len
         se.max_covered_chars = se.prod[-1].mend - se.prod[0].mstart
+
+        # TODO: Make the scorer a completely independent entity.
+        # this is a score that depends on the logarithm of the length. Can't this
+        # be learned as well?
         se.len_score = log(se.max_covered_chars/se.txt_len)
         se.update_score()
 
@@ -232,7 +238,6 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0) -
 
     t_fun = _timeout(timeout)
 
-    # TODO(glanaro): you could move the exception handling outside
     try:
         if ts is None:
             ts = datetime.now()
@@ -424,14 +429,17 @@ def _seq_match(seq, pat, offset=0):
 
 
 def _match_regex(txt: str) -> List[RegexMatch]:
-    """Match all known regex in txt and return a list of RegxMatch objects
-    sorted by the start of the match. Overlapping matches of the same
-    expression are returned as well.
+    """Match all known regex in *txt*
+
+    Overlapping matches of the same expression are returned as well. The returened
+     RegexMatch objects are sorted by the start of the match
 
     :param txt: the text to match against
-    :return: a list of RegexMatch objects ordered my Regex.mstart
-
+    :return: a list of RegexMatch objects ordered my RegexMatch.mstart
     """
+
+    # TODO: it would be better for this function to accept the list of regexes
+    # from the outside rather than relying on global state
     matches = {RegexMatch(name, m)
                for name, re in _regex.items()
                for m in re.finditer(txt, overlapped=False, concurrent=True)}
