@@ -1,12 +1,18 @@
 import regex
 import logging
-from typing import Dict
-from . types import RegexMatch
+from typing import Dict, Callable, Union
+from . types import Artifact, RegexMatch
 
 
 logger = logging.getLogger(__name__)
 
-rules = {}
+# MAYBE: can use an actual "Pattern" class for this purpose as well
+PatternType = Callable[[Artifact], bool]
+# ProductionRule would be of the kind f(ts: datetime, *args) but this can't be
+# specified with the current syntax
+ProductionRule = Callable[..., Artifact]
+
+rules = {}  # type: Dict[str, Tuple[ProductionRule, PatternType]]
 
 _regex_cnt = 100  # leave this much space for ids of production types
 _regex = {}  # compiled regex
@@ -33,8 +39,8 @@ _defines = (r'(?(DEFINE)(?<_hour>{regex_hour})(?P<_minute>{regex_minute})'
                 regex_year=_regex_year)
 
 
-def rule(*patterns):
-    def _map(p):
+def rule(*patterns: Union[str, PatternType]):
+    def _map(p: Union[str, PatternType]) -> PatternType:
         if type(p) is str:
             # its a regex
             global _regex_cnt
@@ -76,8 +82,8 @@ def rule(*patterns):
 
     mapped_patterns = [_map(p) for p in patterns]
 
-    def fwrapper(f):
-        def wrapper(ts, *args):
+    def fwrapper(f: ProductionRule) -> ProductionRule:
+        def wrapper(ts, *args) -> Artifact:
             res = f(ts, *args)
             if res is not None:
                 # upon a successful production, update the span
@@ -88,22 +94,20 @@ def rule(*patterns):
         return wrapper
     return fwrapper
 
-# TODO: those can be implemented as classes/inheritance for typing concerns
 
-
-def regex_match(r_id):
+def regex_match(r_id) -> PatternType:
     def _regex_match(r):
         return type(r) == RegexMatch and r.id == r_id
     return _regex_match
 
 
-def dimension(dim):
+def dimension(dim) -> PatternType:
     def _dimension(d):
         return isinstance(d, dim)
     return _dimension
 
 
-def predicate(pred):
+def predicate(pred) -> PatternType:
     def _predicate(d):
         return getattr(d, pred, False)
     return _predicate
