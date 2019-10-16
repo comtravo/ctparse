@@ -1,4 +1,6 @@
 import logging
+
+from typing import List
 from sklearn.pipeline import make_pipeline
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
@@ -30,7 +32,7 @@ class NB:
         assert self._model.classes_[0] == -1
         return self
 
-    def predict(self, X):
+    def predict(self, X: List[List[str]]) -> float:
         """wrapper to predict - if no model is fitted, return 0.0 for all samples"""
         if self._model is None:
             return [0.0 for x in X]

@@ -21,10 +21,7 @@ CorpusEntry = Tuple[TargetType, TimestampType, Tuple[str, ...]]
 T = TypeVar('T')
 
 
-def make_partial_prod_corpus(
-        corpus: Sequence[CorpusEntry],
-        feature_extractor: Callable[[str, datetime, Tuple[Artifact, ...]], T],
-) -> Tuple[Sequence[T], Sequence[int]]:
+def make_partial_rule_corpus(corpus: Sequence[CorpusEntry]) -> Tuple[Sequence[str], Sequence[int]]:
     """Load the corpus (currently hard coded), run it through ctparse with
     no timeout and no limit on the stack depth.
 
@@ -62,20 +59,20 @@ def make_partial_prod_corpus(
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for prod in ctparse_gen(test, ts, relative_match_len=1.0):
-                y = prod.resolution.nb_str() == target
+            for parse in ctparse_gen(test, ts, relative_match_len=1.0):
+                y = parse.resolution.nb_str() == target
                 # Build data set, one sample for each applied rule in
                 # the sequence of rules applied in this production
                 # *after* the matched regular expressions
-                for i in range(1, len(prod)+1):
-                    Xs.append(feature_extractor(test, ts, prod[:i]))
+                for i in range(1, len(parse.production)+1):
+                    Xs.append([str(id) for p in parse.production[:i]])
                     ys.append(1 if y else -1)
                 one_prod_passes |= y
                 pos_parses += int(y)
                 neg_parses += int(not y)
                 pos_first_parses += int(y and first_prod)
                 first_prod = False
-                y_score.append((prod.score, y))
+                y_score.append((parse.score, y))
             if not one_prod_passes:
                 logger.warning('failure: target "{}" never produced in "{}"'.format(target, test))
             pos_best_scored += int(max(y_score, key=lambda x: x[0])[1])

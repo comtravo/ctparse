@@ -1,17 +1,19 @@
 from unittest import TestCase
 from time import sleep
 from datetime import datetime
-from ctparse.ctparse import _timeout, ctparse, _seq_match, _match_rule
+from ctparse.ctparse import ctparse, _match_rule
+from ctparse.stack_element import _seq_match
+from ctparse.timing import timeout
 from ctparse.types import Time
 
 
 class TestCTParse(TestCase):
     def test_timeout(self):
-        t_fun = _timeout(0.5)
+        t_fun = timeout(0.5)
         with self.assertRaises(Exception):
             sleep(1)
             t_fun()
-        t_fun = _timeout(0)
+        t_fun = timeout(0)
         t_fun()  # all good
 
     def test_ctparse(self):
@@ -80,11 +82,11 @@ class TestCTParse(TestCase):
         self.assertEqual(list(_seq_match(
             [1, 2, 1, 2, 2],
             [lambda x: x, make_rm(1), lambda x: x, make_rm(2), lambda x: x])),
-                         [])
+            [])
         self.assertEqual(list(_seq_match(
             [1, 2, 1, 2, 2, 3],
             [lambda x: x, make_rm(1), lambda x: x, make_rm(2), lambda x: x])),
-                         [[2, 4]])
+            [[2, 4]])
 
     def test_match_rule(self):
         self.assertEqual(list(_match_rule([], ['not empty'])), [])

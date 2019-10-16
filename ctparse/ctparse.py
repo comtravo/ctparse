@@ -3,15 +3,17 @@ import regex
 import pickle
 import bz2
 import os
-from time import perf_counter
 from datetime import datetime
 from math import log
-from functools import wraps
 from typing import Dict, List, Tuple, Iterator, Optional, Union
 
-from . types import RegexMatch, Time, Interval
-from . nb import NB
-from . rule import rules, _regex
+from .timing import timeit, timeout as timeout_, CTParseTimeoutError
+from .stack_element import StackElement
+from .types import RegexMatch, Time, Interval
+from .nb import NB
+from .rule import rules, _regex
+from .scorer import LengthScorer
+from .nb_scorer import NaiveBayesScorer
 
 
 logger = logging.getLogger(__name__)
@@ -96,162 +98,28 @@ def ctparse_gen(txt: str, ts=None, timeout: float = 1.0, relative_match_len=1.0,
                     relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
 
 
-class TimeoutError(Exception):
-    pass
+def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0, scorer=None) -> Iterator[CTParse]:
 
+    if scorer == None:
+        scorer = get_default_scorer()
 
-def _timeout(timeout):
-    start_time = perf_counter()
-
-    def _tt():
-        if timeout == 0:
-            return
-        if perf_counter() - start_time > timeout:
-            raise TimeoutError()
-    return _tt
-
-
-def _timeit(f):
-    """timeit wrapper, use as `timeit(f)(args)
-
-    Will return a tuple (f(args), t) where t the time in seconds the function call
-    took to run.
-
-    """
-    @wraps(f)
-    def _wrapper(*args, **kwargs):
-        start_time = perf_counter()
-        res = f(*args, **kwargs)
-        return res, perf_counter() - start_time
-    return _wrapper
-
-
-# TODO: rename this as PartialParse? And the scored is assigned separately?
-class StackElement:
-    '''A partial parse result with
-
-    * prod: the current partial production
-    * rules: the sequence of regular expressions and rules used/applied to produce prod
-    * score: the score assigned to this production
-    '''
-    # TODO(glanaro): make a costructor for this class and the classmethod use the constructor
-    # this will avoid code duplication in the classmethods below
-
-    @classmethod
-    def from_regex_matches(cls, regex_matches, txt_len):
-        '''Create new initial stack element based on a production that has not
-        yet been touched, i.e. it is only a sequence of matching
-        regular expressions
-        '''
-        se = StackElement()
-        se.prod = regex_matches
-        se.rules = tuple(r.id for r in regex_matches)
-        se.txt_len = txt_len
-        se.max_covered_chars = se.prod[-1].mend - se.prod[0].mstart
-
-        # TODO: Make the scorer a completely independent entity.
-        # this is a score that depends on the logarithm of the length. Can't this
-        # be learned as well?
-        se.len_score = log(se.max_covered_chars/se.txt_len)
-        se.update_score()
-
-        logger.debug('='*80)
-        logger.debug('-> checking rule applicability')
-        # Reducing rules to only those applicable has no effect for
-        # small stacks, but on larger there is a 10-20% speed
-        # improvement
-        se.applicable_rules, _ts = _timeit(se._filter_rules)(rules)
-        logger.debug('of {} total rules {} are applicable in {}'.format(
-            len(rules), len(se.applicable_rules), se.prod))
-        logger.debug('time in _filter_rules: {:.0f}ms'.format(1000*_ts))
-        logger.debug('='*80)
-
-        return se
-
-    def _filter_rules(self, rules):
-        """find all rules that can be applied to the current prod sequence"""
-        def _hasNext(it):
-            try:
-                next(it)
-                return True
-            except StopIteration:
-                return False
-
-        return {rule_name: r for rule_name, r in rules.items()
-                if _hasNext(_seq_match(self.prod, r[1]))}
-
-    @classmethod
-    def from_rule_match(cls, se_old, rule_name, match, prod):
-        se = StackElement()
-        se.prod = se_old.prod[:match[0]] + (prod,) + se_old.prod[match[1]:]
-        se.rules = se_old.rules + (rule_name,)
-        # Refiltering does not give a speedup - actually rather 10%
-        # speed loss se.applicable_rules =
-        #
-        # se._filter_rules(se_old.applicable_rules)
-        se.applicable_rules = se_old.applicable_rules
-        se.txt_len = se_old.txt_len
-        se.max_covered_chars = se.prod[-1].mend - se.prod[0].mstart
-        se.len_score = log(se.max_covered_chars/se.txt_len)
-        se.update_score()
-        return se
-
-    def update_score(self):
-        # TODO(glanaro): this doesn't need to be global state
-        if _nb.hasModel:
-            self.score = _nb.apply(self.rules) + self.len_score
-        else:
-            self.score = 0.0
-
-    def apply_rule(self, ts, rule, rule_name, match):
-        '''Check whether the production in rule can be applied to this stack
-        element. If yes, return a copy where this update is
-        incorporated in the production, the record of applied rules
-        and the score.
-        '''
-        # prod, prod_name, start, end):
-        prod = rule[0](ts, *self.prod[match[0]:match[1]])
-        if prod is not None:
-            return StackElement.from_rule_match(self, rule_name, match, prod)
-        else:
-            return
-
-    def __lt__(self, other):
-        '''Sort stack elements by (a) the length of text they can
-        (potentially) cover and (b) the score assigned to the
-        production.
-
-        a < b <=> a.max_covered_chars < b.max_covered_chars or
-                  (a.max_covered_chars <= b.max_covered_chars and a.score < b.score)
-        '''
-        return ((self.max_covered_chars < other.max_covered_chars) or
-                (self.max_covered_chars == other.max_covered_chars and
-                 self.score < other.score))
-
-
-def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0) -> Iterator[CTParse]:
-    def get_score(seq, len_match):
-        if _nb.hasModel:
-            return _nb.apply(seq) + log(len_match/len(txt))
-        else:
-            return 0.0
-
-    t_fun = _timeout(timeout)
+    t_fun = timeout_(timeout)
 
     try:
         if ts is None:
             ts = datetime.now()
         logger.debug('='*80)
         logger.debug('-> matching regular expressions')
-        p, _tp = _timeit(_match_regex)(txt, _regex)
+        p, _tp = timeit(_match_regex)(txt, _regex)
         logger.debug('time in _match_regex: {:.0f}ms'.format(1000*_tp))
 
         logger.debug('='*80)
         logger.debug('-> building initial stack')
-        stack, _ts = _timeit(_regex_stack)(txt, p, t_fun)
+        stack, _ts = timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
         stack = [StackElement.from_regex_matches(s, len(txt)) for s in stack]
+        [se.update_score(scorer, txt, ts) for se in stack]
         logger.debug('initial stack length: {}'.format(len(stack)))
         # sort stack by length of covered string and - if that is equal - score
         # --> last element is longest coverage and highest scored
@@ -281,6 +149,10 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0) -
                 for r_match in _match_rule(s.prod, r[1]):
                     # apply production part of rule
                     new_s = s.apply_rule(ts, r, r_name, r_match)
+                    # UGLY UGLY UGLY
+                    if new_s is not None:
+                        new_s.update_score(scorer, txt, ts)
+
                     if new_s and stack_prod.get(new_s.prod, new_s.score - 1) < new_s.score:
                         # either new_s.prod has never been produced
                         # before or the score of new_s is higher than
@@ -300,7 +172,16 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0) -
                         # match by the actual production, not the
                         # initial sequence of regular expression
                         # matches
-                        score_x = get_score(s.rules, len(x))
+                        score_x = scorer.score(txt, ts, s)
+                        # TODO: warning, this was like this before, I have no clue if this is
+                        # equivalent
+                        # def get_score(seq, len_match):
+                        # if _nb.hasModel:
+                        #     return _nb.apply(seq) + log(len_match/len(txt))
+                        # else:
+                        #     return 0.0
+                        # score_x = get_score(s.rules, len(x))
+
                         # only emit productions not emitted before or
                         # productions emitted before but scored higher
                         if parse_prod.get(x, score_x - 1) < score_x:
@@ -316,18 +197,27 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0) -
                 stack = stack[-max_stack_depth:]
                 logger.debug('added {} new stack elements, depth after trunc: {}'.format(
                     len(new_stack), len(stack)))
-    except TimeoutError:
+    except CTParseTimeoutError:
         logger.debug('Timeout on "{}"'.format(txt))
         return
 
 
-_model_file = os.path.join(os.path.dirname(__file__), 'models', 'model.pbz')
-if os.path.exists(_model_file):
-    logger.info('Loading model from {}'.format(_model_file))
-    _nb = pickle.load(bz2.open(_model_file, 'rb'))
-else:
-    logger.warning('No model found, initializing empty model')
-    _nb = NB()
+_default_scorer = None
+
+
+def get_default_scorer():
+    global _default_scorer
+
+    if _default_scorer is None:
+        model_file = os.path.join(os.path.dirname(__file__), 'models', 'model.pbz')
+        if os.path.exists(model_file):
+            logger.info('Loading model from {}'.format(model_file))
+            _default_scorer = NaiveBayesScorer.from_model_file(model_file)
+        else:
+            logger.warning('No model found, initializing empty model')
+            _default_scorer = LengthScorer()
+
+    return _default_scorer
 
 
 # replace all comma, semicolon, whitespace, invisible control, opening and closing brackets
@@ -359,73 +249,6 @@ def _match_rule(seq, rule):
             if i_r == r_len:
                 yield i_s, i_start
         i_s += 1
-
-
-def _seq_match(seq, pat, offset=0):
-    # :param seq: a list of intermediate productions, either of type
-    # RegexMatch or some other Artifact
-    #
-    # :param pat: a list of rule patterns to be matched, i.e. either a
-    # RegexMatch or a callable
-    #
-    # Determine whether the pattern pat matches the sequence seq and
-    # return a list of lists, where each sub-list contains those
-    # indices where the RegexMatch objects in pat are located in seq.
-    #
-    # A pattern pat only matches seq, iff each RegexMatch in pat is in
-    # seq in the same order and iff between two RegexMatches aligned
-    # to seq there is at least one additional element in seq. Reason:
-    #
-    # * Rule patterns never have two consequitive RegexMatch objects.
-    #
-    # * Hence there must be some predicate/dimension between two
-    # * RegexMatch objects.
-    #
-    # * For the whole pat to match there must then be at least one
-    #  element in seq that can product this intermediate bit
-    #
-    # If pat does not start with a RegexMatch then there must be at
-    # least one element in seq before the first RegexMatch in pat that
-    # is alignes on seq. Likewise, if pat does not end with a
-    # RegexMatch, then there must be at least one additional element
-    # in seq to match the last non-RegexMatch element in pat.
-    #
-    # STRONG ASSUMPTIONS ON ARGUMENTS: seq and pat do not contain
-    # consequiteve elements which are both of type RegexMatch! Callers
-    # obligation to ensure this!
-
-    if not pat:
-        # if pat is empty yield the empty match
-        yield []
-    elif not seq or not pat:
-        # if either seq or pat is empty there will be no match
-        return
-    elif pat[-1].__name__ != '_regex_match':
-        # there must be at least one additional element in seq at the
-        # end
-        yield from _seq_match(seq[:-1], pat[:-1], offset)
-    elif len(pat) > len(seq):
-        # if pat is longer than seq it cannot match
-        return
-    else:
-        p1 = pat[0]
-        # if p1 is not a RegexMatch, then continue on next pat and
-        # advance sequence by one
-        if p1.__name__ != '_regex_match':
-            yield from _seq_match(seq[1:], pat[1:], offset+1)
-        else:
-            # Get number of RegexMatch in p
-            n_regex = sum(1 for p in pat if p.__name__ == '_regex_match')
-            # For each occurance of RegexMatch pat[0] in seq
-            for iseq, s in enumerate(seq):
-                # apply _regex_match check
-                if p1(s):
-                    # for each match of pat[1:] in seq[iseq+1:], yield a result
-                    for subm in _seq_match(seq[iseq+1:], pat[1:], offset+iseq+1):
-                        if len(subm) == n_regex - 1:
-                            # only yield if all subsequent RegexMatch
-                            # have been aligned!
-                            yield [iseq+offset] + subm
 
 
 def _match_regex(txt: str, regexes: Dict[str, regex.Regex]) -> List[RegexMatch]:
