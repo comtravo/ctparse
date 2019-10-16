@@ -1,17 +1,13 @@
-import bz2
 import logging
-import pickle
 from datetime import datetime
-
-from typing import Sequence, Tuple
+from typing import Callable, List, Sequence, Tuple, TypeVar
 
 from tqdm import tqdm
 
-from .nb import NB
-from .ctparse import _ctparse, _preprocess_string, _nb
-from .time.corpus import corpus as corpus_time
+from .ctparse import ctparse_gen
 from .time.auto_corpus import corpus as auto_corpus
-
+from .time.corpus import corpus as corpus_time
+from .types import Artifact
 
 logger = logging.getLogger(__name__)
 
@@ -19,21 +15,16 @@ logger = logging.getLogger(__name__)
 TargetType = str
 TimestampType = str
 
-CorpusSchema = Tuple[TargetType, TimestampType, Tuple[str, ...]]
+CorpusEntry = Tuple[TargetType, TimestampType, Tuple[str, ...]]
 
 
-def build_model(X, y):  # pragma: no cover
-    nb = NB()
-    nb.fit(X, y)
-    return nb
+T = TypeVar('T')
 
 
-def save_model(model: NB, fname: str) -> None:
-    with bz2.open(fname, 'wb') as fd:
-        pickle.dump(model, fd)
-
-
-def run_corpus(corpus: Sequence[CorpusSchema]):
+def make_partial_prod_corpus(
+        corpus: Sequence[CorpusEntry],
+        feature_extractor: Callable[[str, datetime, Tuple[Artifact, ...]], T],
+) -> Tuple[Sequence[T], Sequence[int]]:
     """Load the corpus (currently hard coded), run it through ctparse with
     no timeout and no limit on the stack depth.
 
@@ -55,8 +46,6 @@ def run_corpus(corpus: Sequence[CorpusSchema]):
     the final production was correct, -1 otherwise.
 
     """
-    model_old = _nb._model
-    _nb._model = None
     at_least_one_failed = False
     # pos_parses: number of parses that are correct
     # neg_parses: number of parses that are wrong
@@ -73,14 +62,14 @@ def run_corpus(corpus: Sequence[CorpusSchema]):
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for prod in _ctparse(_preprocess_string(test), ts, relative_match_len=1.0):
+            for prod in ctparse_gen(test, ts, relative_match_len=1.0):
                 y = prod.resolution.nb_str() == target
                 # Build data set, one sample for each applied rule in
                 # the sequence of rules applied in this production
                 # *after* the matched regular expressions
-                X_prod, y_prod = _nb.map_prod(prod.production, y)
-                Xs.extend(X_prod)
-                ys.extend(y_prod)
+                for i in range(1, len(prod)+1):
+                    Xs.append(feature_extractor(test, ts, prod[:i]))
+                    ys.append(1 if y else -1)
                 one_prod_passes |= y
                 pos_parses += int(y)
                 neg_parses += int(not y)
@@ -107,13 +96,4 @@ def run_corpus(corpus: Sequence[CorpusSchema]):
         pos_best_scored/total_tests))
     if at_least_one_failed:
         raise Exception('ctparse corpus has errors')
-    _nb._model = model_old
     return Xs, ys
-
-
-def regenerate_model():  # pragma: no cover
-    global _nb
-    _nb = NB()  # TODO(glanaro) avoid global state
-    X, y = run_corpus(corpus_time + auto_corpus)
-    logger.info('Got {} training samples'.format(len(y)))
-    _nb = build_model(X, y)
