@@ -28,7 +28,6 @@ class NaiveBayesScorer(Scorer):
     def score(self, txt: str, ts: datetime, stack_element: StackElement) -> float:
         # Penalty for partial matches
         max_covered_chars = stack_element.prod[-1].mend - stack_element.prod[0].mstart
-        print("Max covered chars", max_covered_chars)
         len_score = math.log(max_covered_chars/len(txt))
 
         # TODO: Make the _feature_extractor customizable
