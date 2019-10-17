@@ -172,9 +172,12 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0, s
                         # match by the actual production, not the
                         # initial sequence of regular expression
                         # matches
-                        score_x = scorer.score(txt, ts, s)
+                        score_x = scorer.score_prod(txt, ts, s, x)
+
                         # TODO: warning, this was like this before, I have no clue if this is
                         # equivalent
+                        # print(x) is Time or Interval, so we do a score based on its length???
+                        # super weird.
                         # def get_score(seq, len_match):
                         # if _nb.hasModel:
                         #     return _nb.apply(seq) + log(len_match/len(txt))

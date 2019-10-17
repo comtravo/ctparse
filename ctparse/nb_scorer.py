@@ -28,7 +28,20 @@ class NaiveBayesScorer(Scorer):
     def score(self, txt: str, ts: datetime, stack_element: StackElement) -> float:
         # Penalty for partial matches
         max_covered_chars = stack_element.prod[-1].mend - stack_element.prod[0].mstart
+        print("Max covered chars", max_covered_chars)
         len_score = math.log(max_covered_chars/len(txt))
+
+        # TODO: Make the _feature_extractor customizable
+        X = _feature_extractor(txt, ts, stack_element)
+        pred = self._model.predict_log_proba([X])
+
+        # NOTE: the prediction is log-odds, or logit
+        model_score = float(pred[:, 1] - pred[:, 0])
+
+        return model_score + len_score
+
+    def score_prod(self, txt, ts, stack_element, prod: Artifact) -> float:
+        len_score = math.log(len(prod)/len(txt))
 
         # TODO: Make the _feature_extractor customizable
         X = _feature_extractor(txt, ts, stack_element)
