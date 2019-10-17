@@ -14,6 +14,7 @@ from .nb import NB
 from .rule import rules, _regex
 from .scorer import LengthScorer
 from .nb_scorer import NaiveBayesScorer
+from .scorer import Scorer
 
 
 logger = logging.getLogger(__name__)
@@ -69,13 +70,12 @@ def ctparse(txt: str, ts=None, timeout: float = 1.0, debug=False,
 
     :returns: Optional[CTParse]
     '''
+    parsed = ctparse_gen(txt, ts, timeout=timeout,
+                         relative_match_len=relative_match_len,
+                         max_stack_depth=max_stack_depth, scorer=scorer)
     # TODO(glanaro): for back-compatibility
     if debug:
-        return ctparse_gen(txt, ts, timeout=timeout,
-                           relative_match_len=relative_match_len,
-                           max_stack_depth=max_stack_depth, scorer=scorer)
-    parsed = _ctparse(_preprocess_string(txt), ts, timeout=timeout,
-                      relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
+        return parsed
 
     parsed = list(parsed)
 
@@ -99,7 +99,7 @@ def ctparse_gen(txt: str, ts=None, timeout: float = 1.0, relative_match_len=1.0,
                     scorer=scorer)
 
 
-def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0, scorer=None) -> Iterator[CTParse]:
+def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float, max_stack_depth: int, scorer: Optional[Scorer]) -> Iterator[CTParse]:
 
     if scorer == None:
         scorer = get_default_scorer()
