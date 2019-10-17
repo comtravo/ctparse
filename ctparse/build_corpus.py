@@ -8,6 +8,7 @@ from .ctparse import ctparse_gen
 from .time.auto_corpus import corpus as auto_corpus
 from .time.corpus import corpus as corpus_time
 from .types import Artifact
+from .scorer import DummyScorer
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ def make_partial_rule_corpus(corpus: Sequence[CorpusEntry]) -> Tuple[Sequence[st
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for parse in ctparse_gen(test, ts, relative_match_len=1.0):
+            for parse in ctparse_gen(test, ts, relative_match_len=1.0, scorer=DummyScorer()):
                 y = parse.resolution.nb_str() == target
                 # Build data set, one sample for each applied rule in
                 # the sequence of rules applied in this production

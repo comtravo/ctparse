@@ -47,7 +47,7 @@ class CTParse:
 
 
 def ctparse(txt: str, ts=None, timeout: float = 1.0, debug=False,
-            relative_match_len=1.0, max_stack_depth=10) -> Optional[CTParse]:
+            relative_match_len=1.0, max_stack_depth=10, scorer=None) -> Optional[CTParse]:
     '''Parse a string *txt* into a time expression
 
     :param ts: reference time
@@ -73,7 +73,7 @@ def ctparse(txt: str, ts=None, timeout: float = 1.0, debug=False,
     if debug:
         return ctparse_gen(txt, ts, timeout=timeout,
                            relative_match_len=relative_match_len,
-                           max_stack_depth=max_stack_depth)
+                           max_stack_depth=max_stack_depth, scorer=scorer)
     parsed = _ctparse(_preprocess_string(txt), ts, timeout=timeout,
                       relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
 
@@ -88,14 +88,15 @@ def ctparse(txt: str, ts=None, timeout: float = 1.0, debug=False,
 
 
 def ctparse_gen(txt: str, ts=None, timeout: float = 1.0, relative_match_len=1.0,
-                max_stack_depth=10) -> Iterator[CTParse]:
+                max_stack_depth=10, scorer=None) -> Iterator[CTParse]:
     """Generate parses for the string *txt*.
 
     This function signature is equivalent to that of `ctparse`, with the exeption
     that it returns an iterator over the matches as soon as they are produced.
     """
     return _ctparse(_preprocess_string(txt), ts, timeout=timeout,
-                    relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
+                    relative_match_len=relative_match_len, max_stack_depth=max_stack_depth,
+                    scorer=scorer)
 
 
 def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0, scorer=None) -> Iterator[CTParse]:

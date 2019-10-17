@@ -19,6 +19,14 @@ class Scorer(metaclass=ABCMeta):
         """
 
 
+class DummyScorer(Scorer):
+    def score(self, txt: str, ts: datetime, stack_element: StackElement) -> float:
+        return 0.0
+
+    def score_prod(self, txt, ts, stack_element, prod: Artifact) -> float:
+        return 0.0
+
+
 class LengthScorer(Scorer):
 
     def score(self, txt: str, ts: datetime, stack_element: StackElement) -> float:
