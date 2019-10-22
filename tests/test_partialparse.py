@@ -25,6 +25,9 @@ class TestPartialParse(TestCase):
 
         self.assertNotEqual(pp, pp2)
 
+        with self.assertRaises(ValueError):
+            PartialParse([], [])
+
     def test_seq_match(self):
         # NOTE: we are testing a private function because the algorithm
         # is quite complex
