@@ -1,6 +1,6 @@
 from unittest import TestCase
 from datetime import datetime
-from ctparse.ctparse import ctparse, _seq_match, _match_rule
+from ctparse.ctparse import ctparse, _match_rule
 from ctparse.types import Time
 
 
