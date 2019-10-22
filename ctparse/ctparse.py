@@ -1,50 +1,21 @@
-import logging
-import regex
-import pickle
 import bz2
+import logging
 import os
-from tqdm import tqdm
-from time import perf_counter
+import pickle
 from datetime import datetime
 from math import log
-from functools import wraps
 
-from . types import RegexMatch
-from . nb import NB
-from . rule import rules, _regex
+import regex
+from tqdm import tqdm
 
+from .nb import NB
+from .rule import _regex, rules
+from .timers import CTParseTimeoutError, timeit
+# Avoid collision with variable "timeout"
+from .timers import timeout as timeout_
+from .types import RegexMatch
 
 logger = logging.getLogger(__name__)
-
-
-class TimeoutError(Exception):
-    pass
-
-
-def _timeout(timeout):
-    start_time = perf_counter()
-
-    def _tt():
-        if timeout == 0:
-            return
-        if perf_counter() - start_time > timeout:
-            raise TimeoutError()
-    return _tt
-
-
-def _timeit(f):
-    """timeit wrapper, use as `timeit(f)(args)
-
-    Will return a tuple (f(args), t) where t the time in seconds the function call
-    took to run.
-
-    """
-    @wraps(f)
-    def _wrapper(*args, **kwargs):
-        start_time = perf_counter()
-        res = f(*args, **kwargs)
-        return res, perf_counter() - start_time
-    return _wrapper
 
 
 class StackElement:
@@ -73,7 +44,7 @@ class StackElement:
         # Reducing rules to only those applicable has no effect for
         # small stacks, but on larger there is a 10-20% speed
         # improvement
-        se.applicable_rules, _ts = _timeit(se._filter_rules)(rules)
+        se.applicable_rules, _ts = timeit(se._filter_rules)(rules)
         logger.debug('of {} total rules {} are applicable in {}'.format(
             len(rules), len(se.applicable_rules), se.prod))
         logger.debug('time in _filter_rules: {:.0f}ms'.format(1000*_ts))
@@ -164,19 +135,19 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
         else:
             return 0.0
 
-    t_fun = _timeout(timeout)
+    t_fun = timeout_(timeout)
 
     try:
         if ts is None:
             ts = datetime.now()
         logger.debug('='*80)
         logger.debug('-> matching regular expressions')
-        p, _tp = _timeit(_match_regex)(txt)
+        p, _tp = timeit(_match_regex)(txt)
         logger.debug('time in _match_regex: {:.0f}ms'.format(1000*_tp))
 
         logger.debug('='*80)
         logger.debug('-> building initial stack')
-        stack, _ts = _timeit(_regex_stack)(txt, p, t_fun)
+        stack, _ts = timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
         stack = [StackElement.from_regex_matches(s, len(txt)) for s in stack]
@@ -244,7 +215,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
                 stack = stack[-max_stack_depth:]
                 logger.debug('added {} new stack elements, depth after trunc: {}'.format(
                     len(new_stack), len(stack)))
-    except TimeoutError as e:
+    except CTParseTimeoutError:
         logger.debug('Timeout on "{}"'.format(txt))
         return
 
