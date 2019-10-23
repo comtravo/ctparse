@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from math import log
-from typing import Optional, Tuple, Union, Iterator, Dict, List
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import regex
 from tqdm import tqdm
@@ -23,6 +23,7 @@ class CTParse:
                  production: Tuple[Union[int, str], ...],
                  score: float) -> None:
         """A possible parse returned by ctparse.
+
         :param resolution: the parsed `Time` or `Interval`
         :param production: the sequence of rules (productions) used to arrive
           at the parse
@@ -44,7 +45,7 @@ class CTParse:
 
 
 def ctparse(
-        txt: str, ts=None, timeout: float = 1.0, debug=False,
+        txt: str, ts: Optional[datetime] = None, timeout=1.0, debug=False,
         relative_match_len=1.0, max_stack_depth=10) -> Optional[CTParse]:
     '''Parse a string *txt* into a time expression
 
@@ -81,7 +82,7 @@ def ctparse(
         return parsed[-1]
 
 
-def ctparse_gen(txt: str, ts=None, timeout: float = 1.0, relative_match_len=1.0,
+def ctparse_gen(txt: str, ts: Optional[datetime] = None, timeout=1.0, relative_match_len=1.0,
                 max_stack_depth=10) -> Iterator[CTParse]:
     """Generate parses for the string *txt*.
 
@@ -92,7 +93,7 @@ def ctparse_gen(txt: str, ts=None, timeout: float = 1.0, relative_match_len=1.0,
                     relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
 
 
-def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
+def _ctparse(txt, ts, timeout, relative_match_len, max_stack_depth):
     def get_score(seq, len_match):
         if _nb.hasModel:
             return _nb.apply(seq) + log(len_match/len(txt))

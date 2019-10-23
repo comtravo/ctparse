@@ -52,7 +52,7 @@ def run_corpus(corpus):
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for prod in _ctparse(_preprocess_string(test), ts, relative_match_len=1.0):
+            for prod in _ctparse(_preprocess_string(test), ts, relative_match_len=1.0, timeout=0, max_stack_depth=0):
                 y = prod.resolution.nb_str() == target
                 # Build data set, one sample for each applied rule in
                 # the sequence of rules applied in this production
