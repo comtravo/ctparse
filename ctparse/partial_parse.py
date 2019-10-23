@@ -14,7 +14,7 @@ T = TypeVar('T')
 
 class PartialParse:
 
-    def __init__(self, prod: Tuple[Artifact, ...], rules: Tuple[Union[int, str], ...], scorer=0.0) -> None:
+    def __init__(self, prod: Tuple[Artifact, ...], rules: Tuple[Union[int, str], ...]) -> None:
         '''A data structure representing a partial parse.
 
 
