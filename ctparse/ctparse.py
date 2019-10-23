@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from math import log
-from typing import Optional, Tuple, Union, Iterator
+from typing import Optional, Tuple, Union, Iterator, Dict, List
 
 import regex
 from tqdm import tqdm
@@ -106,7 +106,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
             ts = datetime.now()
         logger.debug('='*80)
         logger.debug('-> matching regular expressions')
-        p, _tp = timeit(_match_regex)(txt)
+        p, _tp = timeit(_match_regex)(txt, _regex)
         logger.debug('time in _match_regex: {:.0f}ms'.format(1000*_tp))
 
         logger.debug('='*80)
@@ -214,51 +214,65 @@ def _match_rule(seq, rule):
         i_s += 1
 
 
-def _match_regex(txt):
-    """Match all known regex in txt and return a list of RegxMatch objects
-    sorted by the start of the match. Overlapping matches of the same
-    expression are returned as well.
-
-    :param txt: the text to match against
-    :return: a list of RegexMatch objects ordered my Regex.mstart
-
-    """
+def _match_regex(txt: str, regexes: Dict[str, regex.Regex]) -> List[RegexMatch]:
+    # Match a collection of regexes in *txt*
+    #
+    # Overlapping matches of the same expression are returned as well. The returened
+    # RegexMatch objects are sorted by the start of the match
+    # :param txt: the text to match against
+    # :param regexes: a collection of regexes name->pattern
+    # :return: a list of RegexMatch objects ordered my RegexMatch.mstart
     matches = {RegexMatch(name, m)
-               for name, re in _regex.items()
+               for name, re in regexes.items()
                for m in re.finditer(txt, overlapped=False, concurrent=True)}
     for m in matches:
         logger.debug('regex: {}'.format(m.__repr__()))
     return sorted(matches, key=lambda x: (x.mstart, x.mend))
 
 
-def _regex_stack(txt, regex_matches, t_fun=lambda: None):
-    """assumes that regex_matches are sorted by increasing start index
+def _regex_stack(txt, regex_matches: List[RegexMatch], on_do_iter=lambda: None) -> List[Tuple[RegexMatch]]:
+    # Group contiguous RegexMatch objects together.
+    #
+    # Assumes that regex_matches are sorted by increasing start index. on_do_iter
+    # is a callback that will be invoked every time the algorithm performs a loop.
+    #
+    # Example:
+    # Say you have the following text, where the regex matches are the
+    # words between square brackets.
+    #
+    # [Tomorrow] I want to go to the movies between [2] [pm] and [5] [pm].
+    #
+    # This function will return the matches that are contiguous (excluding space characters)
+    # [Tomorrow]
+    # [2], [pm]
+    # [5], [pm]
+    #
+    # This also works with overlapping matches.
+    #
+    # Algo:
+    # * initialize an empty stack
+    #
+    # * add all sequences of one expression to the stack, excluding
+    #   expressions which can be reached from "earlier" expressison
+    #   (i.e. there is no gap between them):
+    #
+    #   - say A and B have no gap inbetween and all sequences starting
+    #     at A have already been produced. These by definition(which?: -) include as sub-sequences all sequences starting at B. Any
+    #     other sequences starting at B directly will not add valid
+    #     variations, as each of them could be prefixed with a sequence
+    #     starting at A
+    #
+    # * while the stack is not empty:
+    #
+    #   * get top sequence s from stack
+    #
+    #   * generate all possible continuations for this sequence,
+    #     i.e. sequences where expression can be appended to the last
+    #     element s[-1] in s and put these extended sequences on the stack
+    #
+    #   * if no new continuation could be generated for s, this sequence of RegexMatch is appended
+    #     to the list of results.
 
-    Algo: somewhere on paper, but in a nutshell:
-    * stack empty
-
-    * add all sequences of one expression to the stack, excluding
-      expressions which can be reached from "earlier" expressison
-      (i.e. there is no gap between them):
-
-      - say A and B have no gap inbetween and all sequences starting
-        at A have already been produced. These be definition (which?
-        :-) include as sub-sequences all sequences starting at B. Any
-        other sequences starting at B directly will not add valid
-        variations, as each of them could be prefixed with a sequence
-        starting at A
-
-    * while the stack is not empty:
-
-      * get top sequence s from stack
-
-      * generate all possible continuations for this sequence,
-        i.e. sequences where expression can be appended to the last
-        element s[-1] in s and put these extended sequences on the stack
-
-      * if no new productions could be generated for s, this is one
-        result sequence.
-    """
     prods = []
     n_rm = len(regex_matches)
     # Calculate the upper triangle of an n_rm x n_rm matrix M where
@@ -292,9 +306,11 @@ def _regex_stack(txt, regex_matches, t_fun=lambda: None):
         for j in range(i+1, n_rm):
             M[j][i] = get_m_dist(regex_matches[i], regex_matches[j])
 
+    # NOTE(glanaro): I believe this means that this is a beginning node.
+    # why reversed?
     stack = [(i,) for i in reversed(range(n_rm)) if sum(M[i]) == 0]
     while stack:
-        t_fun()
+        on_do_iter()
         s = stack.pop()
         i = s[-1]
         new_prod = False
