@@ -11,7 +11,7 @@ def test_partial_parse():
     match_a = regex.match("(?<R1>a)", "ab")
     match_b = next(regex.finditer("(?<R2>b)", "ab"))
 
-    pp = PartialParse.from_regex_matches((RegexMatch(1, match_a), RegexMatch(2, match_b)), 2)
+    pp = PartialParse.from_regex_matches((RegexMatch(1, match_a), RegexMatch(2, match_b)))
 
     assert len(pp.prod) == 2
     assert len(pp.rules) == 2

@@ -6,9 +6,11 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 import regex
 from tqdm import tqdm
 
-from .nb import NB, _nb
+from .nb import LEGACY_NB
+from .nb_scorer import NaiveBayesScorer
 from .partial_parse import PartialParse
 from .rule import _regex, rules
+from .scorer import Scorer
 from .timers import CTParseTimeoutError, timeit
 # Avoid collision with variable "timeout"
 from .timers import timeout as timeout_
@@ -46,7 +48,7 @@ class CTParse:
 
 def ctparse(
         txt: str, ts: Optional[datetime] = None, timeout=1.0, debug=False,
-        relative_match_len=1.0, max_stack_depth=10) -> Optional[CTParse]:
+        relative_match_len=1.0, max_stack_depth=10, scorer: Optional[Scorer] = None) -> Optional[CTParse]:
     '''Parse a string *txt* into a time expression
 
     :param ts: reference time
@@ -69,7 +71,7 @@ def ctparse(
     '''
     parsed = ctparse_gen(txt, ts, timeout=timeout,
                          relative_match_len=relative_match_len,
-                         max_stack_depth=max_stack_depth)
+                         max_stack_depth=max_stack_depth, scorer=scorer)
     # TODO: keep debug for back-compatibility, but remove it later
     if debug:
         return parsed
@@ -83,23 +85,21 @@ def ctparse(
 
 
 def ctparse_gen(txt: str, ts: Optional[datetime] = None, timeout=1.0, relative_match_len=1.0,
-                max_stack_depth=10) -> Iterator[CTParse]:
+                max_stack_depth=10, scorer: Optional[Scorer] = None) -> Iterator[CTParse]:
     """Generate parses for the string *txt*.
 
     This function is equivalent to ctparse, with the exeption that it returns an iterator
     over the matches as soon as they are produced.
     """
+    if scorer is None:
+        # TODO: for compatibility reason, remove once we retrain
+        scorer = NaiveBayesScorer(LEGACY_NB._model)
+
     return _ctparse(_preprocess_string(txt), ts, timeout=timeout,
-                    relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
+                    relative_match_len=relative_match_len, max_stack_depth=max_stack_depth, scorer=scorer)
 
 
-def _ctparse(txt, ts, timeout, relative_match_len, max_stack_depth):
-    def get_score(seq, len_match):
-        if _nb.hasModel:
-            return _nb.apply(seq) + log(len_match/len(txt))
-        else:
-            return 0.0
-
+def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float, max_stack_depth: int, scorer: Scorer):
     t_fun = timeout_(timeout)
 
     try:
@@ -115,7 +115,12 @@ def _ctparse(txt, ts, timeout, relative_match_len, max_stack_depth):
         stack, _ts = timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
-        stack = [PartialParse.from_regex_matches(s, len(txt)) for s in stack]
+        stack = [PartialParse.from_regex_matches(s) for s in stack]
+        # TODO: the score should be kept separate from the partial parse
+        # because it depends also on the text and the ts
+        for pp in stack:
+            pp.score = scorer.score(txt, ts, pp)
+
         logger.debug('initial stack length: {}'.format(len(stack)))
         # sort stack by length of covered string and - if that is equal - score
         # --> last element is longest coverage and highest scored
@@ -145,6 +150,12 @@ def _ctparse(txt, ts, timeout, relative_match_len, max_stack_depth):
                 for r_match in _match_rule(s.prod, r[1]):
                     # apply production part of rule
                     new_s = s.apply_rule(ts, r, r_name, r_match)
+
+                    # TODO: We should store scores separately from the production itself
+                    # because the score may depend on the text and the ts
+                    if new_s is not None:
+                        new_s.score = scorer.score(txt, ts, new_s)
+
                     if new_s and stack_prod.get(new_s.prod, new_s.score - 1) < new_s.score:
                         # either new_s.prod has never been produced
                         # before or the score of new_s is higher than
@@ -164,7 +175,7 @@ def _ctparse(txt, ts, timeout, relative_match_len, max_stack_depth):
                         # match by the actual production, not the
                         # initial sequence of regular expression
                         # matches
-                        score_x = get_score(s.rules, len(x))
+                        score_x = scorer.score_final(txt, ts, s, x)
                         # only emit productions not emitted before or
                         # productions emitted before but scored higher
                         if parse_prod.get(x, score_x - 1) < score_x:
