@@ -15,7 +15,7 @@ T = TypeVar('T')
 
 class PartialParse:
 
-    def __init__(self, prod: Tuple[Artifact], rules: Tuple[Union[int, str]]) -> None:
+    def __init__(self, prod: Tuple[Artifact, ...], rules: Tuple[Union[int, str], ...]) -> None:
         '''A data structure representing a partial parse.
 
 
@@ -32,7 +32,7 @@ class PartialParse:
         self.score = 0.0
 
     @classmethod
-    def from_regex_matches(cls, regex_matches: Tuple[RegexMatch], txt_len: int) -> 'PartialParse':
+    def from_regex_matches(cls, regex_matches: Tuple[RegexMatch, ...], txt_len: int) -> 'PartialParse':
         '''Create partial production from a series of RegexMatch
 
         This usually is called when no production rules (with the exception of
