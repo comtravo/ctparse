@@ -1,23 +1,34 @@
 import logging
 from datetime import datetime
 from math import log
+from typing import Optional, Tuple, Union, Iterator
 
 import regex
 from tqdm import tqdm
 
 from .nb import NB, _nb
-from .rule import _regex, rules
-from .timers import CTParseTimeoutError, timeit
-# Avoid collision with variable "timeout"
-from .timers import timeout as timeout_
-from .types import RegexMatch
 from .partial_parse import PartialParse
+from .rule import _regex, rules
+# Avoid collision with variable "timeout"
+from .timers import CTParseTimeoutError, timeit
+from .timers import timeout as timeout_
+from .types import Interval, RegexMatch, Time
 
 logger = logging.getLogger(__name__)
 
 
 class CTParse:
-    def __init__(self, resolution, production, score):
+    def __init__(self,
+                 resolution: Union[Time, Interval],
+                 production: Tuple[Union[int, str], ...],
+                 score: float) -> None:
+        """A possible parse returned by ctparse.
+        :param resolution: the parsed `Time` or `Interval`
+        :param production: the sequence of rules (productions) used to arrive
+          at the parse
+        :param score: a numerical score used to rank parses. A high score means
+          a more likely parse
+        """
         self.resolution = resolution
         self.production = production
         self.score = score
@@ -30,6 +41,55 @@ class CTParse:
         return '{} s={:.3f} p={}'.format(self.resolution,
                                          self.score,
                                          self.production)
+
+
+def ctparse(
+        txt: str, ts=None, timeout: float = 1.0, debug=False,
+        relative_match_len=1.0, max_stack_depth=10) -> Optional[CTParse]:
+    '''Parse a string *txt* into a time expression
+
+    :param ts: reference time
+    :type ts: datetime.datetime
+    :param timeout: timeout for parsing in seconds; timeout=0
+                    indicates no timeout
+    :type timeout: float
+    :param debug: if True do return iterator over all resolution, else
+                  return highest scoring one (default=False)
+    :param relative_match_len: relative minimum share of
+                               characters an initial regex match sequence must
+                               cover compared to the longest such sequence found
+                               to be considered for productions (default=1.0)
+    :type relative_match_len: float
+    :param max_stack_depth: limit the maximal number of highest scored candidate productions
+                            considered for future productions (default=10); set to 0 to not
+                            limit
+    :type max_stack_depth: int
+    :returns: Optional[CTParse]
+    '''
+    parsed = ctparse_gen(txt, ts, timeout=timeout,
+                         relative_match_len=relative_match_len,
+                         max_stack_depth=max_stack_depth)
+    # TODO: keep debug for back-compatibility, but remove it later
+    if debug:
+        return parsed
+    else:
+        parsed = list(parsed)
+        if not parsed or (len(parsed) == 1 and not parsed[0]):
+            logger.warning('Failed to produce result for "{}"'.format(txt))
+            return
+        parsed.sort(key=lambda p: p.score)
+        return parsed[-1]
+
+
+def ctparse_gen(txt: str, ts=None, timeout: float = 1.0, relative_match_len=1.0,
+                max_stack_depth=10) -> Iterator[CTParse]:
+    """Generate parses for the string *txt*.
+
+    This function is equivalent to ctparse, with the exeption that it returns an iterator
+    over the matches as soon as they are produced.
+    """
+    return _ctparse(_preprocess_string(txt), ts, timeout=timeout,
+                    relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
 
 
 def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
@@ -79,7 +139,7 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
             s = stack.pop()
             logger.debug('-'*80)
             logger.debug('producing on {}, score={:.2f}'.format(s.prod, s.score))
-            new_stack = []
+            new_stack_elements = []
             for r_name, r in s.applicable_rules.items():
                 for r_match in _match_rule(s.prod, r[1]):
                     # apply production part of rule
@@ -88,11 +148,11 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
                         # either new_s.prod has never been produced
                         # before or the score of new_s is higher than
                         # a previous identical production
-                        new_stack.append(new_s)
+                        new_stack_elements.append(new_s)
                         logger.debug('  {} -> {}, score={:.2f}'.format(
                             r_name, new_s.prod, new_s.score))
                         stack_prod[new_s.prod] = new_s.score
-            if not new_stack:
+            if not new_stack_elements:
                 logger.debug('~'*80)
                 logger.debug('no rules applicable: emitting')
                 # no new productions were generated from this stack element.
@@ -114,11 +174,11 @@ def _ctparse(txt, ts=None, timeout=0, relative_match_len=0, max_stack_depth=0):
             else:
                 # new productions generated, put on stack and sort
                 # stack by highst score
-                stack.extend(new_stack)
+                stack.extend(new_stack_elements)
                 stack.sort()
                 stack = stack[-max_stack_depth:]
                 logger.debug('added {} new stack elements, depth after trunc: {}'.format(
-                    len(new_stack), len(stack)))
+                    len(new_stack_elements), len(stack)))
     except CTParseTimeoutError:
         logger.debug('Timeout on "{}"'.format(txt))
         return
@@ -131,42 +191,6 @@ _repl2 = regex.compile(r'(\p{Pd}|[\u2010-\u2015]|\u2043)+', regex.VERSION1)
 
 def _preprocess_string(txt):
     return _repl2.sub('-', _repl1.sub(' ', txt, concurrent=True).strip()).strip()
-
-
-def ctparse(txt, ts=None, timeout=1.0, debug=False, relative_match_len=1.0, max_stack_depth=10):
-    '''Parse a string *txt* into a time expression
-
-    :param ts: reference time
-    :type ts: datetime.datetime
-    :param timeout: timeout for parsing in seconds; timeout=0
-                    indicates no timeout
-    :type timeout: int
-    :param debug: if True do return iterator over all resolution, else
-                  return highest scoring one (default=False)
-    :type debug: bool
-    :param relative_match_len: relative minimum share of
-                               characters an initial regex match sequence must
-                               cover compared to the longest such sequence found
-                               to be considered for productions (default=1.0)
-    :type relative_match_len: float
-    :param max_stack_depth: limit the maximal number of highest scored candidate productions
-                            considered for future productions (default=10); set to 0 to not
-                            limit
-    :type max_stack_depth: int
-
-    :returns: Time or Interval
-    '''
-    parsed = _ctparse(_preprocess_string(txt), ts, timeout=timeout,
-                      relative_match_len=relative_match_len, max_stack_depth=max_stack_depth)
-    if debug:
-        return parsed
-    else:
-        parsed = [p for p in parsed]
-        if not parsed or (len(parsed) == 1 and not parsed[0]):
-            logger.warning('Failed to produce result for "{}"'.format(txt))
-            return
-        parsed.sort(key=lambda p: p.score)
-        return parsed[-1]
 
 
 def _match_rule(seq, rule):
