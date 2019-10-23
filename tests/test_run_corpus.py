@@ -1,12 +1,11 @@
 import pytest
 
-from ctparse.model import _nb, run_corpus
+from ctparse.model import run_corpus
 from ctparse.time.corpus import corpus
 
 
 def test_run_corpus():
-    X, y = run_corpus(corpus)
-    _nb.fit(X, y)
+    run_corpus(corpus)
 
 
 def test_run_corpus_failure():

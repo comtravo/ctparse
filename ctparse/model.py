@@ -7,7 +7,7 @@ from datetime import datetime
 from tqdm import tqdm
 
 from .ctparse import _ctparse, _preprocess_string
-from .nb import NB, _nb, _model_file
+from .scorer import DummyScorer
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +34,6 @@ def run_corpus(corpus):
     the final production was correct, -1 otherwise.
 
     """
-    model_old = _nb._model
-    _nb._model = None
     at_least_one_failed = False
     # pos_parses: number of parses that are correct
     # neg_parses: number of parses that are wrong
@@ -52,20 +50,22 @@ def run_corpus(corpus):
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for prod in _ctparse(_preprocess_string(test), ts, relative_match_len=1.0, timeout=0, max_stack_depth=0):
-                y = prod.resolution.nb_str() == target
+            for parse in _ctparse(_preprocess_string(test), ts, relative_match_len=1.0, timeout=0, max_stack_depth=0, scorer=DummyScorer()):
+                y = parse.resolution.nb_str() == target
+
                 # Build data set, one sample for each applied rule in
                 # the sequence of rules applied in this production
                 # *after* the matched regular expressions
-                X_prod, y_prod = _nb.map_prod(prod.production, y)
-                Xs.extend(X_prod)
-                ys.extend(y_prod)
+                for i in range(1, len(parse.production)+1):
+                    Xs.append([str(id) for p in parse.production[:i]])
+                    ys.append(1 if y else -1)
+
                 one_prod_passes |= y
                 pos_parses += int(y)
                 neg_parses += int(not y)
                 pos_first_parses += int(y and first_prod)
                 first_prod = False
-                y_score.append((prod.score, y))
+                y_score.append((parse.score, y))
             if not one_prod_passes:
                 logger.warning('failure: target "{}" never produced in "{}"'.format(target, test))
             pos_best_scored += int(max(y_score, key=lambda x: x[0])[1])
@@ -86,28 +86,4 @@ def run_corpus(corpus):
         pos_best_scored/total_tests))
     if at_least_one_failed:
         raise Exception('ctparse corpus has errors')
-    _nb._model = model_old
     return Xs, ys
-
-
-#
-# Not unittested - would take very long time to run these
-#
-
-def build_model(X, y, save=False):  # pragma: no cover
-    nb = NB()
-    nb.fit(X, y)
-    if save:
-        pickle.dump(nb, bz2.open(_model_file, 'wb'))
-    return nb
-
-
-def regenerate_model():  # pragma: no cover
-    from . time.corpus import corpus as corpus_time
-    from . time.auto_corpus import corpus as auto_corpus
-    global _nb
-    logger.info('Regenerating model')
-    _nb = NB()
-    X, y = run_corpus(corpus_time + auto_corpus)
-    logger.info('Got {} training samples'.format(len(y)))
-    build_model(X, y, save=True)

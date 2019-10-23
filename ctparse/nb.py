@@ -60,7 +60,7 @@ class NB:
 _model_file = os.path.join(os.path.dirname(__file__), 'models', 'model.pbz')
 if os.path.exists(_model_file):
     logger.info('Loading model from {}'.format(_model_file))
-    _nb = pickle.load(bz2.open(_model_file, 'rb'))
+    LEGACY_NB = pickle.load(bz2.open(_model_file, 'rb'))
 else:
     logger.warning('No model found, initializing empty model')
-    _nb = NB()
+    LEGACY_NB = NB()

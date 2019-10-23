@@ -3,7 +3,6 @@ from datetime import datetime
 from math import log
 from typing import Callable, Optional, Sequence, Tuple, TypeVar, Union
 
-from .nb import _nb
 from .rule import rules, ProductionRule, Predicate
 from .timers import timeit
 from .types import Artifact, RegexMatch
@@ -32,22 +31,14 @@ class PartialParse:
         self.score = 0.0
 
     @classmethod
-    def from_regex_matches(cls, regex_matches: Tuple[RegexMatch, ...], txt_len: int) -> 'PartialParse':
+    def from_regex_matches(cls, regex_matches: Tuple[RegexMatch, ...]) -> 'PartialParse':
         '''Create partial production from a series of RegexMatch
 
         This usually is called when no production rules (with the exception of
         regex matches) have been applied.
 
         '''
-        # TODO(gabrielelanaro): txt_len is only used for scoring, remove it
-        # once the scorer has been extracted
         se = cls(prod=regex_matches, rules=tuple(r.id for r in regex_matches))
-
-        # TODO(gabrielelanaro): those attributes will be removed when
-        # extracting the scoring logic
-        se.txt_len = txt_len
-        se.len_score = log(se.max_covered_chars/se.txt_len)
-        se._update_score()
 
         logger.debug('='*80)
         logger.debug('-> checking rule applicability')
@@ -88,11 +79,7 @@ class PartialParse:
                 rules=self.rules + (rule_name,)
             )
 
-            # TODO(glanaro): remove when extracting the scoring functions
             pp.applicable_rules = self.applicable_rules
-            pp.txt_len = self.txt_len
-            pp.len_score = log(pp.max_covered_chars/pp.txt_len)
-            pp._update_score()
             return pp
         else:
             return
@@ -123,13 +110,6 @@ class PartialParse:
 
         return {rule_name: r for rule_name, r in rules.items()
                 if _hasNext(_seq_match(self.prod, r[1]))}
-
-    def _update_score(self):
-        # TODO(glanaro): remove when the scorer has been extracted
-        if _nb.hasModel:
-            self.score = _nb.apply(self.rules) + self.len_score
-        else:
-            self.score = 0.0
 
 
 def _seq_match(seq: Sequence[T], pat: Sequence[Callable[[T], bool]], offset=0):
