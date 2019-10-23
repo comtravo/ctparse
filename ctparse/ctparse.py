@@ -9,8 +9,8 @@ from tqdm import tqdm
 from .nb import NB, _nb
 from .partial_parse import PartialParse
 from .rule import _regex, rules
-# Avoid collision with variable "timeout"
 from .timers import CTParseTimeoutError, timeit
+# Avoid collision with variable "timeout"
 from .timers import timeout as timeout_
 from .types import Interval, RegexMatch, Time
 
