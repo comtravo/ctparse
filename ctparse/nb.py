@@ -1,3 +1,6 @@
+import bz2
+import pickle
+import os
 import logging
 from sklearn.pipeline import make_pipeline
 from sklearn.feature_extraction.text import CountVectorizer
@@ -51,3 +54,13 @@ class NB:
     def apply(self, x):
         """apply model to a single data point"""
         return self.predict([[str(w) for w in x]])[0]
+
+
+# TODO(glanaro): remove when the scorer has been extracted
+_model_file = os.path.join(os.path.dirname(__file__), 'models', 'model.pbz')
+if os.path.exists(_model_file):
+    logger.info('Loading model from {}'.format(_model_file))
+    _nb = pickle.load(bz2.open(_model_file, 'rb'))
+else:
+    logger.warning('No model found, initializing empty model')
+    _nb = NB()
