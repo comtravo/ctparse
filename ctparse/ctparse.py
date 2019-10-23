@@ -218,8 +218,7 @@ def _match_rule(seq, rule):
 def _match_regex(txt: str, regexes: Dict[str, regex.Regex]) -> List[RegexMatch]:
     # Match a collection of regexes in *txt*
     #
-    # Overlapping matches of the same expression are returned as well. The returened
-    # RegexMatch objects are sorted by the start of the match
+    # The returned RegexMatch objects are sorted by the start of the match
     # :param txt: the text to match against
     # :param regexes: a collection of regexes name->pattern
     # :return: a list of RegexMatch objects ordered my RegexMatch.mstart
