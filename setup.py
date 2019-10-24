@@ -11,7 +11,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [ ]
+requirements = []
 
 setup_requirements = ['pytest-runner', ]
 
@@ -39,7 +39,8 @@ setup(
         'regex>=2018.6.6',
         'scikit-learn>=0.20.0,<0.21.0',
         'scipy>=1.1.0,<2.0.0',
-        'tqdm>=4.23.4,<5.0.0'
+        'tqdm>=4.23.4,<5.0.0',
+        'mypy'
     ],
     license="MIT license",
     long_description=readme + '\n\n' + history,
@@ -48,7 +49,7 @@ setup(
     name='ctparse',
     packages=find_packages(include=['ctparse*']),
     package_dir={'ctparse': 'ctparse'},
-    package_data={'ctparse': ['models/model.pbz']},
+    package_data={'ctparse': ['models/model.pbz', 'py.typed']},
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,

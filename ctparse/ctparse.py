@@ -1,20 +1,19 @@
 import logging
 from datetime import datetime
-from math import log
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import (cast, Callable, Dict, Iterator,
+                    List, Optional, Sequence, Tuple, Union)
 
 import regex
-from tqdm import tqdm
 
 from .nb import LEGACY_NB
 from .nb_scorer import NaiveBayesScorer
 from .partial_parse import PartialParse
-from .rule import _regex, rules
+from .rule import _regex as global_regex
 from .scorer import Scorer
 from .timers import CTParseTimeoutError, timeit
 # Avoid collision with variable "timeout"
 from .timers import timeout as timeout_
-from .types import Interval, RegexMatch, Time
+from .types import Artifact, Interval, RegexMatch, Time
 
 logger = logging.getLogger(__name__)
 
@@ -36,19 +35,20 @@ class CTParse:
         self.production = production
         self.score = score
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'CTParse({}, {}, {})'.format(
             self.resolution, self.production, self.score)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '{} s={:.3f} p={}'.format(self.resolution,
                                          self.score,
                                          self.production)
 
 
 def ctparse(
-        txt: str, ts: Optional[datetime] = None, timeout=1.0, debug=False,
-        relative_match_len=1.0, max_stack_depth=10, scorer: Optional[Scorer] = None) -> Optional[CTParse]:
+        txt: str, ts: Optional[datetime] = None, timeout: Union[int, float] = 1.0,
+        debug: bool = False, relative_match_len: float = 1.0, max_stack_depth: int = 10,
+        scorer: Optional[Scorer] = None) -> Optional[CTParse]:
     '''Parse a string *txt* into a time expression
 
     :param ts: reference time
@@ -74,18 +74,20 @@ def ctparse(
                          max_stack_depth=max_stack_depth, scorer=scorer)
     # TODO: keep debug for back-compatibility, but remove it later
     if debug:
-        return parsed
+        return parsed  # type: ignore
     else:
-        parsed = list(parsed)
-        if not parsed or (len(parsed) == 1 and not parsed[0]):
+        parsed_list = list(parsed)
+        # TODO: this way of testing a failure to find a match is a bit clunky with types
+        if len(parsed_list) == 0 or (len(parsed_list) == 1 and parsed_list[0] is None):
             logger.warning('Failed to produce result for "{}"'.format(txt))
-            return
-        parsed.sort(key=lambda p: p.score)
-        return parsed[-1]
+            return None
+        parsed_list.sort(key=lambda p: p.score)  # type: ignore
+        return parsed_list[-1]
 
 
-def ctparse_gen(txt: str, ts: Optional[datetime] = None, timeout=1.0, relative_match_len=1.0,
-                max_stack_depth=10, scorer: Optional[Scorer] = None) -> Iterator[CTParse]:
+def ctparse_gen(txt: str, ts: Optional[datetime] = None, timeout: Union[int, float] = 1.0,
+                relative_match_len: float = 1.0, max_stack_depth: int = 10,
+                scorer: Optional[Scorer] = None) -> Iterator[Optional[CTParse]]:
     """Generate parses for the string *txt*.
 
     This function is equivalent to ctparse, with the exeption that it returns an iterator
@@ -94,28 +96,30 @@ def ctparse_gen(txt: str, ts: Optional[datetime] = None, timeout=1.0, relative_m
     if scorer is None:
         # TODO: for compatibility reason, remove once we retrain
         scorer = NaiveBayesScorer(LEGACY_NB._model)
-
+    if ts is None:
+        ts = datetime.now()
     return _ctparse(_preprocess_string(txt), ts, timeout=timeout,
-                    relative_match_len=relative_match_len, max_stack_depth=max_stack_depth, scorer=scorer)
+                    relative_match_len=relative_match_len,
+                    max_stack_depth=max_stack_depth, scorer=scorer)
 
 
-def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float, max_stack_depth: int, scorer: Scorer):
+def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float,
+             max_stack_depth: int, scorer: Scorer) -> Iterator[Optional[CTParse]]:
     t_fun = timeout_(timeout)
 
     try:
-        if ts is None:
-            ts = datetime.now()
+
         logger.debug('='*80)
         logger.debug('-> matching regular expressions')
-        p, _tp = timeit(_match_regex)(txt, _regex)
+        p, _tp = timeit(_match_regex)(txt, global_regex)
         logger.debug('time in _match_regex: {:.0f}ms'.format(1000*_tp))
 
         logger.debug('='*80)
         logger.debug('-> building initial stack')
-        stack, _ts = timeit(_regex_stack)(txt, p, t_fun)
+        regex_stack, _ts = timeit(_regex_stack)(txt, p, t_fun)
         logger.debug('time in _regex_stack: {:.0f}ms'.format(1000*_ts))
         # add empty production path + counter of contained regex
-        stack = [PartialParse.from_regex_matches(s) for s in stack]
+        stack = [PartialParse.from_regex_matches(s) for s in regex_stack]
         # TODO: the score should be kept separate from the partial parse
         # because it depends also on the text and the ts. A good idea is
         # to create a namedtuple of kind StackElement(partial_parse, score)
@@ -138,9 +142,9 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float, 
 
         # track what has been added to the stack and do not add again
         # if the score is not better
-        stack_prod = {}
+        stack_prod = {}  # type: Dict[Tuple[Artifact, ...], float]
         # track what has been emitted and do not emit agin
-        parse_prod = {}
+        parse_prod = {}  # type: Dict[Union[Time, Interval], float]
         while stack:
             t_fun()
             s = stack.pop()
@@ -150,7 +154,7 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float, 
             for r_name, r in s.applicable_rules.items():
                 for r_match in _match_rule(s.prod, r[1]):
                     # apply production part of rule
-                    new_s = s.apply_rule(ts, r, r_name, r_match)
+                    new_s = s.apply_rule(ts, r[0], r_name, r_match)
 
                     # TODO: We should store scores separately from the production itself
                     # because the score may depend on the text and the ts
@@ -172,6 +176,8 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float, 
                 # emit all (probably partial) production
                 for x in s.prod:
                     if not isinstance(x, RegexMatch):
+                        x = cast(Union[Time, Interval], x)
+
                         # TODO: why do we have a different method for scoring
                         # final productions? This is because you may have non-reducible parses
                         # of the kind [Time, RegexMatch, Interval] or [Time, Time] etc.
@@ -204,11 +210,12 @@ _repl1 = regex.compile(r'[,;\pZ\pC\p{Ps}\p{Pe}]+', regex.VERSION1)
 _repl2 = regex.compile(r'(\p{Pd}|[\u2010-\u2015]|\u2043)+', regex.VERSION1)
 
 
-def _preprocess_string(txt):
+def _preprocess_string(txt: str) -> str:
     return _repl2.sub('-', _repl1.sub(' ', txt, concurrent=True).strip()).strip()
 
 
-def _match_rule(seq, rule):
+def _match_rule(seq: Sequence[Artifact],
+                rule: Sequence[Callable[[Artifact], bool]]) -> Iterator[Tuple[int, int]]:
     if not seq:
         return
     if not rule:
@@ -229,7 +236,7 @@ def _match_rule(seq, rule):
         i_s += 1
 
 
-def _match_regex(txt: str, regexes: Dict[str, regex.Regex]) -> List[RegexMatch]:
+def _match_regex(txt: str, regexes: Dict[int, regex.Regex]) -> List[RegexMatch]:
     # Match a collection of regexes in *txt*
     #
     # The returned RegexMatch objects are sorted by the start of the match
@@ -244,7 +251,8 @@ def _match_regex(txt: str, regexes: Dict[str, regex.Regex]) -> List[RegexMatch]:
     return sorted(matches, key=lambda x: (x.mstart, x.mend))
 
 
-def _regex_stack(txt, regex_matches: List[RegexMatch], on_do_iter=lambda: None) -> List[Tuple[RegexMatch]]:
+def _regex_stack(txt: str, regex_matches: List[RegexMatch],
+                 on_do_iter: Callable[[], None] = lambda: None) -> List[Tuple[RegexMatch, ...]]:
     # Group contiguous RegexMatch objects together.
     #
     # Assumes that regex_matches are sorted by increasing start index. on_do_iter
@@ -271,8 +279,8 @@ def _regex_stack(txt, regex_matches: List[RegexMatch], on_do_iter=lambda: None) 
     #   (i.e. there is no gap between them):
     #
     #   - say A and B have no gap inbetween and all sequences starting
-    #     at A have already been produced. These by definition(which?: -) include as sub-sequences all sequences starting at B. Any
-    #     other sequences starting at B directly will not add valid
+    #     at A have already been produced. These by definition(which?: -) include as sub-sequences
+    #     all sequences starting at B. Any other sequences starting at B directly will not add valid
     #     variations, as each of them could be prefixed with a sequence
     #     starting at A
     #
@@ -304,7 +312,7 @@ def _regex_stack(txt, regex_matches: List[RegexMatch], on_do_iter=lambda: None) 
 
     _separator_regex = regex.compile(r'\s*', regex.VERSION1)
 
-    def get_m_dist(m1, m2):
+    def get_m_dist(m1: RegexMatch, m2: RegexMatch) -> int:
         # 1 if there is no relevant gap between m1 and m2, 0 otherwise
         # assumes that m1 and m2 are sorted be their start index
         if m2.mstart < m1.mend:
@@ -322,7 +330,7 @@ def _regex_stack(txt, regex_matches: List[RegexMatch], on_do_iter=lambda: None) 
 
     # NOTE(glanaro): I believe this means that this is a beginning node.
     # why reversed?
-    stack = [(i,) for i in reversed(range(n_rm)) if sum(M[i]) == 0]
+    stack = [(i,) for i in reversed(range(n_rm)) if sum(M[i]) == 0]  # type: List[Tuple[int, ...]]
     while stack:
         on_do_iter()
         s = stack.pop()

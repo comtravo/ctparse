@@ -1,9 +1,8 @@
 import logging
 from datetime import datetime
-from math import log
 from typing import Callable, Optional, Sequence, Tuple, TypeVar, Union
 
-from .rule import rules, ProductionRule, Predicate
+from .rule import rules as global_rules, ProductionRule
 from .timers import timeit
 from .types import Artifact, RegexMatch
 
@@ -27,6 +26,7 @@ class PartialParse:
 
         self.prod = prod
         self.rules = rules
+        self.applicable_rules = global_rules
         self.max_covered_chars = self.prod[-1].mend - self.prod[0].mstart
         self.score = 0.0
 
@@ -45,9 +45,9 @@ class PartialParse:
         # Reducing rules to only those applicable has no effect for
         # small stacks, but on larger there is a 10-20% speed
         # improvement
-        se.applicable_rules, _ts = timeit(se._filter_rules)(rules)
+        se.applicable_rules, _ts = timeit(se._filter_rules)(global_rules)
         logger.debug('of {} total rules {} are applicable in {}'.format(
-            len(rules), len(se.applicable_rules), se.prod))
+            len(global_rules), len(se.applicable_rules), se.prod))
         logger.debug('time in _filter_rules: {:.0f}ms'.format(1000*_ts))
         logger.debug('='*80)
 
@@ -55,11 +55,11 @@ class PartialParse:
 
     def apply_rule(self,
                    ts: datetime,
-                   rule: Tuple[ProductionRule, Predicate],
+                   rule: ProductionRule,
                    rule_name: Union[str, int],
                    match: Tuple[int, int]) -> Optional['PartialParse']:
         '''Check whether the production in rule can be applied to this stack
-        element. 
+        element.
 
         If yes, return a copy where this update is
         incorporated in the production, the record of applied rules
@@ -70,8 +70,7 @@ class PartialParse:
         :param rule_name: the name of the rule
         :param match: the start and end index of the parameters that the rule needs.
         '''
-        # TODO: the second element of the rule is not being used
-        prod = rule[0](ts, *self.prod[match[0]:match[1]])
+        prod = rule(ts, *self.prod[match[0]:match[1]])
 
         if prod is not None:
             pp = PartialParse(
@@ -82,7 +81,7 @@ class PartialParse:
             pp.applicable_rules = self.applicable_rules
             return pp
         else:
-            return
+            return None
 
     def __lt__(self, other):
         '''Sort stack elements by (a) the length of text they can
@@ -97,7 +96,8 @@ class PartialParse:
                  self.score < other.score))
 
     def __repr__(self):
-        return "PartialParse(prod={}, rules={}, score={})".format(repr(self.prod), repr(self.rules), repr(self.score))
+        return "PartialParse(prod={}, rules={}, score={})".format(
+            repr(self.prod), repr(self.rules), repr(self.score))
 
     def _filter_rules(self, rules):
         # find all rules that can be applied to the current prod sequence

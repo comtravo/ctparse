@@ -5,7 +5,7 @@ the ctparse package.
 
 """
 from time import perf_counter
-from typing import Callable, TypeVar, Union, Tuple
+from typing import Any, Callable, TypeVar, Union, Tuple
 from functools import wraps
 
 T = TypeVar('T')
@@ -29,7 +29,7 @@ def timeout(timeout: Union[float, int]) -> Callable[[], None]:
     """
     start_time = perf_counter()
 
-    def _tt():
+    def _tt() -> None:
         if timeout == 0:
             return
         if perf_counter() - start_time > timeout:
@@ -52,7 +52,7 @@ def timeit(f: Callable[..., T]) -> Callable[..., Tuple[T, float]]:
 
     """
     @wraps(f)
-    def _wrapper(*args, **kwargs):
+    def _wrapper(*args: Any, **kwargs: Any) -> Tuple[T, float]:
         start_time = perf_counter()
         res = f(*args, **kwargs)
         return res, perf_counter() - start_time

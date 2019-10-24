@@ -1,7 +1,7 @@
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY
-from .. rule import rule, predicate, dimension, _regex_to_join
-from .. types import Time, Interval, pod_hours
+from ..rule import rule, predicate, dimension, _regex_to_join
+from ..types import Time, Interval, pod_hours
 
 
 @rule(r'at|on|am|um|gegen|den|dem|der|the|ca\.?|approx\.?|about|(in|of)( the)?|around',
@@ -551,7 +551,7 @@ def ruleDateTimeDateTime(ts, d1, _, d2):
     if d1.year == d2.year and d1.month == d2.month and d1.day == d2.day and d1.hour > d2.hour:
         return
     if (d1.year == d2.year and d1.month == d2.month and d1.day == d2.day and
-       d1.hour == d2.hour and d1.minute >= d2.minute):
+            d1.hour == d2.hour and d1.minute >= d2.minute):
         return
     return Interval(t_from=d1, t_to=d2)
 

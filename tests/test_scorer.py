@@ -1,11 +1,10 @@
 import datetime
-
-import regex
 import random
+
+from ctparse.nb_scorer import NaiveBayesScorer, train_naive_bayes
 from ctparse.partial_parse import PartialParse
 from ctparse.scorer import DummyScorer, RandomScorer
-from ctparse.nb_scorer import NaiveBayesScorer, train_naive_bayes
-from ctparse.types import Time, Interval
+from ctparse.types import Interval, Time
 
 
 def test_dummy():
