@@ -117,7 +117,8 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float, 
         # add empty production path + counter of contained regex
         stack = [PartialParse.from_regex_matches(s) for s in stack]
         # TODO: the score should be kept separate from the partial parse
-        # because it depends also on the text and the ts
+        # because it depends also on the text and the ts. A good idea is
+        # to create a namedtuple of kind StackElement(partial_parse, score)
         for pp in stack:
             pp.score = scorer.score(txt, ts, pp)
 
@@ -171,10 +172,12 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float, 
                 # emit all (probably partial) production
                 for x in s.prod:
                     if not isinstance(x, RegexMatch):
-                        # update score to be only relative to the text
-                        # match by the actual production, not the
-                        # initial sequence of regular expression
-                        # matches
+                        # TODO: why do we have a different method for scoring
+                        # final productions? This is because you may have non-reducible parses
+                        # of the kind [Time, RegexMatch, Interval] or [Time, Time] etc.
+                        # In this case we want to emit those Time, Interval parses separately
+                        # and score them appropriately (the default Score.score function
+                        # only operates on the whole PartialParse).
                         score_x = scorer.score_final(txt, ts, s, x)
                         # only emit productions not emitted before or
                         # productions emitted before but scored higher

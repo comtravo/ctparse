@@ -77,7 +77,7 @@ def _identity(x):
     return x
 
 
-def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[int], output_fname: str) -> None:
+def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[int]) -> BaseEstimator:
     """Train a naive bayes model for NaiveBayesScorer"""
     # Create and train the pipeline
     model = make_pipeline(
@@ -89,6 +89,11 @@ def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[int], output_fname
     # Make sure that class order is -1, 1
     assert model.classes_[0] == -1
 
-    # Save the model to disk
-    with bz2.open(output_fname, 'wb') as fd:
+    return model
+
+
+def save_naive_bayes(model: BaseEstimator, fname: str) -> None:
+    """Save a naive bayes model for NaiveBayesScorer"""
+    # TODO: version this model and dump metadata with lots of information
+    with bz2.open(fname, 'wb') as fd:
         pickle.dump(model, fd)
