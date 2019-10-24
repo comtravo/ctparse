@@ -3,7 +3,7 @@ import bz2
 import math
 import pickle
 from datetime import datetime
-from typing import Sequence, Tuple, Union
+from typing import Sequence, Union
 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
@@ -18,7 +18,7 @@ from .types import Time, Interval
 class NaiveBayesScorer(Scorer):
 
     def __init__(self, nb_model: BaseEstimator) -> None:
-        """Scorer based on a naive bayes estimator. 
+        """Scorer based on a naive bayes estimator.
 
         This scorer models the probability of having a correct parse, conditioned
         on the sequence of rules (expressed as a categorical feature) that led to

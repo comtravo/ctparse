@@ -1,12 +1,11 @@
 """This module contains the Scorer abstraction that can be used to
 implement scoring strategies for ctparse.
 """
-import math
 
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from random import Random
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 from .partial_parse import PartialParse
 from .types import Time, Interval

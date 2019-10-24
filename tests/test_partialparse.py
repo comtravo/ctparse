@@ -1,4 +1,5 @@
 import datetime
+from typing import Any, Callable
 
 import pytest
 import regex
@@ -7,7 +8,7 @@ from ctparse.partial_parse import PartialParse, _seq_match
 from ctparse.types import RegexMatch, Time
 
 
-def test_partial_parse():
+def test_partial_parse() -> None:
     match_a = regex.match("(?<R1>a)", "ab")
     match_b = next(regex.finditer("(?<R2>b)", "ab"))
 
@@ -18,24 +19,24 @@ def test_partial_parse():
 
     assert isinstance(pp.score, float)
 
-    def mock_rule(ts, a):
+    def mock_rule(ts: datetime.datetime, a: Time) -> Time:
         return Time()
 
     pp2 = pp.apply_rule(datetime.datetime(day=1, month=1, year=2015),
-                        (mock_rule, lambda x: True), 'mock_rule', (0, 1))
+                        mock_rule, 'mock_rule', (0, 1))
 
     assert pp != pp2
 
     with pytest.raises(ValueError):
-        PartialParse([], [])
+        PartialParse((), ())
 
 
-def test_seq_match():
+def test_seq_match() -> None:
     # NOTE: we are testing a private function because the algorithm
     # is quite complex
 
-    def make_rm(i):
-        def _regex_match(s):
+    def make_rm(i: int) -> Callable[[Any], bool]:
+        def _regex_match(s: Any) -> bool:
             return s == i
         return _regex_match
 
@@ -55,27 +56,31 @@ def test_seq_match():
     assert list(_seq_match([1, 2, 3], [make_rm(2)])) == [[1]]
     assert list(_seq_match([1, 2, 3], [make_rm(3)])) == [[2]]
     assert list(_seq_match([1, 2, 'a'], [make_rm(1), make_rm(2)])) == [[0, 1]]
-    assert list(_seq_match([1, 'a', 3], [make_rm(1), lambda x: x, make_rm(3)])) == [[0, 2]]
+    assert list(_seq_match([1, 'a', 3], [make_rm(1), _identity, make_rm(3)])) == [[0, 2]]
     assert list(_seq_match(['a', 2, 3], [make_rm(2), make_rm(3)])) == [[1, 2]]
     # starts with non regex
-    assert list(_seq_match([1, 2], [lambda x: x, make_rm(1), make_rm(2)])) == []
-    assert list(_seq_match(['a', 1, 2], [lambda x: x, make_rm(1), make_rm(2)])) == [[1, 2]]
+    assert list(_seq_match([1, 2], [_identity, make_rm(1), make_rm(2)])) == []
+    assert list(_seq_match(['a', 1, 2], [_identity, make_rm(1), make_rm(2)])) == [[1, 2]]
     # ends with non regex
-    assert list(_seq_match([1, 2], [make_rm(1), make_rm(2), lambda x: x])) == []
-    assert list(_seq_match([1, 2, 'a'], [make_rm(1), make_rm(2), lambda x: x])) == [[0, 1]]
+    assert list(_seq_match([1, 2], [make_rm(1), make_rm(2), _identity])) == []
+    assert list(_seq_match([1, 2, 'a'], [make_rm(1), make_rm(2), _identity])) == [[0, 1]]
     # repeated pattern
     assert (list(_seq_match([1, 2, 1, 2, 2], [make_rm(1), make_rm(2)])) ==
             [[0, 1], [0, 3], [0, 4], [2, 3], [2, 4]])
-    assert (list(_seq_match([1, 2, 1, 2, 2], [make_rm(1), lambda x: x, make_rm(2)])) ==
+    assert (list(_seq_match([1, 2, 1, 2, 2], [make_rm(1), _identity, make_rm(2)])) ==
             [[0, 3], [0, 4], [2, 4]])
-    assert (list(_seq_match([1, 2, 1, 2, 2], [lambda x: x, make_rm(1), make_rm(2)])) ==
+    assert (list(_seq_match([1, 2, 1, 2, 2], [_identity, make_rm(1), make_rm(2)])) ==
             [[2, 3], [2, 4]])
-    assert (list(_seq_match([1, 2, 1, 2, 2], [make_rm(1), make_rm(2), lambda x: x])) ==
+    assert (list(_seq_match([1, 2, 1, 2, 2], [make_rm(1), make_rm(2), _identity])) ==
             [[0, 1], [0, 3], [2, 3]])
     assert (list(_seq_match(
-        [1, 2, 1, 2, 2], [lambda x: x, make_rm(1), lambda x: x, make_rm(2), lambda x: x])) ==
+        [1, 2, 1, 2, 2], [_identity, make_rm(1), _identity, make_rm(2), _identity])) ==
         [])
     assert (list(_seq_match(
         [1, 2, 1, 2, 2, 3],
-        [lambda x: x, make_rm(1), lambda x: x, make_rm(2), lambda x: x])) ==
+        [_identity, make_rm(1), _identity, make_rm(2), _identity])) ==
         [[2, 4]])
+
+
+def _identity(x: Any) -> bool:
+    return True

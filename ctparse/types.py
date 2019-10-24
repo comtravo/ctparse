@@ -1,44 +1,49 @@
 from datetime import datetime
+from regex import Regex
+from typing import Any, Dict, Optional, Tuple, TypeVar
+
+T = TypeVar('T', bound='Artifact')
 
 
 class Artifact:
-    def __init__(self):
+    def __init__(self) -> None:
         self.mstart = 0
         self.mend = 0
         self._attrs = ['mstart', 'mend']
 
-    def update_span(self, *args):
+    def update_span(self: T, *args: 'Artifact') -> T:
         self.mstart = args[0].mstart
         self.mend = args[-1].mend
         return self
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.mend - self.mstart
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return ''
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '{}[{}-{}]{{{}}}'.format(
             self.__class__.__name__, self.mstart, self.mend, str(self))
 
-    def nb_str(self):
+    def nb_str(self) -> str:
+        """Return a string representation without the bounds information."""
         return '{}[]{{{}}}'.format(
             self.__class__.__name__, str(self))
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if type(other) != type(self):
             return False
         else:
             return all(getattr(self, a) == getattr(other, a) for a in self._attrs)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(tuple(getattr(self, a) for a in self._attrs))
 
-    def _hasOnly(self, *args):
+    def _hasOnly(self, *args: str) -> bool:
         '''check that all attributes set to True are set (i.e. not None) and
         all set to False are not set (i.e. None)
 
@@ -47,7 +52,7 @@ class Artifact:
             getattr(self, a) is not None if a in args else getattr(self, a) is None
             for a in self._attrs)
 
-    def _hasAtLeast(self, *args):
+    def _hasAtLeast(self, *args: str) -> bool:
         '''check that all attributes set to True are set (i.e. not None) and
         all set to False are not set (i.e. None)
 
@@ -56,7 +61,7 @@ class Artifact:
 
 
 class RegexMatch(Artifact):
-    def __init__(self, id, m):
+    def __init__(self, id: int, m: Regex) -> None:
         super().__init__()
         self._attrs = ['mstart', 'mend', 'id']
         self.key = 'R{}'.format(id)
@@ -66,7 +71,7 @@ class RegexMatch(Artifact):
         self.mend = m.span(self.key)[1]
         self._text = m.group(self.key)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '{}:{}'.format(self.id, self._text)
 
 
@@ -163,11 +168,11 @@ _pod_hours = {
                       'offset': (0, 0)}}}
 
 
-def _mk_pod_hours():
-    def _add_ts(t1, t2):
-        return (t1[0]+t2[0], t1[1] + t2[1])
+def _mk_pod_hours() -> Dict[str, Tuple[int, int]]:
+    def _add_ts(t1: Tuple[int, int], t2: Tuple[int, int]) -> Tuple[int, int]:
+        return (t1[0] + t2[0], t1[1] + t2[1])
 
-    def _mk(pod, pod_data, t):
+    def _mk(pod: str, pod_data: Dict[str, Any], t: Tuple[int, int]) -> Dict[str, Tuple[int, int]]:
         r = {pod: _add_ts(t, pod_data['offset'])}
         for k, v in pod_data.items():
             if k == 'offset':
@@ -187,7 +192,14 @@ pod_hours = _mk_pod_hours()
 
 
 class Time(Artifact):
-    def __init__(self, year=None, month=None, day=None, hour=None, minute=None, DOW=None, POD=None):
+    def __init__(self,
+                 year: Optional[int] = None,
+                 month: Optional[int] = None,
+                 day: Optional[int] = None,
+                 hour: Optional[int] = None,
+                 minute: Optional[int] = None,
+                 DOW: Optional[int] = None,
+                 POD: Optional[str] = None) -> None:
         super().__init__()
         self._attrs = ['year', 'month', 'day', 'hour', 'minute', 'DOW', 'POD']
         # Might add some validation here, did not to avoid the overhead
@@ -203,19 +215,19 @@ class Time(Artifact):
     # Make sure to not accidentially test bool(x) as False when x==0, but you meant x==None
     # ------------------------------------------------------------------------------------
     @property
-    def isDOY(self):
+    def isDOY(self) -> bool:
         '''isDayOfYear <=> a dd.mm but not year
         '''
         return self._hasOnly('month', 'day')
 
     @property
-    def isDOM(self):
+    def isDOM(self) -> bool:
         '''isDayOfMonth <=> a dd but no month
         '''
         return self._hasOnly('day')
 
     @property
-    def isDOW(self):
+    def isDOW(self) -> bool:
         '''isDayOfWeek <=> DOW is the 0=Monday index; fragile test, as the DOW
         could be accompanied by e.g. a full date etc.; in practice,
         however, the production rules do not do that.
@@ -224,68 +236,68 @@ class Time(Artifact):
         return self._hasOnly('DOW')
 
     @property
-    def isMonth(self):
+    def isMonth(self) -> bool:
         return self._hasOnly('month')
 
     @property
-    def isPOD(self):
+    def isPOD(self) -> bool:
         '''isPartOfDay <=> morning, etc.; fragile, tests only that there is a
         POD and neither a full date nor a full time
         '''
         return self._hasOnly('POD')
 
     @property
-    def isHour(self):
+    def isHour(self) -> bool:
         '''only has an hour'''
         return self._hasOnly('hour')
 
     @property
-    def isTOD(self):
+    def isTOD(self) -> bool:
         '''isTimeOfDay - only a time, not date'''
         return self._hasOnly('hour') or self._hasOnly('hour', 'minute')
 
     @property
-    def isDate(self):
+    def isDate(self) -> bool:
         '''isDate - only a date, not time'''
         return self._hasOnly('year', 'month', 'day')
 
     @property
-    def isDateTime(self):
+    def isDateTime(self) -> bool:
         '''a date and a time'''
         return (self._hasOnly('year', 'month', 'day', 'hour') or
                 self._hasOnly('year', 'month', 'day', 'hour', 'minute'))
 
     @property
-    def isYear(self):
+    def isYear(self) -> bool:
         '''just a year'''
         return self._hasOnly('year')
 
     @property
-    def hasDate(self):
+    def hasDate(self) -> bool:
         '''at least a date'''
         return self._hasAtLeast('year', 'month', 'day')
 
     @property
-    def hasDOY(self):
+    def hasDOY(self) -> bool:
         '''at least a day of year'''
         return self._hasAtLeast('month', 'day')
 
     @property
-    def hasDOW(self):
+    def hasDOW(self) -> bool:
         '''at least a day of week'''
         return self._hasAtLeast('DOW')
 
     @property
-    def hasTime(self):
+    def hasTime(self) -> bool:
         '''at least a time to the hour'''
         return self._hasAtLeast('hour')
 
     @property
-    def hasPOD(self):
+    def hasPOD(self) -> bool:
         '''at least a part of day'''
         return self._hasAtLeast('POD')
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '{}-{}-{} {}:{} ({}/{})'.format(
             '{:04d}'.format(self.year) if self.year is not None else 'X',
             '{:02d}'.format(self.month) if self.month is not None else 'X',
@@ -296,18 +308,18 @@ class Time(Artifact):
             '{}'.format(self.POD) if self.POD is not None else 'X')
 
     @property
-    def start(self):
+    def start(self) -> 'Time':
         if self.hour is None and self.hasPOD:
-            hour = pod_hours[self.POD][0]
+            hour = pod_hours[self.POD][0]  # type: ignore
         else:
             hour = self.hour or 0
         return Time(year=self.year, month=self.month, day=self.day,
                     hour=hour, minute=self.minute or 0)
 
     @property
-    def end(self):
+    def end(self) -> 'Time':
         if self.hour is None and self.hasPOD:
-            hour = pod_hours[self.POD][1]
+            hour = pod_hours[self.POD][1]  # type: ignore
         else:
             hour = self.hour if self.hour is not None else 23
         return Time(year=self.year, month=self.month, day=self.day,
@@ -315,7 +327,7 @@ class Time(Artifact):
                     minute=self.minute if self.minute is not None else 59)
 
     @property
-    def dt(self):
+    def dt(self) -> datetime:
         if self.year is None or self.month is None or self.day is None:
             raise ValueError('cannot convert underspecified Time into datetime'
                              ', missing at least one of year, month or day')
@@ -325,30 +337,33 @@ class Time(Artifact):
 
 
 class Interval(Artifact):
-    def __init__(self, t_from=None, t_to=None):
+    def __init__(self, t_from: Optional[Time] = None, t_to: Optional[Time] = None) -> None:
         super().__init__()
         self._attrs = ['t_from', 't_to']
         self.t_from = t_from
         self.t_to = t_to
 
     @property
-    def isTimeInterval(self):
-        return self.t_from.isTOD and self.t_to.isTOD
+    def isTimeInterval(self) -> bool:
+        if self.t_from is None or self.t_to is None:
+            return False
+        else:
+            return self.t_from.isTOD and self.t_to.isTOD
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '{} - {}'.format(
             str(self.t_from),
             str(self.t_to))
 
     @property
-    def start(self):
+    def start(self) -> Optional[Time]:
         if self.t_from is not None:
             return self.t_from.start
         else:
             return None
 
     @property
-    def end(self):
+    def end(self) -> Optional[Time]:
         if self.t_to is not None:
             return self.t_to.end
         else:
