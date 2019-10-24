@@ -52,6 +52,7 @@ clean-test: ## remove test and coverage artifacts
 
 lint: ## check style with flake8
 	flake8 ctparse tests
+	mypy -p ctparse -p tests
 
 test: ## run tests quickly with the default Python
 	py.test
