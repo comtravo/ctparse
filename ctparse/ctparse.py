@@ -176,7 +176,7 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float, 
                         # final productions? This is because you may have non-reducible parses
                         # of the kind [Time, RegexMatch, Interval] or [Time, Time] etc.
                         # In this case we want to emit those Time, Interval parses separately
-                        # and score them appropriately (the default Score.score function
+                        # and score them appropriately (the default Scorer.score function
                         # only operates on the whole PartialParse).
                         score_x = scorer.score_final(txt, ts, s, x)
                         # only emit productions not emitted before or
