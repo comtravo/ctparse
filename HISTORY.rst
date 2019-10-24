@@ -2,6 +2,12 @@
 History
 =======
 
+0.0.39 (2019-10-24)
+
+* split ctparse file into several different modules
+* added types to public interface
+* introduced the Scorer abstraction to implement richer scoring strategies
+
 0.0.38 (2018-11-05)
 -------------------
 
