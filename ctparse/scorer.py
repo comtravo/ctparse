@@ -17,7 +17,8 @@ class Scorer(metaclass=ABCMeta):
     @abstractmethod
     def score(self, txt: str, ts: datetime, partial_parse: PartialParse) -> float:
         """Produce a score for a partial production.
-        :param txt: the text that is being parsed
+
+        :param txt:  the text that is being parsed
         :param ts: the reference time
         :param partial_parse: the partial parse that needs to be scored
         """
@@ -26,6 +27,7 @@ class Scorer(metaclass=ABCMeta):
     def score_final(self, txt: str, ts: datetime,
                     partial_parse: PartialParse, prod: Union[Time, Interval]) -> float:
         """Produce the final score for a production.
+
         :param txt: the text that is being parsed
         :param ts: the reference time
         :param partial_parse: the PartialParse object that generated the production
