@@ -49,7 +49,7 @@ setup(
     name='ctparse',
     packages=find_packages(include=['ctparse*']),
     package_dir={'ctparse': 'ctparse'},
-    package_data={'ctparse': ['models/model.pbz']},
+    package_data={'ctparse': ['models/model.pbz', 'py.typed']},
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
