@@ -2,6 +2,12 @@
 History
 =======
 
+0.0.40 (2019-10-25)
+-------------------
+
+* update develop dependencies
+* remove unused Protocol import from typing_extensions
+
 0.0.39 (2019-10-24)
 -------------------
 
