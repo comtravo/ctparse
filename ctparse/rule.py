@@ -3,7 +3,6 @@ import logging
 
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union, Type
-from typing_extensions import Protocol
 
 import regex
 
