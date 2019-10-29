@@ -1,5 +1,6 @@
-# TODO: this module is being kept here because the model file is currently in pickle format and requires
-# the nb module to be present. Once we can reliably regenerate the model, delete this module.
+# TODO: this module is being kept here because the model file is currently in pickle format and
+# requires the nb module to be present. Once we can reliably regenerate the model, delete this
+# module.
 
 import logging
 from sklearn.pipeline import make_pipeline
