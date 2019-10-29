@@ -24,13 +24,11 @@ The following steps are probably a helpful guideline.
      the expression. It might not score it highest. To check this,
      rebuild the model and try parsing the expression again:
 
-     .. code:: python
+     .. code:: bash
 
-            from ctparse.ctparse import regenerate_model
+            python scripts/train_default_model.py
 
-            regenerate_model()
-
-     To avoid issues with reloading, plsease restart the python
+     To avoid issues with reloading, please restart the python
      interpreter after regenerating the model.
 
      If this fixes the issue please commit the updated ``corpus.py``
