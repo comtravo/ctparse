@@ -1,6 +1,8 @@
 from datetime import datetime
+from typing import Any, Dict, Optional, Tuple, Type, TypeVar
+
+import regex
 from regex import Regex
-from typing import Any, Dict, Optional, Tuple, TypeVar
 
 T = TypeVar('T', bound='Artifact')
 
@@ -191,6 +193,9 @@ def _mk_pod_hours() -> Dict[str, Tuple[int, int]]:
 pod_hours = _mk_pod_hours()
 
 
+_TIME_REGEX = regex.compile(r"(\d{4}|X)-(\d{2}|X)-(\d{2}|X) (\d{2}|X):(\d{2}|X) \((\d|X)\/(\w+)\)")
+
+
 class Time(Artifact):
     def __init__(self,
                  year: Optional[int] = None,
@@ -307,6 +312,23 @@ class Time(Artifact):
             '{:d}'.format(self.DOW) if self.DOW is not None else 'X',
             '{}'.format(self.POD) if self.POD is not None else 'X')
 
+    @classmethod
+    def from_str(cls: Type['Time'], text: str) -> 'Time':
+        match = _TIME_REGEX.match(text)
+        if not match:
+            raise ValueError("Invalid format")
+        else:
+            def parse_opt_int(x): return None if x == 'X' else int(x)
+            pod = match.group(7)
+            return cls(
+                year=parse_opt_int(match.group(1)),
+                month=parse_opt_int(match.group(2)),
+                day=parse_opt_int(match.group(3)),
+                hour=parse_opt_int(match.group(4)),
+                minute=parse_opt_int(match.group(5)),
+                DOW=parse_opt_int(match.group(6)),
+                POD=None if pod == 'X' else pod)
+
     @property
     def start(self) -> 'Time':
         if self.hour is None and self.hasPOD:
@@ -354,6 +376,16 @@ class Interval(Artifact):
         return '{} - {}'.format(
             str(self.t_from),
             str(self.t_to))
+
+    @classmethod
+    def from_str(cls: Type['Interval'], text: str) -> 'Interval':
+        bounds = text.split(' - ')
+        if len(bounds) != 2:
+            raise ValueError("Invalid format")
+
+        t_from = None if bounds[0] == 'None' else Time.from_str(bounds[0])
+        t_to = None if bounds[1] == 'None' else Time.from_str(bounds[1])
+        return cls(t_from=t_from, t_to=t_to)
 
     @property
     def start(self) -> Optional[Time]:
