@@ -146,10 +146,29 @@ def ruleDOM2(ts, m):
 
 @rule(r'(?<!\d|\.)(?P<year>(?&_year))(?!\d)')
 def ruleYear(ts, m):
+    # Since we may have two-digits years, we have to make a call
+    # on how to handle which century does the time refers to.
+    # We are using a strategy inspired by excel. Reference:
+    # https://github.com/comtravo/ctparse/issues/56
+    # https://docs.microsoft.com/en-us/office/troubleshoot/excel/two-digit-year-numbers
     y = int(m.match.group('year'))
-    if y < 1900:
-        y += 2000
-    return Time(year=y)
+    SAME_CENTURY_THRESHOLD = 10
+
+    # Let the reference year be ccyy (e.g. 1983 => cc=19, yy=83)
+    cc = ts.year // 100
+    yy = ts.year % 100
+    # Check if year is two digits
+    if y < 100:
+        # Then any two digit year between 0 and
+        # yy+10 is interpreted to be within the
+        #  century cc (e.g. 83 maps to 1983, 93 to 1993),
+        # anything above maps to the previous century (e.g. 94 maps to 1894).
+        if y < yy + SAME_CENTURY_THRESHOLD:
+            return Time(year=cc * 100 + y)
+        else:
+            return Time(year=(cc - 1) * 100 + y)
+    else:
+        return Time(year=y)
 
 
 @rule(r'heute|(um diese zeit|zu dieser zeit|um diesen zeitpunkt|zu diesem zeitpunkt)|'
