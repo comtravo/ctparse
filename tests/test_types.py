@@ -134,6 +134,29 @@ class TestTime(TestCase):
         self.assertEqual(repr(t),
                          'Time[0-0]{0001-01-01 01:01 (1/pod)}')
 
+    def test_from_str(self):
+        # Complete time
+        t = Time(year=1, month=1, day=1, hour=1, minute=1, DOW=1, POD='pod')
+        t_str = str(t)
+        t_back = Time.from_str(t_str)
+        self.assertEqual(t, t_back)
+
+        # Incomplete time
+        t = Time(year=None, month=1, day=1, hour=None, minute=None, DOW=None, POD='pod')
+        t_str = str(t)
+        t_back = Time.from_str(t_str)
+        self.assertEqual(t, t_back)
+
+        # Zeroed time
+        t = Time()
+        t_str = str(t)
+        t_back = Time.from_str(t_str)
+        self.assertEqual(t, t_back)
+
+        # Mistake
+        with self.assertRaises(ValueError):
+            Time.from_str('0001-01-01 01-01 (1/pod)')
+
     def test_start(self):
         t = Time()
         self.assertEqual(t.start, Time(hour=0, minute=0))
@@ -183,6 +206,28 @@ class TestInterval(TestCase):
     def test_repr(self):
         self.assertEqual(repr(Interval(Time(), Time())),
                          'Interval[0-0]{X-X-X X:X (X/X) - X-X-X X:X (X/X)}')
+
+    def test_from_str(self):
+        # Complete interval
+        t1 = Time(year=1, month=1, day=1, hour=1, minute=1, DOW=1, POD='pod')
+        t2 = Time(year=2, month=1, day=1, hour=1, minute=1, DOW=1, POD='pod')
+        interval = Interval(t1, t2)
+        i_back = Interval.from_str(str(interval))
+        self.assertEqual(interval, i_back)
+
+        # Incomplete interval
+        interval = Interval(None, t2)
+        i_back = Interval.from_str(str(interval))
+        self.assertEqual(interval, i_back)
+
+        # Zeroed interval
+        interval = Interval()
+        i_back = Interval.from_str(str(interval))
+        self.assertEqual(interval, i_back)
+
+        # Mistake
+        with self.assertRaises(ValueError):
+            Interval.from_str('X-X-X X: X(X/X) -X-X-X X: X(X/X)')
 
     def test_start(self):
         i = Interval(Time(2013, 1, 1),
