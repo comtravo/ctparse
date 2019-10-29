@@ -28,7 +28,7 @@ def test_random():
 def test_nbscorer():
     # We only test that it runs just fine
     X = [("a", "b"), ("a",), ("b"), ("a", "b", "a", "b")]
-    y = [-1, 1, 1, -1]
+    y = [False, True, True, False]
 
     model = train_naive_bayes(X, y)
     scorer = NaiveBayesScorer(model)

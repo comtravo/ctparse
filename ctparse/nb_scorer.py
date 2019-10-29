@@ -77,18 +77,18 @@ def _identity(x):
     return x
 
 
-def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[int]) -> BaseEstimator:
+def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]) -> BaseEstimator:
     """Train a naive bayes model for NaiveBayesScorer"""
+    y_binary = [1 if y_i else -1 for y_i in y]
     # Create and train the pipeline
     model = make_pipeline(
         CountVectorizer(ngram_range=(1, 3), lowercase=False,
                         tokenizer=_identity),
         MultinomialNB(alpha=1.0))
-    model.fit(X, y)
+    model.fit(X, y_binary)
 
     # Make sure that class order is -1, 1
     assert model.classes_[0] == -1
-
     return model
 
 
