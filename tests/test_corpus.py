@@ -1,7 +1,11 @@
+from datetime import datetime
+
 import pytest
 
-from ctparse.corpus import run_corpus
+from ctparse.corpus import (TimeParseEntry, make_partial_rule_dataset,
+                            run_corpus)
 from ctparse.time.corpus import corpus
+from ctparse.types import Time
 
 
 def test_run_corpus() -> None:
@@ -21,3 +25,14 @@ def test_run_corpus_failure() -> None:
     ]
     with pytest.raises(Exception):
         run_corpus(fail_corpus)
+
+
+def test_make_partial_rule_dataset() -> None:
+    ts = datetime(year=2019, month=10, day=1)
+    entries = [
+        TimeParseEntry("today at 5 pm", ts, Time(year=2019, month=10, day=1, hour=17, minute=0))
+    ]
+
+    X, y = zip(*make_partial_rule_dataset(entries))
+    assert isinstance(y[0], bool)
+    assert isinstance(X[0][0], str)

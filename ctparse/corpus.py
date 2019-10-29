@@ -23,7 +23,7 @@ class TimeParseEntry(NamedTuple):
 
 
 def make_partial_rule_dataset(
-        entries: Iterator[TimeParseEntry]) -> Iterator[Tuple[List[str], bool]]:
+        entries: Sequence[TimeParseEntry]) -> Iterator[Tuple[List[str], bool]]:
     """Build a data set from a list of TimeParseEntry.
 
     The text is run through ctparse and all possible parses are obtained. Each parse
