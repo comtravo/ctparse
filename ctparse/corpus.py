@@ -11,15 +11,10 @@ from .scorer import DummyScorer
 
 logger = logging.getLogger(__name__)
 
-
-class TimeParseEntry(NamedTuple):
-    """A triplet of text, reference timestamp and correct parse.
-
-    It can be used as raw data to build datasets for ctparse.
-    """
-    text: str
-    ts: datetime
-    gold: Union[Time, Interval]
+# A triplet of text, reference timestamp and correct parse.
+# It can be used as raw data to build datasets for ctparse.
+TimeParseEntry = NamedTuple(
+    'TimeParseEntry', [('text', str), ('ts', datetime), ('gold', Union[Time, Interval])])
 
 
 def make_partial_rule_dataset(
