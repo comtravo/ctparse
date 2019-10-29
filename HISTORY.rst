@@ -2,6 +2,12 @@
 History
 =======
 
+0.0.41 (2019-10-29)
+-------------------
+
+* Fix run_corpus refactoring bug
+* Implemented retraining utilities
+
 0.0.40 (2019-10-25)
 -------------------
 
