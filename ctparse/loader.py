@@ -12,7 +12,7 @@ from .nb import NB
 logger = logging.getLogger(__name__)
 
 # Location of the default model, included with ctparse
-DEFAULT_MODEL = os.path.join(os.path.dirname(__file__), 'models', 'model.pbz')
+DEFAULT_MODEL_FILE = os.path.join(os.path.dirname(__file__), 'models', 'model.pbz')
 
 
 def load_default_scorer() -> Scorer:
@@ -20,10 +20,10 @@ def load_default_scorer() -> Scorer:
 
     If the score is not found, the scorer defaults to `DummyScorer`.
     """
-    if os.path.exists(DEFAULT_MODEL):
-        logger.info('Loading model from {}'.format(DEFAULT_MODEL))
+    if os.path.exists(DEFAULT_MODEL_FILE):
+        logger.info('Loading model from {}'.format(DEFAULT_MODEL_FILE))
 
-        with bz2.open(DEFAULT_MODEL, 'rb') as fd:
+        with bz2.open(DEFAULT_MODEL_FILE, 'rb') as fd:
             mdl = pickle.load(fd)
 
         if isinstance(mdl, NB):
