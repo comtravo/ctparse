@@ -147,8 +147,8 @@ def ruleDOM2(ts, m):
 @rule(r'(?<!\d|\.)(?P<year>(?&_year))(?!\d)')
 def ruleYear(ts, m):
     # Since we may have two-digits years, we have to make a call
-    # on how to handle which century does the time refers to
-    # we are using a strategy inspired by excel. Reference:
+    # on how to handle which century does the time refers to.
+    # We are using a strategy inspired by excel. Reference:
     # https://github.com/comtravo/ctparse/issues/56
     # https://docs.microsoft.com/en-us/office/troubleshoot/excel/two-digit-year-numbers
     y = int(m.match.group('year'))
