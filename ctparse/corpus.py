@@ -68,7 +68,8 @@ def make_partial_rule_dataset(
                 yield X, y
 
 
-def run_corpus(corpus: List[Tuple[str, str, Sequence[str]]]) -> Tuple[List[List[str]], List[bool]]:
+def run_corpus(
+        corpus: Sequence[Tuple[str, str, Sequence[str]]]) -> Tuple[List[List[str]], List[bool]]:
     """Load the corpus(currently hard coded), run it through ctparse with
     no timeout and no limit on the stack depth.
 
@@ -86,7 +87,8 @@ def run_corpus(corpus: List[Tuple[str, str, Sequence[str]]]) -> Tuple[List[List[
     ...
     [r_0, ..., r_n, p_0, ..., p_m, 'step_m']
 
-    All samples from one production are given the same label which indicates if the production was correct.
+    All samples from one production are given the same label which indicates if
+    the production was correct.
 
     To build a similar datasets without the strict checking, use `make_partial_rule_dataset`
     """
