@@ -5,8 +5,6 @@ from typing import (cast, Callable, Dict, Iterator,
 
 import regex
 
-from .nb import LEGACY_NB
-from .nb_scorer import NaiveBayesScorer
 from .partial_parse import PartialParse
 from .rule import _regex as global_regex
 from .scorer import Scorer
@@ -14,8 +12,11 @@ from .timers import CTParseTimeoutError, timeit
 # Avoid collision with variable "timeout"
 from .timers import timeout as timeout_
 from .types import Artifact, Interval, RegexMatch, Time
+from .loader import load_default_scorer
 
 logger = logging.getLogger(__name__)
+
+_DEFAULT_SCORER = load_default_scorer()
 
 
 class CTParse:
@@ -94,8 +95,7 @@ def ctparse_gen(txt: str, ts: Optional[datetime] = None, timeout: Union[int, flo
     over the matches as soon as they are produced.
     """
     if scorer is None:
-        # TODO: for compatibility reason, remove once we retrain
-        scorer = NaiveBayesScorer(LEGACY_NB._model)
+        scorer = _DEFAULT_SCORER
     if ts is None:
         ts = datetime.now()
     return _ctparse(_preprocess_string(txt), ts, timeout=timeout,

@@ -1,6 +1,6 @@
-import bz2
-import pickle
-import os
+# TODO: this module is being kept here because the model file is currently in pickle format and requires
+# the nb module to be present. Once we can reliably regenerate the model, delete this module.
+
 import logging
 from sklearn.pipeline import make_pipeline
 from sklearn.feature_extraction.text import CountVectorizer
@@ -54,13 +54,3 @@ class NB:
     def apply(self, x):
         """apply model to a single data point"""
         return self.predict([[str(w) for w in x]])[0]
-
-
-# TODO(glanaro): remove when the scorer has been extracted
-_model_file = os.path.join(os.path.dirname(__file__), 'models', 'model.pbz')
-if os.path.exists(_model_file):
-    logger.info('Loading model from {}'.format(_model_file))
-    LEGACY_NB = pickle.load(bz2.open(_model_file, 'rb'))
-else:
-    logger.warning('No model found, initializing empty model')
-    LEGACY_NB = NB()
