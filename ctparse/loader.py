@@ -7,7 +7,6 @@ import pickle
 
 from .scorer import Scorer, DummyScorer
 from .nb_scorer import NaiveBayesScorer
-from .nb import NB
 
 logger = logging.getLogger(__name__)
 
@@ -22,15 +21,9 @@ def load_default_scorer() -> Scorer:
     """
     if os.path.exists(DEFAULT_MODEL_FILE):
         logger.info('Loading model from {}'.format(DEFAULT_MODEL_FILE))
-
         with bz2.open(DEFAULT_MODEL_FILE, 'rb') as fd:
             mdl = pickle.load(fd)
-
-        if isinstance(mdl, NB):
-            logger.info("Found model in legacy format")
-            return NaiveBayesScorer(mdl._model)
-        else:
-            return NaiveBayesScorer(mdl)
+        return NaiveBayesScorer(mdl)
 
     else:
         logger.warning('No model found, initializing empty scorer')
