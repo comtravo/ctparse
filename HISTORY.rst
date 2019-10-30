@@ -2,6 +2,13 @@
 History
 =======
 
+0.0.42 (2019-10-30)
+-------------------
+
+* Removed nb module
+* Fix for two digit years
+* Freshly retrained model binary file
+
 0.0.41 (2019-10-29)
 -------------------
 
