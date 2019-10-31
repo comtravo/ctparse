@@ -350,12 +350,14 @@ class Time(Artifact):
 
     @property
     def dt(self) -> datetime:
-        if self.year is None or self.month is None or self.day is None:
+        # Use the start time, in case we have a POD specification
+        t = self.start
+        if t.year is None or t.month is None or t.day is None:
             raise ValueError('cannot convert underspecified Time into datetime'
                              ', missing at least one of year, month or day')
-        return datetime(self.year, self.month, self.day,
-                        self.hour or 0,
-                        self.minute or 0)
+        return datetime(t.year, t.month, t.day,
+                        t.hour or 0,
+                        t.minute or 0)
 
 
 class Interval(Artifact):

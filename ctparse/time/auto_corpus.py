@@ -5711,5 +5711,11 @@ corpus = [  # pragma: no cover
             "2 jul 22"
         ]
     ],
-
+    [
+        "Interval[]{2018-06-07 X:X (X/evening) - 2018-06-07 X:X (X/night)}",
+        "2018-05-08T16:32",
+        [
+            "at 7.6 evening/night"
+        ]
+    ],
 ]
