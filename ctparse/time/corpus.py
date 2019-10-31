@@ -333,8 +333,8 @@ corpus = [
       '8Uhr - 13Uhr',
       '8h to 13h']),
     # rulePODPOD
-    ('Interval[]{2018-05-08 X:X (X/evening) - 2018-05-08 X:X (X/night)}',
-     '2018-05-08T16:32',
+    ('Interval[]{X-X-X X:X (X/evening) - X-X-X X:X (X/night)}',
+     '2018-05-08T10:32',
      ['evening/night']),
     # ruleAfterTime
     ('Interval[]{2017-11-26 08:00 (X/X) - None}',
