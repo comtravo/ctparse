@@ -580,6 +580,11 @@ def ruleTODTOD(ts, t1, _, t2):
     return Interval(t_from=t1, t_to=t2)
 
 
+@rule(predicate('isPOD'), _regex_to_join, predicate('isPOD'))
+def rulePODPOD(ts, t1, _, t2):
+    return Interval(t_from=t1, t_to=t2)
+
+
 @rule(predicate('isDate'), dimension(Interval))
 def ruleDateInterval(ts, d, i):
     if not ((i.t_from is None or i.t_from.isTOD or i.t_from.isPOD) and
@@ -594,10 +599,13 @@ def ruleDateInterval(ts, d, i):
         t_to = Time(year=d.year, month=d.month, day=d.day,
                     hour=i.t_to.hour, minute=i.t_to.minute,
                     POD=i.t_to.POD)
+    # This is for wrapping time around a date.
+    # Mon, Nov 13 11:30 PM - 3:35 AM
     if t_from and t_to and t_from.dt >= t_to.dt:
-        t_to = t_to.dt + relativedelta(days=1)
-        t_to = Time(year=t_to.year, month=t_to.month, day=t_to.day,
-                    hour=t_to.hour, minute=t_to.minute)
+        t_to_dt = t_to.dt + relativedelta(days=1)
+        t_to = Time(year=t_to_dt.year, month=t_to_dt.month, day=t_to_dt.day,
+                    hour=t_to_dt.hour, minute=t_to_dt.minute,
+                    POD=t_to.POD)
     return Interval(t_from=t_from, t_to=t_to)
 
 
