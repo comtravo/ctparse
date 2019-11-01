@@ -2,6 +2,12 @@
 History
 =======
 
+0.0.43 (2019-01-01)
+-------------------
+
+* Added slash as a general separator
+* Added ruleTODTOD (to support expression like afternoon/evening)
+
 0.0.42 (2019-10-30)
 -------------------
 
