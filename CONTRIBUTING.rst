@@ -45,8 +45,10 @@ The following steps are probably a helpful guideline.
      considered more favorable to add varying test cases (e.g. in
      different languages, slight variation) to the corpus, the same
      string can also just be duplicated to achive this *implict
-     up-weightning* effect.
-   
+     up-weightning* effect. The examples that are intended to influence the scoring,
+     as opposed to the ones used to develop new rules, are usually appended
+     to the file ``auto_corpus.py```.
+  
   #. **The tests fail**: if this is because not all tests in the
      corpus pass, i.e. you get an error message like the following::
 
