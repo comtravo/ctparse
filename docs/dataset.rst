@@ -1,1 +1,1 @@
-.. include:: ../datasets/README.md
+.. include:: ../datasets/README.rst
