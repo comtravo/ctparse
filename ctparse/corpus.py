@@ -66,7 +66,8 @@ def make_partial_rule_dataset(
 def load_timeparse_corpus(fname: str) -> Sequence[TimeParseEntry]:
     """Load a corpus from disk.
 
-    The corpus format is described in the documentation.
+    For more information about the format of the time parse corpus,
+    refer to the documentation.
     """
     with open(fname, "r") as fd:
         entries = json.load(fd)
