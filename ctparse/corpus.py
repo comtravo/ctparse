@@ -63,6 +63,19 @@ def make_partial_rule_dataset(
                 yield X, y
 
 
+def parse_nb_string(gold_parse: str) -> Union[Time, Interval]:
+    """Parse a Time or an Interval from their no-bound string representation.
+
+    The no-bound string representations are generated from ``Artifact.nb_str``.
+    """
+    if gold_parse.startswith('Time'):
+        return Time.from_str(gold_parse[7:-1])
+    if gold_parse.startswith('Interval'):
+        return Interval.from_str(gold_parse[11:-1])
+    else:
+        raise ValueError("'{}' has an invalid format".format(gold_parse))
+
+
 def run_corpus(
         corpus: Sequence[Tuple[str, str, Sequence[str]]]) -> Tuple[List[List[str]], List[bool]]:
     """Load the corpus (currently hard coded), run it through ctparse with
