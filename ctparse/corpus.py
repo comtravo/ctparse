@@ -1,13 +1,13 @@
+import json
 import logging
 from datetime import datetime
-
-from typing import List, NamedTuple, Tuple, Iterator, Union, Sequence
+from typing import Iterator, List, NamedTuple, Sequence, Tuple, Union
 
 from tqdm import tqdm
 
-from .types import Time, Interval
 from .ctparse import ctparse_gen
 from .scorer import DummyScorer
+from .types import Interval, Time
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +61,22 @@ def make_partial_rule_dataset(
             for i in range(1, len(parse.production)+1):
                 X = [str(p) for p in parse.production[:i]]
                 yield X, y
+
+
+def load_timeparse_corpus(fname: str) -> Sequence[TimeParseEntry]:
+    """Load a corpus from disk.
+
+    The corpus format is described in the documentation.
+    """
+    with open(fname, "r") as fd:
+        entries = json.load(fd)
+
+    return [
+        TimeParseEntry(text=e["text"],
+                       ts=datetime.fromisoformat(e["ref_time"]),
+                       gold=parse_nb_string(e["gold_parse"]))
+        for e in entries
+    ]
 
 
 def parse_nb_string(gold_parse: str) -> Union[Time, Interval]:

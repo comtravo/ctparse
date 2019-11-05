@@ -3,9 +3,26 @@ from datetime import datetime
 import pytest
 
 from ctparse.corpus import (TimeParseEntry, make_partial_rule_dataset,
-                            run_corpus, parse_nb_string)
+                            run_corpus, parse_nb_string, load_timeparse_corpus)
 from ctparse.time.corpus import corpus
 from ctparse.types import Time, Interval
+
+CORPUS_JSON = """
+[
+ {
+  "text": "Donnerstag, den 05.10. ca 6:55",
+  "ref_time": "2017-09-25T16:06:55",
+  "gold_parse": "Time[]{2017-10-05 06:55 (X/X)}",
+  "language": "de"
+ },
+ {
+  "text": "22.05.2017 früh",
+  "ref_time": "2017-05-16T05:42:09",
+  "gold_parse": "Time[]{2017-05-22 X:X (X/earlymorning)}",
+  "language": "de"
+ }
+]
+"""
 
 
 def test_run_corpus() -> None:
@@ -44,3 +61,12 @@ def test_parse_nb_string() -> None:
     assert t == parse_nb_string('Time[]{0001-01-01 01:01 (1/pod)}')
     assert Interval(Time(), Time()) == parse_nb_string(
         'Interval[]{X-X-X X:X (X/X) - X-X-X X:X (X/X)}')
+
+
+def test_load_timeparse_corpus(tmp_path) -> None:
+    path = tmp_path / "test.json"
+    path.write_text(CORPUS_JSON)
+
+    result = load_timeparse_corpus(str(path))
+
+    assert len(result) == 2
