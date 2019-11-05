@@ -2,7 +2,13 @@
 History
 =======
 
-0.0.43 (2019-01-01)
+0.0.44 (2019-10-05)
+-------------------
+
+* Released time corpus
+* Implemented training model using ctparse corpus
+
+0.0.43 (2019-10-01)
 -------------------
 
 * Added slash as a general separator
