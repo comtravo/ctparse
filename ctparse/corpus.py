@@ -18,7 +18,10 @@ TimeParseEntry = NamedTuple(
 
 
 def make_partial_rule_dataset(
-        entries: Sequence[TimeParseEntry]) -> Iterator[Tuple[List[str], bool]]:
+        entries: Sequence[TimeParseEntry],
+        timeout: float = 0,
+        max_stack_depth: int = 0,
+        progress=False) -> Iterator[Tuple[List[str], bool]]:
     """Build a data set from a list of TimeParseEntry.
 
     The text is run through ctparse and all possible parses are obtained. Each parse
@@ -45,16 +48,20 @@ def make_partial_rule_dataset(
     # full history with the current implementation, however we can obtain a dataset
     # of (text, reference_time, rule_ids) quite easily, because the rule is a linear
     # list.
+
+    if progress:
+        entries = tqdm(entries, total=len(entries))
+
     for entry in entries:
         for parse in ctparse_gen(entry.text, entry.ts, relative_match_len=1.0,
-                                 timeout=0, max_stack_depth=0, scorer=DummyScorer()):
+                                 timeout=timeout, max_stack_depth=max_stack_depth,
+                                 scorer=DummyScorer()):
             # TODO: we should make sure ctparse_gen never returns None. If there is no result
             # it should return an empty list
             if parse is None:
                 continue
 
             y = parse.resolution == entry.gold
-
             # Build data set, one sample for each applied rule in
             # the sequence of rules applied in this production
             # *after* the matched regular expressions
