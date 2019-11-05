@@ -81,7 +81,7 @@ def load_timeparse_corpus(fname: str) -> Sequence[TimeParseEntry]:
 
     return [
         TimeParseEntry(text=e["text"],
-                       ts=datetime.fromisoformat(e["ref_time"]),
+                       ts=datetime.strptime(e["ref_time"], "%Y-%m-%dT%H:%M:%S"),
                        gold=parse_nb_string(e["gold_parse"]))
         for e in entries
     ]
