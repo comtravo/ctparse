@@ -8,6 +8,7 @@ Welcome to the ctparse documentation!
    readme
    installation
    usage
+   dataset
    contributing
    modules
    authors

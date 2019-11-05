@@ -26,7 +26,7 @@ The following steps are probably a helpful guideline.
 
      .. code:: bash
 
-            python scripts/train_default_model.py
+            python scripts/train_default_model.py --legacy --dataset datasets/timeparse_corpus.json
 
      To avoid issues with reloading, please restart the python
      interpreter after regenerating the model.
