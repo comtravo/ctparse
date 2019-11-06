@@ -1,5 +1,6 @@
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY
+from datetime import datetime
 from ..rule import rule, predicate, dimension, _regex_to_join
 from ..types import Time, Interval, pod_hours
 
@@ -547,6 +548,14 @@ def ruleDateDOM(ts, d1, _, d2):
         return
     return Interval(t_from=d1,
                     t_to=Time(year=d1.year, month=d1.month, day=d2.day))
+
+
+@rule(predicate('isDate'), _regex_to_join, predicate('isDOW'))
+def ruleDateDOWInterval(ts, d1, _, d2):
+    # from Monday to Friday, if next Friday comes before next Monday
+    ref = datetime(year=d1.year, month=d1.month, day=d1.day)
+    d2 = ruleLatentDOW(ref, d2)
+    return Interval(t_from=d1, t_to=d2)
 
 
 @rule(predicate('isDOY'), _regex_to_join, predicate('isDate'))
