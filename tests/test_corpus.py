@@ -2,10 +2,12 @@ from datetime import datetime
 
 import pytest
 
-from ctparse.corpus import (TimeParseEntry, make_partial_rule_dataset,
-                            run_corpus, parse_nb_string, load_timeparse_corpus)
+from ctparse.corpus import (TimeParseEntry, load_timeparse_corpus,
+                            make_partial_rule_dataset, parse_nb_string,
+                            run_corpus)
+from ctparse.scorer import DummyScorer
 from ctparse.time.corpus import corpus
-from ctparse.types import Time, Interval
+from ctparse.types import Interval, Time
 
 CORPUS_JSON = """
 [
@@ -50,7 +52,8 @@ def test_make_partial_rule_dataset() -> None:
         TimeParseEntry("today at 5 pm", ts, Time(year=2019, month=10, day=1, hour=17, minute=0))
     ]
 
-    X, y = zip(*make_partial_rule_dataset(entries))
+    X, y = zip(*make_partial_rule_dataset(entries, timeout=0,
+                                          max_stack_depth=0, scorer=DummyScorer()))
     assert isinstance(y[0], bool)
     assert isinstance(X[0][0], str)
 

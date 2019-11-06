@@ -1,11 +1,13 @@
 """Train a default multinomial bayes classifier"""
 import argparse
-from ctparse.corpus import run_corpus, make_partial_rule_dataset, load_timeparse_corpus
-from ctparse.time import corpus, auto_corpus
-
-from ctparse.nb_scorer import train_naive_bayes, save_naive_bayes
-from ctparse.loader import DEFAULT_MODEL_FILE
 import logging
+
+from ctparse.corpus import (load_timeparse_corpus, make_partial_rule_dataset,
+                            run_corpus)
+from ctparse.loader import DEFAULT_MODEL_FILE
+from ctparse.nb_scorer import save_naive_bayes, train_naive_bayes
+from ctparse.scorer import DummyScorer
+from ctparse.time import auto_corpus, corpus
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,9 @@ def main():
     if args.dataset:
         logger.info("Loading dataset {}".format(args.dataset))
         entries = load_timeparse_corpus(args.dataset)
-        X, y = zip(*make_partial_rule_dataset(entries, timeout=10.0, progress=True))
+        X, y = zip(*make_partial_rule_dataset(
+            entries, scorer=DummyScorer(), timeout=0,
+            max_stack_depth=100, progress=True))
         X_combined.extend(X)
         y_combined.extend(y)
 
