@@ -138,6 +138,14 @@ corpus = [
       'on 8th of May',
       'this May 8th',
       'may 8']),
+    ('Time[]{2019-05-08 X:X (X/X)}',
+     '2018-03-07T12:43',
+     ['8.5.2019',
+      '8. Mai 2019',
+      '8. Mai 19',
+      '8/May/2019',
+      'am 8. Mai 2019',
+      'diesen 8. Mai 19']),
     # ruleDOWDOM
     ('Time[]{2018-05-08 X:X (X/X)}',
      '2018-03-07T12:43',
@@ -158,6 +166,13 @@ corpus = [
      '2018-03-07T12:43',
      ['Dienstagmorgen 8.5.',
       '8.5. Dienstagmorgen', ]),
+    # ruleMonthYear
+    ('Time[]{2020-06-X X:X (X/X)}',
+     '2020-03-07T12:43',
+     ['June 2020',
+      '06 2020',
+      '06 2020',
+      'Juni 2020']),
     # rulePOD, ruleLatentPOD
     ('Time[]{2018-03-08 X:X (X/morning)}',
      '2018-03-07T12:43',

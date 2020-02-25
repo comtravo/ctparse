@@ -256,6 +256,18 @@ def ruleDOWNextWeek(ts, dow, _):
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
+@rule(predicate('isMonth'), predicate('isYear'))
+def ruleMonthYear(ts, m, y):
+    return Time(year=y.year, month=m.month)
+
+
+@rule(predicate('isMonth'), r'-|/', predicate('isYear'))
+# FIX: 06.2020 does NOT work - 2020 cannot be matched as year when
+# there is a '.' in front
+def ruleMonthSepYear(ts, m, _, y):
+    return Time(year=y.year, month=m.month)
+
+
 @rule(predicate('isDOY'), predicate('isYear'))
 def ruleDOYYear(ts, doy, y):
     return Time(year=y.year, month=doy.month, day=doy.day)
@@ -349,7 +361,7 @@ def ruleLatentPOD(ts, pod):
 
 
 @rule(r'(?<!\d|\.)(?P<day>(?&_day))[\./\-]'
-      r'((?P<month>(?&_month))|(?P<named_month>({})))\.?'
+      r'((?P<month>(?&_month))\.?|(?P<named_month>({})))'
       r'(?!\d|am|\s*pm)'.format(_rule_months))
 # do not allow dd.ddam, dd.ddpm, but allow dd.dd am - e.g. in the German "13.06 am Nachmittag"
 def ruleDDMM(ts, m):
@@ -378,7 +390,7 @@ def ruleMMDD(ts, m):
 
 
 @rule(r'(?<!\d|\.)(?P<day>(?&_day))[-/\.]'
-      r'((?P<month>(?&_month))|(?P<named_month>({})))[-/\.]'
+      r'((?P<month>(?&_month))[-/\.]|(?P<named_month>({}))[-/])'
       r'(?P<year>(?&_year))(?!\d)'.format(_rule_months))
 def ruleDDMMYYYY(ts, m):
     y = int(m.match.group('year'))
