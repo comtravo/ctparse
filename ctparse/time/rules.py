@@ -395,7 +395,7 @@ def ruleDDMMYYYY(ts, m):
                 day=int(m.match.group('day')))
 
 
-@rule(r'(?<!\d|\.)(?P<hour>(?&_hour))((:|uhr|h|\.)?'
+@rule(r'(?<!\d|\.)(?P<hour>(?&_hour))((?P<sep>:|uhr|h|\.)?'
       r'(?P<minute>(?&_minute))?\s*(uhr|h)?)(?P<ampm>\s*[ap]\.?m\.?)?(?!\d)')
 def ruleHHMM(ts, m):
     # hh [am|pm]
@@ -404,6 +404,24 @@ def ruleHHMM(ts, m):
     t = Time(hour=int(m.match.group('hour')),
              minute=int(m.match.group('minute') or 0))
     if m.match.group('ampm') is None:
+        if m.match.group('sep'):
+            return t
+        t_year = t.hour * 1000 + t.minute
+        # Military times (i.e. no separator) are notriously difficult to
+        # distinguish from yyyy; these are some heuristics to avoid an abundance
+        # of false positives for hhmm
+        #
+        # If hhmm is the current year -> assume it is a year
+        if t_year == ts.year:
+            return None
+        # If hhmm is the year in 3 month from now -> same, prefer year
+        if t_year == (ts + relativedelta(months=3)).year:
+            return None
+        # If the minutes is not a multiple of 5 prefer year (flight times are
+        # always multiples of 5 minutes)
+        if t.minute % 5:
+            return None
+        # ok, maybe it is actually a hhmm
         return t
     elif m.match.group('ampm').lower().startswith('a') and t.hour <= 12:
         return t
