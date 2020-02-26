@@ -414,7 +414,7 @@ def _is_valid_military_time(ts, t):
     return True
 
 
-def _maybe_apply_am_pm(t: Time, ampm_match):
+def _maybe_apply_am_pm(t, ampm_match):
     if ampm_match is None:
         return t
     elif ampm_match.lower().startswith('a') and t.hour <= 12:
