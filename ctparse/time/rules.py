@@ -396,7 +396,7 @@ def ruleDDMMYYYY(ts, m):
 
 
 def _is_valid_military_time(ts, t):
-    t_year = t.hour * 1000 + t.minute
+    t_year = t.hour * 100 + t.minute
     # Military times (i.e. no separator) are notriously difficult to
     # distinguish from yyyy; these are some heuristics to avoid an abundance
     # of false positives for hhmm
@@ -414,35 +414,46 @@ def _is_valid_military_time(ts, t):
     return True
 
 
-@rule(r'(?<!\d|\.)(?P<hour>(?&_hour))(?P<minute>(?&_minute))'
-      r'\s*(?P<clock>uhr|h)?(?!\d)')
+def _maybe_apply_am_pm(t: Time, ampm_match):
+    if ampm_match is None:
+        return t
+    elif ampm_match.lower().startswith('a') and t.hour <= 12:
+        return t
+    elif ampm_match.lower().startswith('p') and t.hour < 12:
+        return Time(hour=t.hour + 12, minute=t.minute)
+    else:
+        # the case ampm_match.startswith('a') and t.hour >
+        # 12 (e.g. 13:30am) makes no sense, lets ignore the ampm
+        # likewise if hour >= 12 no 'pm' action is needed
+        return t
+
+
+@rule(r'(?<!\d|\.)(?P<hour>(?&_hour))(?P<minute>(?&_minute))'  # match hhmm
+      r'\s*(?P<clock>uhr|h)?'  # optional uhr
+      r'\s*(?P<ampm>\s*[ap]\.?m\.?)?(?!\d)'  # optional am/pm
+      )
 def ruleHHMMmilitary(ts, m):
     t = Time(hour=int(m.match.group('hour')),
              minute=int(m.match.group('minute') or 0))
     if m.match.group('clock') or _is_valid_military_time(ts, t):
-        return t
+        return _maybe_apply_am_pm(t, m.match.group('ampm'))
+
     return None
 
 
-@rule(r'(?<!\d|\.)(?P<hour>(?&_hour))((?P<sep>:|uhr|h|\.)?'
-      r'(?P<minute>(?&_minute))?\s*(?P<clock>uhr|h)?)(?P<ampm>\s*[ap]\.?m\.?)?(?!\d)')
+@rule(r'(?<!\d|\.)'  # We don't start matching with another number, or a dot
+      r'(?P<hour>(?&_hour))'  # We certainly match an hour
+      r'((?P<sep>:|uhr|h|\.)(?P<minute>(?&_minute)))?'  # We try to match also the minute
+      r'\s*(?P<clock>uhr|h)?'  # We match uhr with no minute
+      r'(?P<ampm>\s*[ap]\.?m\.?)?'  # AM PM
+      r'(?!\d)')
 def ruleHHMM(ts, m):
     # hh [am|pm]
     # hh:mm
     # hhmm
     t = Time(hour=int(m.match.group('hour')),
              minute=int(m.match.group('minute') or 0))
-    if m.match.group('ampm') is None:
-        return t
-    elif m.match.group('ampm').lower().startswith('a') and t.hour <= 12:
-        return t
-    elif m.match.group('ampm').lower().startswith('p') and t.hour < 12:
-        return Time(hour=t.hour+12, minute=t.minute)
-    else:
-        # the case m.match.group('ampm').startswith('a') and t.hour >
-        # 12 (e.g. 13:30am) makes no sense, lets ignore the ampm
-        # likewise if hour >= 12 no 'pm' action is needed
-        return t
+    return _maybe_apply_am_pm(t, m.match.group('ampm'))
 
 
 @rule(r'(?<!\d|\.)(?P<hour>(?&_hour))\s*(uhr|h|o\'?clock)')
