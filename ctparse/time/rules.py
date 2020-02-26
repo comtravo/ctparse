@@ -407,8 +407,10 @@ def _is_valid_military_time(ts, t):
     # If hhmm is the year in 3 month from now -> same, prefer year
     if t_year == (ts + relativedelta(months=3)).year:
         return False
-    # If the minutes is not a multiple of 5 prefer year (flight times are
-    # always multiples of 5 minutes)
+    # If the minutes is not a multiple of 5 prefer year.
+    # Since military times are typically used for flights,
+    # and flight times are only multiples of 5, we use this heuristic as evidence
+    # for military times.
     if t.minute % 5:
         return False
     return True
@@ -428,7 +430,7 @@ def _maybe_apply_am_pm(t, ampm_match):
         return t
 
 
-@rule(r'(?<!\d|\.)(?P<hour>(?&_hour))(?P<minute>(?&_minute))'  # match hhmm
+@rule(r'(?<!\d|\.)(?P<hour>(?:[01]\d)|(?:2[0-3]))(?P<minute>(?&_minute))'  # match hhmm
       r'\s*(?P<clock>uhr|h)?'  # optional uhr
       r'\s*(?P<ampm>\s*[ap]\.?m\.?)?(?!\d)'  # optional am/pm
       )
