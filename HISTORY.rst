@@ -2,15 +2,15 @@
 History
 =======
 
-0.0.46 (2020-02-02)
+0.0.47 (2020-02-28)
 -------------------
 
 * Add python 3.8
 
-0.0.45 (2019-11-06)
+0.0.46 (2020-02-26)
 -------------------
 
-* Nits
+* Implemented heuristics to detect (albeit imperfectly) military times
 
 0.0.44 (2019-11-05)
 -------------------
