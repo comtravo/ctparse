@@ -2,6 +2,11 @@
 History
 =======
 
+0.0.47 (2020-02-28)
+-------------------
+
+* Allow overlapping matches of regular expression when generating inital stack of "tokens"
+
 0.0.46 (2020-02-26)
 -------------------
 
