@@ -2,6 +2,16 @@
 History
 =======
 
+0.0.47 (2020-02-28)
+-------------------
+
+* Allow overlapping matches of regular expression when generating inital stack of "tokens"
+
+0.0.46 (2020-02-26)
+-------------------
+
+* Implemented heuristics to detect (albeit imperfectly) military times
+
 0.0.44 (2019-11-05)
 -------------------
 

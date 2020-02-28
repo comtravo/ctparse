@@ -245,7 +245,7 @@ def _match_regex(txt: str, regexes: Dict[int, regex.Regex]) -> List[RegexMatch]:
     # :return: a list of RegexMatch objects ordered my RegexMatch.mstart
     matches = {RegexMatch(name, m)
                for name, re in regexes.items()
-               for m in re.finditer(txt, overlapped=False, concurrent=True)}
+               for m in re.finditer(txt, overlapped=True, concurrent=True)}
     for m in matches:
         logger.debug('regex: {}'.format(m.__repr__()))
     return sorted(matches, key=lambda x: (x.mstart, x.mend))
