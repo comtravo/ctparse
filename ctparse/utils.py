@@ -65,13 +65,12 @@ class CustomCountVectorizer:
 
         return count_vectors_matrix
 
-    def fit(self, raw_documents, y=None):
+    def fit(self, raw_documents):
         """Learn a vocabulary dictionary of all tokens in the raw documents.
 
         Parameters
         ----------
-        raw_documents : iterable
-            An iterable which yields either str, unicode or file objects.
+        raw_documents : iterable of str
 
         Returns
         -------
@@ -80,7 +79,7 @@ class CustomCountVectorizer:
         self.fit_transform(raw_documents)
         return self
 
-    def fit_transform(self, raw_documents, y=None):
+    def fit_transform(self, raw_documents):
         """Learn the vocabulary dictionary and return term-document matrix.
 
         This is equivalent to fit followed by transform, but more efficiently
@@ -88,8 +87,7 @@ class CustomCountVectorizer:
 
         Parameters
         ----------
-        raw_documents : iterable
-            An iterable which yields either str, unicode or file objects.
+        raw_documents : iterable of str
 
         Returns
         -------
