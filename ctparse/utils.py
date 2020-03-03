@@ -4,7 +4,7 @@ import regex as re
 class CustomCountVectorizer:
     _white_space = re.compile(r"\s+")
 
-    def __init__(self, ngram_range, tokenizer, vocabulary=None, fixed_vocab=False):
+    def __init__(self, ngram_range, vocabulary=None, fixed_vocab=False):
         self.ngram_range = ngram_range
         self.vocabulary = vocabulary
         self.fixed_vocab = fixed_vocab
@@ -33,9 +33,9 @@ class CustomCountVectorizer:
 
     def preprocess(self):
         """ Return a callable to preprocess text and perform tokenization"""
-        return lambda doc: self._char_ngrams(doc)
+        return lambda doc: self.create_ngrams(doc)
 
-    def create_feature_matrix(self, documents):
+    def create_feature_matrix(self, documents, set_vocabulary):
         """ Create feature matrix"""
         build_features = self.preprocess()
 
@@ -50,8 +50,8 @@ class CustomCountVectorizer:
                     all_features.append(feature)
                     feature_counts[feature] = 1
             count_matrix.append(feature_counts)
-
-        self.vocabulary = sorted(set(all_features))
+        if set_vocabulary:
+            self.vocabulary = sorted(set(all_features))
         count_vectors_matrix = []
         # Build document frequency matrix
         for count_dict in count_matrix:
@@ -97,6 +97,11 @@ class CustomCountVectorizer:
             Document-term matrix.
         """
 
-        X = self.create_feature_matrix(raw_documents)
+        X = self.create_feature_matrix(raw_documents, set_vocabulary=True)
         return X
 
+    def transform(self, raw_documents):
+        """ Create term-document matrix based on pre-generated vocabulary"""
+
+        X = self.create_feature_matrix(raw_documents, set_vocabulary=False)
+        return X
