@@ -46,7 +46,9 @@ class NaiveBayesScorer(Scorer):
         len_score = math.log(max_covered_chars/len(txt))
 
         X = _feature_extractor(txt, ts, partial_parse)
+        print('extracted features ', X)
         pred = self._model.predict_log_proba([X])
+        print(pred)
 
         # NOTE: the prediction is log-odds, or logit
         model_score = float(pred[:, 1] - pred[:, 0])

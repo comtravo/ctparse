@@ -91,7 +91,7 @@ def ctparse_gen(txt: str, ts: Optional[datetime] = None, timeout: Union[int, flo
                 scorer: Optional[Scorer] = None) -> Iterator[Optional[CTParse]]:
     """Generate parses for the string *txt*.
 
-    This function is equivalent to ctparse, with the exeption that it returns an iterator
+    This function is equivalent to ctparse, with the exception that it returns an iterator
     over the matches as soon as they are produced.
     """
     if scorer is None:
@@ -108,7 +108,7 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float,
     t_fun = timeout_(timeout)
 
     try:
-
+        print('Changed function!!!!')
         logger.debug('='*80)
         logger.debug('-> matching regular expressions')
         p, _tp = timeit(_match_regex)(txt, global_regex)
@@ -125,6 +125,7 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float,
         # to create a namedtuple of kind StackElement(partial_parse, score)
         for pp in stack:
             pp.score = scorer.score(txt, ts, pp)
+            print('Score of ', pp, ' is ', pp.score)
 
         logger.debug('initial stack length: {}'.format(len(stack)))
         # sort stack by length of covered string and - if that is equal - score
@@ -150,6 +151,7 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float,
             s = stack.pop()
             logger.debug('-'*80)
             logger.debug('producing on {}, score={:.2f}'.format(s.prod, s.score))
+            print('producing on {}, score={:.2f}'.format(s.prod, s.score))
             new_stack_elements = []
             for r_name, r in s.applicable_rules.items():
                 for r_match in _match_rule(s.prod, r[1]):
@@ -275,10 +277,10 @@ def _regex_stack(txt: str, regex_matches: List[RegexMatch],
     # * initialize an empty stack
     #
     # * add all sequences of one expression to the stack, excluding
-    #   expressions which can be reached from "earlier" expressison
+    #   expressions which can be reached from "earlier" expression
     #   (i.e. there is no gap between them):
     #
-    #   - say A and B have no gap inbetween and all sequences starting
+    #   - say A and B have no gap in between and all sequences starting
     #     at A have already been produced. These by definition(which?: -) include as sub-sequences
     #     all sequences starting at B. Any other sequences starting at B directly will not add valid
     #     variations, as each of them could be prefixed with a sequence
