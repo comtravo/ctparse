@@ -103,3 +103,10 @@ class CustomCountVectorizer:
 
         X = self.create_feature_matrix(raw_documents, set_vocabulary=False)
         return X
+
+
+def make_pipeline(*transformers, x_train, y_train):
+    """ Train a sequence of estimators and return the model """
+    X_transformed = transformers[0].fit_transform(x_train)
+    nb_model = transformers[1].fit(x_train, y_train)
+    return nb_model

@@ -1,16 +1,19 @@
-from math import log
+from math import log, exp
+
+
+def log_sum_exp(x):
+    max_value = max(x)
+    x_normalized = [x_i - max_value for x_i in x]
+    sum_of_exp = sum([exp(xn_i) for xn_i in x_normalized])
+    return max_value + log(sum_of_exp)
 
 
 class MultinomialNaiveBayes:
-    def __init__(self, alpha=1.0, class_prior=None, likelihood=None, neg_class_count=None,
-                 pos_class_count=None, vocab_size=None):
+    def __init__(self, alpha=1.0, class_prior=None, log_likelihood=None, token_count=None):
         self.alpha = alpha
         self.class_prior = class_prior
-        self.likelihood = likelihood
-        self.neg_class_count = neg_class_count
-        self.pos_class_count = pos_class_count
-        self.neg_class_count = neg_class_count
-        self.len_vocabulary = vocab_size
+        self.log_likelihood = log_likelihood
+        self.token_counts = token_count
 
     @staticmethod
     def validate_xy(X, y):
@@ -20,68 +23,70 @@ class MultinomialNaiveBayes:
         if len(X) <= 0 and not all(len(X[i]) != 0 for i in range(len(X))):
             raise ValueError('Expected 2D array')
 
+    @staticmethod
+    def binarize_y(y):
+        return [1 if y_i == 1 else 0 for y_i in y]
+
     def construct_log_class_prior(self, y):
         # Input classes are -1 and 1
-        self.neg_class_count = sum(1 if y_i == -1 else 0 for y_i in y)
-        self.pos_class_count = len(y) - self.neg_class_count
+        neg_class_count = sum(1 if y_i == 0 else 0 for y_i in y)
+        pos_class_count = len(y) - neg_class_count
 
-        neg_log_prior = log(self.neg_class_count / (self.pos_class_count + self.neg_class_count))
-        pos_log_prior = log(self.pos_class_count / (self.pos_class_count + self.neg_class_count))
-
+        neg_log_prior = log(neg_class_count / (pos_class_count + neg_class_count))
+        pos_log_prior = log(pos_class_count / (pos_class_count + neg_class_count))
         self.class_prior = [neg_log_prior, pos_log_prior]
 
     def construct_log_likelihood(self, X, y):
         # Token counts
-        token_dict = {'positive': {}, 'negative': {}}
-        pos_class_tokens = neg_class_tokens = 0
-        self.len_vocabulary = len(X[0])
-        for token_index in range(len(X[0])):
-            token_pos_count = sum(doc[token_index] if y[token_index] == 1 else 0 for doc in X)
-            token_neg_count = len(y) - token_pos_count
-            token_dict['positive'][token_index] = token_pos_count
-            token_dict['negative'][token_index] = token_neg_count
-            pos_class_tokens = pos_class_tokens + (1 if token_pos_count > 0 else 0)
-            neg_class_tokens = neg_class_tokens + (1 if token_neg_count > 0 else 0)
+        vocabulary_len = len(X[0])
+        token_counts = {'negative_class': [], 'positive_class': []}
+        for token_index in range(vocabulary_len):
+            token_pos_count = sum(doc[token_index] if y[doc_index] == 1
+                                  else 0 for doc_index, doc in enumerate(X))
+            token_neg_count = sum(doc[token_index] if y[doc_index] == 0
+                                  else 0 for doc_index, doc in enumerate(X))
+            token_counts['positive_class'].append(token_pos_count)
+            token_counts['negative_class'].append(token_neg_count)
 
-        likelihood = {'positive_features': {}, 'negative_features': {}}
-        for token in token_dict['positive']:
-            likelihood['positive_features'][token] = log(
-                (token_dict['positive'][token] + self.alpha) /
-                (token_dict['positive'][token] + self.len_vocabulary)
+        self.token_counts = token_counts
+        token_pos_class_sum = sum(token_counts['positive_class']) + self.alpha * vocabulary_len
+        token_neg_class_sum = sum(token_counts['negative_class']) + self.alpha * vocabulary_len
+
+        log_likelihood = {'negative_class': [], 'positive_class': []}
+        for token_ind in range(vocabulary_len):
+            log_likelihood['positive_class'].append(
+                log(token_counts['positive_class'][token_ind] + self.alpha) -
+                log(token_pos_class_sum)
             )
 
-        for token in token_dict['negative']:
-            likelihood['negative_features'][token] = log(
-                (token_dict['negative'][token] + self.alpha) /
-                (token_dict['negative'][token] + self.len_vocabulary)
+            log_likelihood['negative_class'].append(
+                log(token_counts['negative_class'][token_ind] + self.alpha) -
+                log(token_neg_class_sum)
             )
-        self.likelihood = likelihood
+        self.log_likelihood = log_likelihood
 
     def fit(self, X, y):
         self.validate_xy(X, y)
-        self.construct_log_class_prior(y)
-        self.construct_log_likelihood(X, y)
+        y_binary = self.binarize_y(y)
+        self.construct_log_class_prior(y_binary)
+        self.construct_log_likelihood(X, y_binary)
 
         return self
 
     def predict_log_probability(self, xtest):
         """ Calculate the posterior log probability of new sample X"""
-        # Assign the scores with priors of positive and negative class
+        # Initialise the scores with priors of positive and negative class
         neg_score = self.class_prior[0]
         pos_score = self.class_prior[1]
+        for token_index in range(len(xtest)):
+            pos_score += (self.log_likelihood['positive_class'][token_index] *
+                          xtest[token_index])
 
-        # Smoothed probabilities are calculated below, these are used when a
-        # word in the test document is not found in the given class but is found
-        # in another class's feature dict
-        smooth_pos = log(1 / (self.pos_class_count + self.len_vocabulary))
-        smooth_neg = log(1 / (self.neg_class_count + self.len_vocabulary))
+            neg_score += (self.log_likelihood['negative_class'][token_index] *
+                          xtest[token_index])
 
-        for token in xtest:
-            if token in self.likelihood['positive_features']:
-                pos_score += self.likelihood['positive_features'][token]
-                neg_score += smooth_neg
-            elif token in self.likelihood['negative_features']:
-                neg_score += self.likelihood['negative_features'][token]
-                pos_score += smooth_pos
+        joint_log_likelihood = [neg_score, pos_score]
 
-        return [neg_score, pos_score]
+        # Normalize the scores
+        log_prob_x = log_sum_exp(joint_log_likelihood)
+        return [score - log_prob_x for score in joint_log_likelihood]
