@@ -23,13 +23,13 @@ class MultinomialNaiveBayes:
         if len(X) <= 0 and not all(len(X[i]) != 0 for i in range(len(X))):
             raise ValueError('Expected 2D array')
 
-    @staticmethod
-    def binarize_y(y):
-        return [1 if y_i == 1 else 0 for y_i in y]
+    # @staticmethod
+    # def binarize_y(y):
+    #     return [1 if y_i == 1 else 0 for y_i in y]
 
     def construct_log_class_prior(self, y):
         # Input classes are -1 and 1
-        neg_class_count = sum(1 if y_i == 0 else 0 for y_i in y)
+        neg_class_count = sum(1 if y_i == -1 else 0 for y_i in y)
         pos_class_count = len(y) - neg_class_count
 
         neg_log_prior = log(neg_class_count / (pos_class_count + neg_class_count))
@@ -43,7 +43,7 @@ class MultinomialNaiveBayes:
         for token_index in range(vocabulary_len):
             token_pos_count = sum(doc[token_index] if y[doc_index] == 1
                                   else 0 for doc_index, doc in enumerate(X))
-            token_neg_count = sum(doc[token_index] if y[doc_index] == 0
+            token_neg_count = sum(doc[token_index] if y[doc_index] == -1
                                   else 0 for doc_index, doc in enumerate(X))
             token_counts['positive_class'].append(token_pos_count)
             token_counts['negative_class'].append(token_neg_count)
@@ -67,9 +67,8 @@ class MultinomialNaiveBayes:
 
     def fit(self, X, y):
         self.validate_xy(X, y)
-        y_binary = self.binarize_y(y)
-        self.construct_log_class_prior(y_binary)
-        self.construct_log_likelihood(X, y_binary)
+        self.construct_log_class_prior(y)
+        self.construct_log_likelihood(X, y)
 
         return self
 
