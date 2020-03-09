@@ -108,7 +108,6 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float,
     t_fun = timeout_(timeout)
 
     try:
-        print('Changed function!!!!')
         logger.debug('='*80)
         logger.debug('-> matching regular expressions')
         p, _tp = timeit(_match_regex)(txt, global_regex)
@@ -125,7 +124,6 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float,
         # to create a namedtuple of kind StackElement(partial_parse, score)
         for pp in stack:
             pp.score = scorer.score(txt, ts, pp)
-            print('Score of ', pp, ' is ', pp.score)
 
         logger.debug('initial stack length: {}'.format(len(stack)))
         # sort stack by length of covered string and - if that is equal - score
@@ -151,7 +149,6 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float,
             s = stack.pop()
             logger.debug('-'*80)
             logger.debug('producing on {}, score={:.2f}'.format(s.prod, s.score))
-            print('producing on {}, score={:.2f}'.format(s.prod, s.score))
             new_stack_elements = []
             for r_name, r in s.applicable_rules.items():
                 for r_match in _match_rule(s.prod, r[1]):

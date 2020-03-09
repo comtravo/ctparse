@@ -5,11 +5,8 @@ import pickle
 from datetime import datetime
 from typing import Sequence, Union
 
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.pipeline import make_pipeline
-from sklearn.base import BaseEstimator
-
+from ctparse.nb_estimator import MultinomialNaiveBayes
+from ctparse.utils import CustomCountVectorizer, train_pipeline
 from .scorer import Scorer
 from .partial_parse import PartialParse
 from .types import Time, Interval
@@ -17,7 +14,7 @@ from .types import Time, Interval
 
 class NaiveBayesScorer(Scorer):
 
-    def __init__(self, nb_model: BaseEstimator) -> None:
+    def __init__(self, nb_model: MultinomialNaiveBayes) -> None:
         """Scorer based on a naive bayes estimator.
 
         This scorer models the probability of having a correct parse, conditioned
@@ -43,15 +40,13 @@ class NaiveBayesScorer(Scorer):
     def score(self, txt: str, ts: datetime, partial_parse: PartialParse) -> float:
         # Penalty for partial matches
         max_covered_chars = partial_parse.prod[-1].mend - partial_parse.prod[0].mstart
-        len_score = math.log(max_covered_chars/len(txt))
+        len_score = math.log(max_covered_chars / len(txt))
 
         X = _feature_extractor(txt, ts, partial_parse)
-        print('extracted features ', X)
-        pred = self._model.predict_log_proba([X])
-        print(pred)
+        pred = self._model.predict_log_probability(X)
 
         # NOTE: the prediction is log-odds, or logit
-        model_score = float(pred[:, 1] - pred[:, 0])
+        model_score = float(pred[1] - pred[0])
 
         return model_score + len_score
 
@@ -60,13 +55,13 @@ class NaiveBayesScorer(Scorer):
         # The difference between the original score and final score is that in the
         # final score, the len_score is calculated based on the length of the final
         # production
-        len_score = math.log(len(prod)/len(txt))
+        len_score = math.log(len(prod) / len(txt))
 
         X = _feature_extractor(txt, ts, partial_parse)
-        pred = self._model.predict_log_proba([X])
+        pred = self._model.predict_log_proba(X)
 
         # NOTE: the prediction is log-odds, or logit
-        model_score = float(pred[:, 1] - pred[:, 0])
+        model_score = float(pred[1] - pred[0])
 
         return model_score + len_score
 
@@ -79,22 +74,18 @@ def _identity(x):
     return x
 
 
-def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]) -> BaseEstimator:
+def train_custom_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]) -> \
+    MultinomialNaiveBayes:
     """Train a naive bayes model for NaiveBayesScorer"""
     y_binary = [1 if y_i else -1 for y_i in y]
     # Create and train the pipeline
-    model = make_pipeline(
-        CountVectorizer(ngram_range=(1, 3), lowercase=False,
-                        tokenizer=_identity),
-        MultinomialNB(alpha=1.0))
-    model.fit(X, y_binary)
-
-    # Make sure that class order is -1, 1
-    assert model.classes_[0] == -1
+    model = train_pipeline(X, y_binary,
+                           CustomCountVectorizer(ngram_range=(1, 3)),
+                           MultinomialNaiveBayes(alpha=1.0))
     return model
 
 
-def save_naive_bayes(model: BaseEstimator, fname: str) -> None:
+def save_naive_bayes(model: MultinomialNaiveBayes, fname: str) -> None:
     """Save a naive bayes model for NaiveBayesScorer"""
     # TODO: version this model and dump metadata with lots of information
     with bz2.open(fname, 'wb') as fd:

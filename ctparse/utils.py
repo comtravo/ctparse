@@ -33,7 +33,7 @@ class CustomCountVectorizer:
 
     def preprocess(self):
         """ Return a callable to preprocess text and perform tokenization"""
-        return lambda doc: self.create_ngrams(doc)
+        return lambda doc: self.create_ngrams(str(doc))
 
     def create_feature_matrix(self, documents, set_vocabulary):
         """ Create feature matrix"""
@@ -105,8 +105,8 @@ class CustomCountVectorizer:
         return X
 
 
-def make_pipeline(*transformers, x_train, y_train):
+def train_pipeline(x_train, y_train, *transformers):
     """ Train a sequence of estimators and return the model """
-    X_transformed = transformers[0].fit_transform(x_train)
-    nb_model = transformers[1].fit(x_train, y_train)
+    x_transformed = transformers[0].fit_transform(x_train)
+    nb_model = transformers[1].fit(x_transformed, y_train)
     return nb_model
