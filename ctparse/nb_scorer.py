@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Sequence, Union
 
 from ctparse.nb_estimator import MultinomialNaiveBayes
-from ctparse.utils import CustomCountVectorizer, train_pipeline, CtParsePipeline
+from ctparse.utils import CustomCountVectorizer, CtParsePipeline
 from .scorer import Scorer
 from .partial_parse import PartialParse
 from .types import Time, Interval

@@ -59,7 +59,7 @@ def make_partial_rule_dataset(
 
     for entry in entries:
         for parse in ctparse_gen(entry.text, entry.ts, relative_match_len=relative_match_len,
-                                 timeout=timeout, max_stack_depth=max_stack_depth):
+                                 timeout=timeout, max_stack_depth=max_stack_depth, scorer=scorer):
             # TODO: we should make sure ctparse_gen never returns None. If there is no result
             # it should return an empty list
             if parse is None:
