@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Sequence, Union
 
 from ctparse.nb_estimator import MultinomialNaiveBayes
-from ctparse.utils import CustomCountVectorizer, train_pipeline
+from ctparse.utils import CustomCountVectorizer, train_pipeline, CtParsePipeline
 from .scorer import Scorer
 from .partial_parse import PartialParse
 from .types import Time, Interval
@@ -14,7 +14,7 @@ from .types import Time, Interval
 
 class NaiveBayesScorer(Scorer):
 
-    def __init__(self, nb_model: MultinomialNaiveBayes) -> None:
+    def __init__(self, nb_model: CtParsePipeline) -> None:
         """Scorer based on a naive bayes estimator.
 
         This scorer models the probability of having a correct parse, conditioned
@@ -33,7 +33,7 @@ class NaiveBayesScorer(Scorer):
         self._model = nb_model
 
     @classmethod
-    def from_model_file(cls, fname: str) -> 'NaiveBayesScorer':
+    def from_model_file(cls, fname: str):
         with bz2.open(fname, 'rb') as fd:
             return cls(pickle.load(fd))
 
@@ -43,7 +43,7 @@ class NaiveBayesScorer(Scorer):
         len_score = math.log(max_covered_chars / len(txt))
 
         X = _feature_extractor(txt, ts, partial_parse)
-        pred = self._model.predict_log_probability(X)
+        pred = self._model.predict_probability(X)
 
         # NOTE: the prediction is log-odds, or logit
         model_score = float(pred[1] - pred[0])
@@ -58,7 +58,7 @@ class NaiveBayesScorer(Scorer):
         len_score = math.log(len(prod) / len(txt))
 
         X = _feature_extractor(txt, ts, partial_parse)
-        pred = self._model.predict_log_proba(X)
+        pred = self._model.predict_probability(X)
 
         # NOTE: the prediction is log-odds, or logit
         model_score = float(pred[1] - pred[0])
@@ -74,18 +74,17 @@ def _identity(x):
     return x
 
 
-def train_custom_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]) -> \
-    MultinomialNaiveBayes:
+def train_custom_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]):
     """Train a naive bayes model for NaiveBayesScorer"""
     y_binary = [1 if y_i else -1 for y_i in y]
     # Create and train the pipeline
-    model = train_pipeline(X, y_binary,
-                           CustomCountVectorizer(ngram_range=(1, 3)),
-                           MultinomialNaiveBayes(alpha=1.0))
+    pipeline = CtParsePipeline(CustomCountVectorizer(ngram_range=(1, 3)),
+                               MultinomialNaiveBayes(alpha=1.0))
+    model = pipeline.fit(X, y_binary)
     return model
 
 
-def save_naive_bayes(model: MultinomialNaiveBayes, fname: str) -> None:
+def save_naive_bayes(model: CtParsePipeline, fname: str) -> None:
     """Save a naive bayes model for NaiveBayesScorer"""
     # TODO: version this model and dump metadata with lots of information
     with bz2.open(fname, 'wb') as fd:

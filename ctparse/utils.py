@@ -1,3 +1,4 @@
+from .nb_estimator import MultinomialNaiveBayes
 import regex as re
 
 
@@ -105,8 +106,20 @@ class CustomCountVectorizer:
         return X
 
 
-def train_pipeline(x_train, y_train, *transformers):
-    """ Train a sequence of estimators and return the model """
-    x_transformed = transformers[0].fit_transform(x_train)
-    nb_model = transformers[1].fit(x_transformed, y_train)
-    return nb_model
+class CtParsePipeline:
+    def __init__(self, transformer: CustomCountVectorizer, estimator: MultinomialNaiveBayes):
+        self.transformer = transformer
+        self.estimator = estimator
+
+    def fit(self, X, y=None):
+        """ Fit the transformer and then fit the Naive Bayes model on the transformed data"""
+        X_transformed = self.transformer.fit(X)
+        model = self.estimator.fit(X_transformed, y)
+
+        return model
+
+    def predict_probability(self, X):
+        """ Apply the transforms and get probability predictions from the estimator"""
+        X_transformed = self.transformer.transform(X)
+        preds = self.estimator.predict_log_probability(X_transformed)
+        return preds
