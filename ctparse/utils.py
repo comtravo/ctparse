@@ -11,7 +11,7 @@ class CustomCountVectorizer:
         self.fixed_vocab = fixed_vocab
 
     def create_ngrams(self, text):
-        """ Return ngrams"""
+        """Return ngrams"""
 
         text = self._white_space.sub("", text)
         txt_len = len(text)
@@ -33,7 +33,7 @@ class CustomCountVectorizer:
         return ngrams
 
     def preprocess(self):
-        """ Return a callable to preprocess text and perform tokenization"""
+        """Return a callable to preprocess text and perform tokenization"""
         return lambda doc: self.create_ngrams(str(doc))
 
     def create_feature_matrix(self, documents, set_vocabulary):
@@ -83,9 +83,6 @@ class CustomCountVectorizer:
     def fit_transform(self, raw_documents):
         """Learn the vocabulary dictionary and return term-document matrix.
 
-        This is equivalent to fit followed by transform, but more efficiently
-        implemented.
-
         Parameters
         ----------
         raw_documents : iterable of str
@@ -95,13 +92,11 @@ class CustomCountVectorizer:
         X : array, [n_samples, n_features]
             Document-term matrix.
         """
-
         X = self.create_feature_matrix(raw_documents, set_vocabulary=True)
         return X
 
     def transform(self, raw_documents):
-        """ Create term-document matrix based on pre-generated vocabulary"""
-
+        """Create term-document matrix based on pre-generated vocabulary"""
         X = self.create_feature_matrix(raw_documents, set_vocabulary=False)
         return X
 
@@ -115,7 +110,6 @@ class CtParsePipeline:
         """ Fit the transformer and then fit the Naive Bayes model on the transformed data"""
         X_transformed = self.transformer.fit_transform(X)
         self.estimator = self.estimator.fit(X_transformed, y)
-
         return self
 
     def predict_probability(self, X):
