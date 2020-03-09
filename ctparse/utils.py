@@ -114,9 +114,9 @@ class CtParsePipeline:
     def fit(self, X, y=None):
         """ Fit the transformer and then fit the Naive Bayes model on the transformed data"""
         X_transformed = self.transformer.fit(X)
-        model = self.estimator.fit(X_transformed, y)
+        self.estimator = self.estimator.fit(X_transformed, y)
 
-        return model
+        return self
 
     def predict_probability(self, X):
         """ Apply the transforms and get probability predictions from the estimator"""
