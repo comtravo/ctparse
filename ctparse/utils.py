@@ -115,6 +115,5 @@ class CtParsePipeline:
     def predict_probability(self, X):
         """ Apply the transforms and get probability predictions from the estimator"""
         X_transformed = self.transformer.transform(X)
-        print('transformed rules as ', X_transformed)
         preds = self.estimator.predict_log_probability(X_transformed)
         return preds
