@@ -77,12 +77,13 @@ class MultinomialNaiveBayes:
         # Initialise the scores with priors of positive and negative class
         neg_score = self.class_prior[0]
         pos_score = self.class_prior[1]
-        for token_index in range(len(xtest)):
-            pos_score += (self.log_likelihood['positive_class'][token_index] *
-                          xtest[token_index])
+        for word in xtest:
+            for token_index in range(len(word)):
+                pos_score += (self.log_likelihood['positive_class'][token_index] *
+                              word[token_index])
 
-            neg_score += (self.log_likelihood['negative_class'][token_index] *
-                          xtest[token_index])
+                neg_score += (self.log_likelihood['negative_class'][token_index] *
+                              word[token_index])
 
         joint_log_likelihood = [neg_score, pos_score]
 
