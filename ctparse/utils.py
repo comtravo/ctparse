@@ -1,5 +1,6 @@
 from .nb_estimator import MultinomialNaiveBayes
 import regex as re
+from math import exp
 
 
 class CustomCountVectorizer:
@@ -115,5 +116,6 @@ class CtParsePipeline:
     def predict_probability(self, X):
         """ Apply the transforms and get probability predictions from the estimator"""
         X_transformed = self.transformer.transform(X)
-        preds = self.estimator.predict_log_probability(X_transformed)
+        log_preds = self.estimator.predict_log_probability(X_transformed)
+        preds = [exp(log_pred) for log_pred in log_preds]
         return preds
