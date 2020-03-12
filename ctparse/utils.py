@@ -14,24 +14,31 @@ class CustomCountVectorizer:
     def create_ngrams(self, text):
         """Return ngrams"""
 
-        text = self._white_space.sub("", text)
-        txt_len = len(text)
-        min_r, max_r = self.ngram_range
+        tokens = text
 
-        if min_r == 1:
-            # iterate through str for unigrams
-            ngrams = list(text)
-            min_r += 1
-        else:
-            ngrams = []
+        # handle token n-grams
+        min_n, max_n = self.ngram_range
+        if max_n != 1:
+            original_tokens = tokens
+            if min_n == 1:
+                # no need to do any slicing for unigrams
+                # just iterate through the original tokens
+                tokens = list(original_tokens)
+                min_n += 1
+            else:
+                tokens = []
 
-        # bind method outside of loop to reduce overhead
-        ngrams_append = ngrams.append
+            n_original_tokens = len(original_tokens)
 
-        for n in range(min_r, min(max_r + 1, txt_len + 1)):
-            for i in range(txt_len - n + 1):
-                ngrams_append(text[i: i + n])
-        return ngrams
+            # bind method outside of loop to reduce overhead
+            tokens_append = tokens.append
+            space_join = " ".join
+
+            for n in range(min_n,
+                           min(max_n + 1, n_original_tokens + 1)):
+                for i in range(n_original_tokens - n + 1):
+                    tokens_append(space_join(original_tokens[i: i + n]))
+        return tokens
 
     def preprocess(self):
         """Return a callable to preprocess text and perform tokenization"""
