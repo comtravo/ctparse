@@ -45,23 +45,21 @@ class MultinomialNaiveBayes:
                                   else 0 for doc_index, doc in enumerate(X))
             token_neg_count = sum(doc[token_index] if y[doc_index] == -1
                                   else 0 for doc_index, doc in enumerate(X))
-            token_counts['positive_class'].append(token_pos_count)
-            token_counts['negative_class'].append(token_neg_count)
+            token_counts['positive_class'].append(token_pos_count + self.alpha)
+            token_counts['negative_class'].append(token_neg_count + self.alpha)
 
         self.token_counts = token_counts
-        token_pos_class_sum = sum(token_counts['positive_class']) + self.alpha * vocabulary_len
-        token_neg_class_sum = sum(token_counts['negative_class']) + self.alpha * vocabulary_len
+        token_pos_class_sum = sum(token_counts['positive_class'])
+        token_neg_class_sum = sum(token_counts['negative_class'])
 
         log_likelihood = {'negative_class': [], 'positive_class': []}
         for token_ind in range(vocabulary_len):
             log_likelihood['positive_class'].append(
-                log(token_counts['positive_class'][token_ind] + self.alpha) -
-                log(token_pos_class_sum)
+                log(token_counts['positive_class'][token_ind]) - log(token_pos_class_sum)
             )
 
             log_likelihood['negative_class'].append(
-                log(token_counts['negative_class'][token_ind] + self.alpha) -
-                log(token_neg_class_sum)
+                log(token_counts['negative_class'][token_ind]) - log(token_neg_class_sum)
             )
         self.log_likelihood = log_likelihood
 
@@ -77,6 +75,7 @@ class MultinomialNaiveBayes:
         # Initialise the scores with priors of positive and negative class
         neg_score = self.class_prior[0]
         pos_score = self.class_prior[1]
+        ll = []
         for word in xtest:
             for token_index in range(len(word)):
                 pos_score += (self.log_likelihood['positive_class'][token_index] *
@@ -84,9 +83,9 @@ class MultinomialNaiveBayes:
 
                 neg_score += (self.log_likelihood['negative_class'][token_index] *
                               word[token_index])
-
+                ll.append([self.log_likelihood['negative_class'][token_index],
+                           self.log_likelihood['positive_class'][token_index]])
         joint_log_likelihood = [neg_score, pos_score]
-
         # Normalize the scores
         log_prob_x = log_sum_exp(joint_log_likelihood)
         return [score - log_prob_x for score in joint_log_likelihood]

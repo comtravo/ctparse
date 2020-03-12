@@ -142,7 +142,7 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float,
         # track what has been added to the stack and do not add again
         # if the score is not better
         stack_prod = {}  # type: Dict[Tuple[Artifact, ...], float]
-        # track what has been emitted and do not emit agin
+        # track what has been emitted and do not emit again
         parse_prod = {}  # type: Dict[Union[Time, Interval], float]
         while stack:
             t_fun()
