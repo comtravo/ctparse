@@ -40,24 +40,23 @@ class CustomCountVectorizer:
                     tokens_append(space_join(original_tokens[i: i + n]))
         return tokens
 
-    def preprocess(self):
-        """Return a callable to preprocess text and perform tokenization"""
-        return lambda doc: self.create_ngrams(str(doc))
+    # def preprocess(self):
+    #     """Return a callable to preprocess text and perform tokenization"""
+    #     return lambda doc: self.create_ngrams(str(doc))
 
     def create_feature_matrix(self, documents, set_vocabulary):
         """ Create feature matrix"""
-        build_features = self.preprocess()
-
+        features = self.create_ngrams(documents)
         all_features = []
         count_matrix = []
-        for doc in documents:
-            feature_counts = {}
-            for feature in build_features(doc):
-                if feature in feature_counts:
-                    feature_counts[feature] += 1
-                else:
-                    all_features.append(feature)
-                    feature_counts[feature] = 1
+
+        feature_counts = {}
+        for feature in features:
+            if feature in feature_counts:
+                feature_counts[feature] += 1
+            else:
+                all_features.append(feature)
+                feature_counts[feature] = 1
             count_matrix.append(feature_counts)
         if set_vocabulary:
             self.vocabulary = sorted(set(all_features))
