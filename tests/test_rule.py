@@ -21,7 +21,7 @@ class TestRule(TestCase):
         self.assertIsNotNone(rule(r'This long string must not match as this expression '
                                   'will be part of the system unless ctparse is reloaded'))
 
-    def test_consequtive_regex_not_allowed(self):
+    def test_consecutive_regex_not_allowed(self):
         with self.assertRaises(ValueError):
             rule(r'one', r'two')
 

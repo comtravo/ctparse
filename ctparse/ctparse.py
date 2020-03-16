@@ -91,7 +91,7 @@ def ctparse_gen(txt: str, ts: Optional[datetime] = None, timeout: Union[int, flo
                 scorer: Optional[Scorer] = None) -> Iterator[Optional[CTParse]]:
     """Generate parses for the string *txt*.
 
-    This function is equivalent to ctparse, with the exeption that it returns an iterator
+    This function is equivalent to ctparse, with the exception that it returns an iterator
     over the matches as soon as they are produced.
     """
     if scorer is None:
@@ -108,7 +108,6 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float,
     t_fun = timeout_(timeout)
 
     try:
-
         logger.debug('='*80)
         logger.debug('-> matching regular expressions')
         p, _tp = timeit(_match_regex)(txt, global_regex)
@@ -143,7 +142,7 @@ def _ctparse(txt: str, ts: datetime, timeout: float, relative_match_len: float,
         # track what has been added to the stack and do not add again
         # if the score is not better
         stack_prod = {}  # type: Dict[Tuple[Artifact, ...], float]
-        # track what has been emitted and do not emit agin
+        # track what has been emitted and do not emit again
         parse_prod = {}  # type: Dict[Union[Time, Interval], float]
         while stack:
             t_fun()
@@ -275,10 +274,10 @@ def _regex_stack(txt: str, regex_matches: List[RegexMatch],
     # * initialize an empty stack
     #
     # * add all sequences of one expression to the stack, excluding
-    #   expressions which can be reached from "earlier" expressison
+    #   expressions which can be reached from "earlier" expression
     #   (i.e. there is no gap between them):
     #
-    #   - say A and B have no gap inbetween and all sequences starting
+    #   - say A and B have no gap in between and all sequences starting
     #     at A have already been produced. These by definition(which?: -) include as sub-sequences
     #     all sequences starting at B. Any other sequences starting at B directly will not add valid
     #     variations, as each of them could be prefixed with a sequence
