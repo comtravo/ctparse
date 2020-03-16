@@ -3,8 +3,7 @@ from math import log, exp
 
 def log_sum_exp(x):
     max_value = max(x)
-    x_normalized = [x_i - max_value for x_i in x]
-    sum_of_exp = sum([exp(xn_i) for xn_i in x_normalized])
+    sum_of_exp = sum([exp(x_i - max_value) for x_i in x])
     return max_value + log(sum_of_exp)
 
 
@@ -75,7 +74,6 @@ class MultinomialNaiveBayes:
         # Initialise the scores with priors of positive and negative class
         neg_score = self.class_prior[0]
         pos_score = self.class_prior[1]
-        ll = []
         for word in xtest:
             for token_index in range(len(word)):
                 pos_score += (self.log_likelihood['positive_class'][token_index] *
