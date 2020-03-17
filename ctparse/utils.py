@@ -115,9 +115,7 @@ class CTParsePipeline:
         self.estimator = self.estimator.fit(X_transformed, y)
         return self
 
-    def predict_probability(self, X: Sequence[Sequence[str]]) -> Sequence[Tuple[float, float]]:
+    def predict_log_proba(self, X: Sequence[Sequence[str]]) -> Sequence[Tuple[float, float]]:
         """ Apply the transforms and get probability predictions from the estimator"""
         X_transformed = self.transformer.transform(X)
-        log_preds = self.estimator.predict_log_probability(X_transformed)
-        preds = [[exp(log_pred[0]), exp(log_pred[1])] for log_pred in log_preds]
-        return preds
+        return self.estimator.predict_log_probability(X_transformed)
