@@ -1,79 +1,75 @@
-from .nb_estimator import MultinomialNaiveBayes
-import regex as re
+from collections import defaultdict
 from math import exp
+from typing import Dict, Sequence, Tuple
+
+from .nb_estimator import MultinomialNaiveBayes
 
 
 class CustomCountVectorizer:
-    _white_space = re.compile(r"\s+")
-
-    def __init__(self, ngram_range, vocabulary=None, fixed_vocab=False):
+    def __init__(self,
+                 ngram_range: Tuple[int, int],
+                 vocabulary: Dict[str, int] = None,
+                 fixed_vocab: bool = False):
         self.ngram_range = ngram_range
         self.vocabulary = vocabulary
         self.fixed_vocab = fixed_vocab
 
-    def create_ngrams(self, text):
-        """Return ngrams"""
-
-        tokens = text
-
-        # handle token n-grams
+    def create_ngrams(self, documents: Sequence[Sequence[str]]) -> Sequence[Sequence[str]]:
+        """For each document in documents, replace original tokens by a list of
+        all min_n:max_n = self.ngram_rangengrams in that document.
+        """
         min_n, max_n = self.ngram_range
-        if max_n != 1:
-            original_tokens = tokens
+        space_join = " ".join
+
+        def _create(document: Sequence[str]) -> Sequence[str]:
+            doc_len = len(document)
+            doc_max_n = min(max_n, doc_len) + 1
             if min_n == 1:
-                # no need to do any slicing for unigrams
-                # just iterate through the original tokens
-                tokens = list(original_tokens)
-                min_n += 1
+                ngrams = list(document)
+                min_nn = min_n + 1
             else:
-                tokens = []
+                ngrams = []
+                min_nn = 1
 
-            n_original_tokens = len(original_tokens)
+            for n in range(min_nn, doc_max_n):
+                for i in range(0, doc_len - n + 1):
+                    ngrams.append(space_join(document[i:i+n]))
+            return ngrams
+        return [_create(d) for d in documents]
 
-            # bind method outside of loop to reduce overhead
-            tokens_append = tokens.append
-            space_join = " ".join
-
-            for n in range(min_n,
-                           min(max_n + 1, n_original_tokens + 1)):
-                for i in range(n_original_tokens - n + 1):
-                    tokens_append(space_join(original_tokens[i: i + n]))
-        return tokens
-
-    # def preprocess(self):
-    #     """Return a callable to preprocess text and perform tokenization"""
-    #     return lambda doc: self.create_ngrams(str(doc))
-
-    def create_feature_matrix(self, documents, set_vocabulary):
-        """ Create feature matrix"""
-        features = self.create_ngrams(documents)
-        all_features = []
+    def create_feature_matrix(self, documents: Sequence[Sequence[str]], set_vocabulary: bool) \
+            -> Sequence[Dict[int, int]]:
+        """Create feature matrix"""
+        document_features = self.create_ngrams(documents)
+        all_features = set()
         count_matrix = []
 
-        feature_counts = {}
-        for feature in features:
-            if feature in feature_counts:
-                feature_counts[feature] += 1
-            else:
-                all_features.append(feature)
-                feature_counts[feature] = 1
+        for document_feature in document_features:
+            feature_counts: Dict[str, int] = {}
+            for feature in document_feature:
+                if feature in feature_counts:
+                    feature_counts[feature] += 1
+                else:
+                    all_features.add(feature)
+                    feature_counts[feature] = 1
             count_matrix.append(feature_counts)
-        if set_vocabulary:
-            self.vocabulary = sorted(set(all_features))
+        if set_vocabulary or not self.vocabulary:
+            self.vocabulary = {word: idx for idx, word in enumerate(all_features)}
+        len_vocab = len(self.vocabulary)
         count_vectors_matrix = []
         # Build document frequency matrix
         for count_dict in count_matrix:
-            doc_vectors = []
-            for word in self.vocabulary:
-                if word in count_dict.keys():
-                    doc_vectors.append(count_dict[word])
-                else:
-                    doc_vectors.append(0)
-            count_vectors_matrix.append(doc_vectors)
-
+            doc_vector: Dict[int, int] = defaultdict(int)
+            for word, cnt in count_dict.items():
+                idx = self.vocabulary.get(word, None)
+                if idx is not None:
+                    doc_vector[idx] = cnt
+            count_vectors_matrix.append(doc_vector)
+        # add vocab length in first element
+        count_vectors_matrix[0][len_vocab - 1] = count_vectors_matrix[0][len_vocab - 1]
         return count_vectors_matrix
 
-    def fit(self, raw_documents):
+    def fit(self, raw_documents: Sequence[Sequence[str]]) -> 'CustomCountVectorizer':
         """Learn a vocabulary dictionary of all tokens in the raw documents.
 
         Parameters
@@ -87,7 +83,7 @@ class CustomCountVectorizer:
         self.fit_transform(raw_documents)
         return self
 
-    def fit_transform(self, raw_documents):
+    def fit_transform(self, raw_documents: Sequence[Sequence[str]]) -> Sequence[Dict[int, int]]:
         """Learn the vocabulary dictionary and return term-document matrix.
 
         Parameters
@@ -102,26 +98,26 @@ class CustomCountVectorizer:
         X = self.create_feature_matrix(raw_documents, set_vocabulary=True)
         return X
 
-    def transform(self, raw_documents):
+    def transform(self, raw_documents: Sequence[Sequence[str]]) -> Sequence[Dict[int, int]]:
         """Create term-document matrix based on pre-generated vocabulary"""
         X = self.create_feature_matrix(raw_documents, set_vocabulary=False)
         return X
 
 
-class CtParsePipeline:
+class CTParsePipeline:
     def __init__(self, transformer: CustomCountVectorizer, estimator: MultinomialNaiveBayes):
         self.transformer = transformer
         self.estimator = estimator
 
-    def fit(self, X, y=None):
+    def fit(self, X: Sequence[Sequence[str]], y: Sequence[int]) -> 'CTParsePipeline':
         """ Fit the transformer and then fit the Naive Bayes model on the transformed data"""
         X_transformed = self.transformer.fit_transform(X)
         self.estimator = self.estimator.fit(X_transformed, y)
         return self
 
-    def predict_probability(self, X):
+    def predict_probability(self, X: Sequence[Sequence[str]]) -> Sequence[Tuple[float, float]]:
         """ Apply the transforms and get probability predictions from the estimator"""
         X_transformed = self.transformer.transform(X)
         log_preds = self.estimator.predict_log_probability(X_transformed)
-        preds = [exp(log_pred) for log_pred in log_preds]
+        preds = [[exp(log_pred[0]), exp(log_pred[1])] for log_pred in log_preds]
         return preds

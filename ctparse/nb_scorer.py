@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Sequence, Union
 
 from ctparse.nb_estimator import MultinomialNaiveBayes
-from ctparse.utils import CustomCountVectorizer, CtParsePipeline
+from ctparse.utils import CustomCountVectorizer, CTParsePipeline
 from .scorer import Scorer
 from .partial_parse import PartialParse
 from .types import Time, Interval
@@ -14,7 +14,7 @@ from .types import Time, Interval
 
 class NaiveBayesScorer(Scorer):
 
-    def __init__(self, nb_model: CtParsePipeline) -> None:
+    def __init__(self, nb_model: CTParsePipeline) -> None:
         """Scorer based on a naive bayes estimator.
 
         This scorer models the probability of having a correct parse, conditioned
@@ -46,7 +46,7 @@ class NaiveBayesScorer(Scorer):
         pred = self._model.predict_probability(X)
 
         # NOTE: the prediction is log-odds, or logit
-        model_score = float(pred[1] - pred[0])
+        model_score = pred[0][1] - pred[0][0]
 
         return model_score + len_score
 
@@ -61,7 +61,7 @@ class NaiveBayesScorer(Scorer):
         pred = self._model.predict_probability(X)
 
         # NOTE: the prediction is log-odds, or logit
-        model_score = float(pred[1] - pred[0])
+        model_score = pred[0][1] - pred[0][0]
 
         return model_score + len_score
 
@@ -78,13 +78,13 @@ def train_custom_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]):
     """Train a naive bayes model for NaiveBayesScorer"""
     y_binary = [1 if y_i else -1 for y_i in y]
     # Create and train the pipeline
-    pipeline = CtParsePipeline(CustomCountVectorizer(ngram_range=(1, 3)),
+    pipeline = CTParsePipeline(CustomCountVectorizer(ngram_range=(1, 3)),
                                MultinomialNaiveBayes(alpha=1.0))
     model = pipeline.fit(X, y_binary)
     return model
 
 
-def save_naive_bayes(model: CtParsePipeline, fname: str) -> None:
+def save_naive_bayes(model: CTParsePipeline, fname: str) -> None:
     """Save a naive bayes model for NaiveBayesScorer"""
     # TODO: version this model and dump metadata with lots of information
     with bz2.open(fname, 'wb') as fd:

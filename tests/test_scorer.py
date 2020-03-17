@@ -1,7 +1,7 @@
 import datetime
 import random
 
-from ctparse.nb_scorer import NaiveBayesScorer, train_naive_bayes
+from ctparse.nb_scorer import NaiveBayesScorer, train_custom_naive_bayes
 from ctparse.partial_parse import PartialParse
 from ctparse.scorer import DummyScorer, RandomScorer
 from ctparse.types import Interval, Time
@@ -30,7 +30,7 @@ def test_nbscorer():
     X = [("a", "b"), ("a",), ("b"), ("a", "b", "a", "b")]
     y = [False, True, True, False]
 
-    model = train_naive_bayes(X, y)
+    model = train_custom_naive_bayes(X, y)
     scorer = NaiveBayesScorer(model)
 
     pp = PartialParse((Time(), Interval()), ("rule1", "rule2"))

@@ -34,11 +34,8 @@ setup(
     ],
     description="Parse natural language time expressions in python",
     install_requires=[
-        'numpy>=1.14.4,<2.0.0',
         'python-dateutil>=2.7.3,<3.0.0',
         'regex>=2018.6.6',
-        'scikit-learn>=0.20.0,<0.21.0',
-        'scipy>=1.1.0,<2.0.0',
         'tqdm>=4.23.4,<5.0.0'
     ],
     license="MIT license",
