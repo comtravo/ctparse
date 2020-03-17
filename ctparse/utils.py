@@ -1,5 +1,4 @@
 from collections import defaultdict
-from math import exp
 from typing import Dict, Sequence, Tuple
 
 from .nb_estimator import MultinomialNaiveBayes
