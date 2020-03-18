@@ -21,9 +21,6 @@ def parse_args():
     )
     parser.add_argument(
         "--dataset", help="Dataset file")
-    parser.add_argument(
-        "--load", help="Load pre generated X_train and y_train", action='store_true'
-    )
     return parser.parse_args()
 
 
@@ -52,19 +49,6 @@ def main():
 
         if len(X) == 0:
             raise ValueError("Need to specify at least a dataset for training")
-
-        # save x and y for debugging new pipeline
-        with open('X_train.txt', 'w') as filehandle:
-            filehandle.writelines("%s\n" % x_i for x_i in X_combined)
-
-        with open('y_train.txt', 'w') as fh:
-            fh.writelines("%s\n" % y_i for y_i in y_combined)
-
-    if args.load:
-        with open('X_train.txt', 'r') as fh:
-            X_combined = [doc.rstrip() for doc in fh.readlines()]
-        with open('y_train.txt', 'r') as fh:
-            y_combined = [doc.rstrip() for doc in fh.readlines()]
 
     mdl = train_naive_bayes(X_combined, y_combined)
     save_naive_bayes(mdl, DEFAULT_MODEL_FILE)
