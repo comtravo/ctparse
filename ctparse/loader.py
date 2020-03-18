@@ -17,7 +17,7 @@ DEFAULT_MODEL_FILE = os.path.join(os.path.dirname(__file__), 'models', 'model.pb
 def load_default_scorer() -> Scorer:
     """Load the scorer shipped with ctparse.
 
-    If the score is not found, the scorer defaults to `DummyScorer`.
+    If the scorer is not found, the scorer defaults to `DummyScorer`.
     """
     if os.path.exists(DEFAULT_MODEL_FILE):
         logger.info('Loading model from {}'.format(DEFAULT_MODEL_FILE))

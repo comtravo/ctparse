@@ -19,7 +19,7 @@ class CountVectorizer:
         self.ngram_range = ngram_range
         self.vocabulary: Optional[Dict[str, int]] = None
 
-    def create_ngrams(
+    def _create_ngrams(
         self, documents: Sequence[Sequence[str]]
     ) -> Sequence[Sequence[str]]:
         """For each document in documents, replace original tokens by a list of
@@ -55,7 +55,7 @@ class CountVectorizer:
 
         return [_create(d) for d in documents]
 
-    def create_feature_matrix(
+    def _create_feature_matrix(
         self, documents: Sequence[Sequence[str]], set_vocabulary: bool
     ) -> Sequence[Dict[int, int]]:
         """Map documents (sequences of tokens) to numerical data (sparse maps of
@@ -76,7 +76,7 @@ class CountVectorizer:
             For each document a mapping of `feature_index` to a count how often this
             feature appeared in the document.
         """
-        documents = self.create_ngrams(documents)
+        documents = self._create_ngrams(documents)
         all_features = set()
         count_matrix = []
 
@@ -106,12 +106,12 @@ class CountVectorizer:
         count_vectors_matrix[0][len_vocab - 1] = count_vectors_matrix[0][len_vocab - 1]
         return count_vectors_matrix
 
-    def fit(self, raw_documents: Sequence[Sequence[str]]) -> "CountVectorizer":
+    def fit(self, documents: Sequence[Sequence[str]]) -> "CountVectorizer":
         """Learn a vocabulary dictionary of all tokens in the raw documents.
 
         Parameters
         ----------
-        raw_documents : Sequence[Sequence[str]]
+        documents : Sequence[Sequence[str]]
             Sequence of documents, each as a sequence of tokens
 
         Returns
@@ -119,7 +119,7 @@ class CountVectorizer:
         CountVectorizer
             The updated vectorizer, i.e. this updates the internal vocabulary
         """
-        self.fit_transform(raw_documents)
+        self.fit_transform(documents)
         return self
 
     def fit_transform(
@@ -138,7 +138,7 @@ class CountVectorizer:
         Sequence[Dict[int, int]]
             Document-term matrix.
         """
-        X = self.create_feature_matrix(documents, set_vocabulary=True)
+        X = self._create_feature_matrix(documents, set_vocabulary=True)
         return X
 
     def transform(
@@ -157,5 +157,5 @@ class CountVectorizer:
         Sequence[Dict[int, int]]
             Document-term matrix.
         """
-        X = self.create_feature_matrix(documents, set_vocabulary=False)
+        X = self._create_feature_matrix(documents, set_vocabulary=False)
         return X

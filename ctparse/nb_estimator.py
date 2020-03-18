@@ -2,7 +2,7 @@ from typing import Sequence, Dict, Tuple, List
 from math import log, exp
 
 
-def log_sum_exp(x: Sequence[float]) -> float:
+def _log_sum_exp(x: Sequence[float]) -> float:
     max_value = max(x)
     sum_of_exp = sum(exp(x_i - max_value) for x_i in x)
     return max_value + log(sum_of_exp)
@@ -14,7 +14,7 @@ class MultinomialNaiveBayes:
         self.class_prior = (0.0, 0.0)
         self.log_likelihood: Dict[str, List[float]] = {}
 
-    def construct_log_class_prior(self, y: Sequence[int]) -> None:
+    def _construct_log_class_prior(self, y: Sequence[int]) -> None:
         # Input classes are -1 and 1
         neg_class_count = sum(1 if y_i == -1 else 0 for y_i in y)
         pos_class_count = len(y) - neg_class_count
@@ -23,7 +23,7 @@ class MultinomialNaiveBayes:
         pos_log_prior = log(pos_class_count / (pos_class_count + neg_class_count))
         self.class_prior = (neg_log_prior, pos_log_prior)
 
-    def construct_log_likelihood(self, X: Sequence[Dict[int, int]], y: Sequence[int]):
+    def _construct_log_likelihood(self, X: Sequence[Dict[int, int]], y: Sequence[int]):
         # Token counts
         # implicit assumption from vectorizer: first element has count for #vocab size set
         vocabulary_len = max(X[0].keys()) + 1
@@ -53,8 +53,8 @@ class MultinomialNaiveBayes:
                                'positive_class': log_likelihood_positive}
 
     def fit(self, X: Sequence[Dict[int, int]], y: Sequence[int]) -> 'MultinomialNaiveBayes':
-        self.construct_log_class_prior(y)
-        self.construct_log_likelihood(X, y)
+        self._construct_log_class_prior(y)
+        self._construct_log_likelihood(X, y)
         return self
 
     def predict_log_probability(self, X: Sequence[Dict[int, int]]) -> Sequence[Tuple[float, float]]:
@@ -69,6 +69,6 @@ class MultinomialNaiveBayes:
                 neg_score += self.log_likelihood['negative_class'][idx] * cnt
             joint_log_likelihood = [neg_score, pos_score]
             # Normalize the scores
-            log_prob_x = log_sum_exp(joint_log_likelihood)
+            log_prob_x = _log_sum_exp(joint_log_likelihood)
             scores.append((neg_score - log_prob_x, pos_score - log_prob_x))
         return scores

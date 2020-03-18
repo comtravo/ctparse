@@ -19,6 +19,14 @@ ctparse.corpus module
    :undoc-members:
    :show-inheritance:
 
+ctparse.count\_vectorizer module
+--------------------------------
+
+.. automodule:: ctparse.count_vectorizer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 ctparse.ctparse module
 ----------------------
 
