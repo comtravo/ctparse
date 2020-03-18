@@ -16,7 +16,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--legacy",
-        help="Use legacy dataset (ctparse.time.corpus and ctparse.time.auto_corpus)",
+        help="Use legacy dataset (ctparse.time.corpus and ctparse.time.auto_corpus as training data)",
         action='store_true'
     )
     parser.add_argument(
@@ -47,8 +47,8 @@ def main():
         X_combined.extend(X)
         y_combined.extend(y)
 
-        if len(X) == 0:
-            raise ValueError("Need to specify at least a dataset for training")
+    if len(X) == 0:
+        raise ValueError("Need to specify at least a dataset for training")
 
     mdl = train_naive_bayes(X_combined, y_combined)
     save_naive_bayes(mdl, DEFAULT_MODEL_FILE)
