@@ -2,12 +2,14 @@
 History
 =======
 
-0.0.48 (2020-03-XX)
+0.1.1 (2020-03-XX)
 -------------------
+* Major refactor of code underlying predictive model
 * Based on a contribution from @bharathi-srini: replace naive bayes from sklearn by own implementation
 * Thus remove dependencies on numpy, scipy, scikit-learn
 * Predictions are much faster: 97/s in the old vs. 239/s in the new code base
 * Performance identical
+* Deprecate support for python 3.5, add 3.8
 
 0.0.47 (2020-02-28)
 -------------------

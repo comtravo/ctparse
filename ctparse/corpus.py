@@ -80,7 +80,7 @@ def load_timeparse_corpus(fname: str) -> Sequence[TimeParseEntry]:
     For more information about the format of the time parse corpus,
     refer to the documentation.
     """
-    with open(fname, "r") as fd:
+    with open(fname, "r", encoding='utf-8') as fd:
         entries = json.load(fd)
 
     return [

@@ -68,7 +68,7 @@ def test_parse_nb_string() -> None:
 
 def test_load_timeparse_corpus(tmp_path) -> None:
     path = tmp_path / "test.json"
-    path.write_text(CORPUS_JSON)
+    path.write_text(CORPUS_JSON, encoding="utf-8")
 
     result = load_timeparse_corpus(str(path))
 

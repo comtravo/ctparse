@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Sequence, Union
 
 from ctparse.nb_estimator import MultinomialNaiveBayes
-from ctparse.utils import CustomCountVectorizer, CTParsePipeline
+from ctparse.utils import CountVectorizer, CTParsePipeline
 from .scorer import Scorer
 from .partial_parse import PartialParse
 from .types import Time, Interval
@@ -70,15 +70,11 @@ def _feature_extractor(txt: str, ts: datetime, partial_parse: PartialParse) -> S
     return [str(r) for r in partial_parse.rules]
 
 
-def _identity(x):
-    return x
-
-
-def train_custom_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]):
+def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]):
     """Train a naive bayes model for NaiveBayesScorer"""
     y_binary = [1 if y_i else -1 for y_i in y]
     # Create and train the pipeline
-    pipeline = CTParsePipeline(CustomCountVectorizer(ngram_range=(1, 3)),
+    pipeline = CTParsePipeline(CountVectorizer(ngram_range=(1, 3)),
                                MultinomialNaiveBayes(alpha=1.0))
     model = pipeline.fit(X, y_binary)
     return model

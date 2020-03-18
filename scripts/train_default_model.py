@@ -5,7 +5,7 @@ import logging
 from ctparse.corpus import (load_timeparse_corpus, make_partial_rule_dataset,
                             run_corpus)
 from ctparse.loader import DEFAULT_MODEL_FILE
-from ctparse.nb_scorer import save_naive_bayes, train_custom_naive_bayes
+from ctparse.nb_scorer import save_naive_bayes, train_naive_bayes
 from ctparse.scorer import DummyScorer
 from ctparse.time import auto_corpus, corpus
 
@@ -16,7 +16,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--legacy",
-        help="Use legacy dataset (ctparse.time.corpus and ctparse.time.auto_corpus as training data)",
+        help="Use legacy dataset (ctparse.time.corpus and ctparse.time.auto_corpus)",
         action='store_true'
     )
     parser.add_argument(
@@ -55,10 +55,10 @@ def main():
 
         # save x and y for debugging new pipeline
         with open('X_train.txt', 'w') as filehandle:
-            filehandle.writelines("%s\n" %x_i for x_i in X_combined)
+            filehandle.writelines("%s\n" % x_i for x_i in X_combined)
 
         with open('y_train.txt', 'w') as fh:
-            fh.writelines("%s\n" %y_i for y_i in y_combined)
+            fh.writelines("%s\n" % y_i for y_i in y_combined)
 
     if args.load:
         with open('X_train.txt', 'r') as fh:
@@ -66,7 +66,7 @@ def main():
         with open('y_train.txt', 'r') as fh:
             y_combined = [doc.rstrip() for doc in fh.readlines()]
 
-    mdl = train_custom_naive_bayes(X_combined, y_combined)
+    mdl = train_naive_bayes(X_combined, y_combined)
     save_naive_bayes(mdl, DEFAULT_MODEL_FILE)
 
 
