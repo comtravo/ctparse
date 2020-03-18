@@ -2,9 +2,9 @@ language: python
 sudo: required
 dist: xenial
 python:
+  - 3.8
   - 3.7
   - 3.6
-  - 3.5
 install: pip install -U tox-travis codecov
 script: tox
 after_success:

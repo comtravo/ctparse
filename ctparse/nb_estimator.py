@@ -1,40 +1,27 @@
-from typing import Sequence, Dict
+from typing import Sequence, Dict, Tuple, List
 from math import log, exp
 
 
-def log_sum_exp(x):
+def log_sum_exp(x: Sequence[float]) -> float:
     max_value = max(x)
-    sum_of_exp = sum([exp(x_i - max_value) for x_i in x])
+    sum_of_exp = sum(exp(x_i - max_value) for x_i in x)
     return max_value + log(sum_of_exp)
 
 
 class MultinomialNaiveBayes:
-    def __init__(self, alpha: float = 1.0, class_prior=None, log_likelihood=None):
+    def __init__(self, alpha: float = 1.0):
         self.alpha = alpha
-        self.class_prior = class_prior
-        self.log_likelihood = log_likelihood
+        self.class_prior = (0.0, 0.0)
+        self.log_likelihood: Dict[str, List[float]] = {}
 
-    @staticmethod
-    def validate_xy(X: Sequence[Dict[int, int]], y: Sequence[int]):
-        # ToDo SMA: the usefulness of this function is complete unclear to me
-        # Validate dimensions of X and y
-        if any(isinstance(y_i, list) for y_i in y):
-            raise ValueError('Expected 1D array')
-        if len(X) and not all(len(X[i]) != 0 for i in range(len(X))):
-            raise ValueError('Expected 2D array')
-
-    # @staticmethod
-    # def binarize_y(y):
-    #     return [1 if y_i == 1 else 0 for y_i in y]
-
-    def construct_log_class_prior(self, y: Sequence[int]):
+    def construct_log_class_prior(self, y: Sequence[int]) -> None:
         # Input classes are -1 and 1
         neg_class_count = sum(1 if y_i == -1 else 0 for y_i in y)
         pos_class_count = len(y) - neg_class_count
 
         neg_log_prior = log(neg_class_count / (pos_class_count + neg_class_count))
         pos_log_prior = log(pos_class_count / (pos_class_count + neg_class_count))
-        self.class_prior = [neg_log_prior, pos_log_prior]
+        self.class_prior = (neg_log_prior, pos_log_prior)
 
     def construct_log_likelihood(self, X: Sequence[Dict[int, int]], y: Sequence[int]):
         # Token counts
@@ -48,15 +35,6 @@ class MultinomialNaiveBayes:
                     token_counts_positive[idx] += cnt
                 else:
                     token_counts_negative[idx] += cnt
-        # for token_index in range(vocabulary_len):
-        #     token_pos_count = token_neg_count = 0
-        #     for x, y_ in zip(X, y):
-        #         if y_== 1:
-        #             token_pos_count += x[token_index]
-        #         else:
-        #             token_neg_count += x[token_index]
-        #     token_counts_positive.append(token_pos_count + self.alpha)
-        #     token_counts_negative.append(token_neg_count + self.alpha)
 
         token_pos_class_sum = sum(token_counts_positive)
         token_neg_class_sum = sum(token_counts_negative)
@@ -74,14 +52,12 @@ class MultinomialNaiveBayes:
         self.log_likelihood = {'negative_class': log_likelihood_negative,
                                'positive_class': log_likelihood_positive}
 
-    def fit(self, X: Sequence[Dict[int, int]], y: Sequence[int]):
-        self.validate_xy(X, y)
+    def fit(self, X: Sequence[Dict[int, int]], y: Sequence[int]) -> 'MultinomialNaiveBayes':
         self.construct_log_class_prior(y)
         self.construct_log_likelihood(X, y)
-
         return self
 
-    def predict_log_probability(self, X):
+    def predict_log_probability(self, X: Sequence[Dict[int, int]]) -> Sequence[Tuple[float, float]]:
         """ Calculate the posterior log probability of new sample X"""
         scores = []
         for x in X:
@@ -94,5 +70,5 @@ class MultinomialNaiveBayes:
             joint_log_likelihood = [neg_score, pos_score]
             # Normalize the scores
             log_prob_x = log_sum_exp(joint_log_likelihood)
-            scores.append([neg_score - log_prob_x, pos_score - log_prob_x])
+            scores.append((neg_score - log_prob_x, pos_score - log_prob_x))
         return scores

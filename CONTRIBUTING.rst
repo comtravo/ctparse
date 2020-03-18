@@ -33,9 +33,9 @@ The following steps are probably a helpful guideline.
 
      If this fixes the issue please commit the updated ``corpus.py``
      and the updated model as a pull request (PR) on GitHub, see this guide for
-     more information on what pull requests are and how to create them 
+     more information on what pull requests are and how to create them
      https://help.github.com/articles/creating-a-pull-request/.
-     
+
      The scoring can be influenced by
      adding more structurally identical examples to the corpus. Seeing
      more samples where a specific sequence of rule applications leads
@@ -48,7 +48,7 @@ The following steps are probably a helpful guideline.
      up-weightning* effect. The examples that are intended to influence the scoring,
      as opposed to the ones used to develop new rules, are usually appended
      to the file ``auto_corpus.py```.
-  
+
   #. **The tests fail**: if this is because not all tests in the
      corpus pass, i.e. you get an error message like the following::
 
@@ -96,7 +96,7 @@ The following steps are probably a helpful guideline.
 
   Next you see the unique sub-sequences constructed based on these
   regular expressions (plus again the time used to build them)::
-            
+
     ================================================================================
     -> building initial stack
     regex stack (RegexMatch[0-3]{114:May}, RegexMatch[4-7]{135:5th})
@@ -144,7 +144,7 @@ The following steps are probably a helpful guideline.
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     no rules applicable: emitting
-    => Time[0-7]{2018-05-05 X:X (X/X)}, score=15.91, 
+    => Time[0-7]{2018-05-05 X:X (X/X)}, score=15.91,
     --------------------------------------------------------------------------------
 
   If the desired production does not show up, but the regular
@@ -169,7 +169,7 @@ When adding rules try to follow these guidelines:
    specific year expression, i.e.
 
    .. code:: python
-             
+
       @rule(predicate('hasDate'), r'your funky year')
 
 2. Keep your regex as general as possible, but avoid regular
@@ -279,7 +279,7 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-3. The pull request should work for Python 3.4, 3.5 and 3.6. Check
+3. The pull request should work for Python 3.6., 3.7. and 3.8. Check
    https://travis-ci.org/comtravo/ctparse/pull_requests
    and make sure that the tests pass for all supported Python versions.
 
