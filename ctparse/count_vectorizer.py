@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, Sequence, Tuple, Optional
+from typing import Dict, Sequence, Tuple, Optional, Set
 
 
 class CountVectorizer:
@@ -55,26 +55,21 @@ class CountVectorizer:
 
         return [_create(d) for d in documents]
 
-    def _create_feature_matrix(
-        self, documents: Sequence[Sequence[str]], set_vocabulary: bool
-    ) -> Sequence[Dict[int, int]]:
-        """Map documents (sequences of tokens) to numerical data (sparse maps of
-        `{feature_index: count}`). Here `feature_index` is relative to the vocabulary of
-        this very vectorizer.
+    def _get_feature_counts(self, documents: Sequence[Sequence[str]]) -> \
+            Tuple[Sequence[Dict[str, int]], Set[str]]:
+        """Count (ngram) features appearing in each document
 
         Parameters
         ----------
         documents : Sequence[Sequence[str]]
-            Sequence of tokenized input documents
-        set_vocabulary : bool
-            If `True`, set the vectorizer vocabulary to the ones
-            extracted from documents
+            Sequence of documents tokenized as sequence of string
 
         Returns
         -------
-        Sequence[Dict[int, int]]
-            For each document a mapping of `feature_index` to a count how often this
-            feature appeared in the document.
+        Tuple[Sequence[Dict[str, int]], Set[str]]
+            For each document a dictionary counting how often which feature appeared and a
+            set of all features in all documents. Features are according to this vectorizers
+            n-gram settings.
         """
         documents = self._create_ngrams(documents)
         all_features = set()
@@ -90,8 +85,27 @@ class CountVectorizer:
                     all_features.add(feature)
                     feature_counts[feature] = 1
             count_matrix.append(feature_counts)
-        if set_vocabulary or not self.vocabulary:
-            self.vocabulary = {word: idx for idx, word in enumerate(all_features)}
+        return count_matrix, all_features
+
+    def _create_feature_matrix(
+            self, count_matrix: Sequence[Dict[str, int]]) -> Sequence[Dict[int, int]]:
+        """Map counts of string features to numerical data (sparse maps of
+        `{feature_index: count}`). Here `feature_index` is relative to the vocabulary of
+        this vectorizer.
+
+        Parameters
+        ----------
+        count_matrix : Sequence[Dict[str, int]]
+            Sequence of dictionaries with feature counts
+
+        Returns
+        -------
+        Sequence[Dict[int, int]]
+            For each document a mapping of `feature_index` to a count how often this
+            feature appeared in the document.
+        """
+        if not self.vocabulary:
+            raise ValueError('no vocabulary - vectorizer not fitted?')
         len_vocab = len(self.vocabulary)
         count_vectors_matrix = []
         # Build document frequency matrix
@@ -125,7 +139,7 @@ class CountVectorizer:
     def fit_transform(
         self, documents: Sequence[Sequence[str]]
     ) -> Sequence[Dict[int, int]]:
-        """Learn the vocabulary dictionary and return term-document matrix. Updates
+        """Learn the vocabulary dictionary and return a term-document matrix. Updates
         the internal vocabulary state of the vectorizer.
 
         Parameters
@@ -138,7 +152,9 @@ class CountVectorizer:
         Sequence[Dict[int, int]]
             Document-term matrix.
         """
-        X = self._create_feature_matrix(documents, set_vocabulary=True)
+        count_matrix, all_features = self._get_feature_counts(documents)
+        self.vocabulary = {word: idx for idx, word in enumerate(all_features)}
+        X = self._create_feature_matrix(count_matrix)
         return X
 
     def transform(
@@ -157,5 +173,6 @@ class CountVectorizer:
         Sequence[Dict[int, int]]
             Document-term matrix.
         """
-        X = self._create_feature_matrix(documents, set_vocabulary=False)
+        count_matrix, _ = self._get_feature_counts(documents)
+        X = self._create_feature_matrix(count_matrix)
         return X
