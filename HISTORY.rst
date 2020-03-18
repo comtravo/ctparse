@@ -2,7 +2,7 @@
 History
 =======
 
-0.1.1 (2020-03-XX)
+0.1.1 (2020-03-18)
 -------------------
 * Major refactor of code underlying predictive model
 * Based on a contribution from @bharathi-srini: replace naive bayes from sklearn by own implementation
