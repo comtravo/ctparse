@@ -34,7 +34,7 @@ class NaiveBayesScorer(Scorer):
         self._model = nb_model
 
     @classmethod
-    def from_model_file(cls, fname: str):
+    def from_model_file(cls, fname: str) -> 'NaiveBayesScorer':
         with bz2.open(fname, 'rb') as fd:
             return cls(pickle.load(fd))
 
@@ -71,7 +71,7 @@ def _feature_extractor(txt: str, ts: datetime, partial_parse: PartialParse) -> S
     return [str(r) for r in partial_parse.rules]
 
 
-def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]):
+def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]) -> CTParsePipeline:
     """Train a naive bayes model for NaiveBayesScorer"""
     y_binary = [1 if y_i else -1 for y_i in y]
     # Create and train the pipeline

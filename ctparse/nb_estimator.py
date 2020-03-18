@@ -9,26 +9,41 @@ def _log_sum_exp(x: Sequence[float]) -> float:
 
 
 class MultinomialNaiveBayes:
+    """Implements a multinomial naive Bayes classifier. For background information
+    (and what has inspired this, see e.g.
+    https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB.html)
+    """
+
     def __init__(self, alpha: float = 1.0):
+        """Create new un-trained model
+
+        :param alpha: Additive (Laplace/Lidstone) smoothing parameter (0 for no smoothing),
+                      defaults to 1.0
+        :type alpha: float, optional
+        """
         self.alpha = alpha
         self.class_prior = (0.0, 0.0)
         self.log_likelihood: Dict[str, List[float]] = {}
 
-    def _construct_log_class_prior(self, y: Sequence[int]) -> None:
+    @staticmethod
+    def _construct_log_class_prior(y: Sequence[int]) -> Tuple[float, float]:
         # Input classes are -1 and 1
         neg_class_count = sum(1 if y_i == -1 else 0 for y_i in y)
         pos_class_count = len(y) - neg_class_count
 
         neg_log_prior = log(neg_class_count / (pos_class_count + neg_class_count))
         pos_log_prior = log(pos_class_count / (pos_class_count + neg_class_count))
-        self.class_prior = (neg_log_prior, pos_log_prior)
+        return (neg_log_prior, pos_log_prior)
 
-    def _construct_log_likelihood(self, X: Sequence[Dict[int, int]], y: Sequence[int]):
+    @staticmethod
+    def _construct_log_likelihood(X: Sequence[Dict[int, int]],
+                                  y: Sequence[int],
+                                  alpha: float) -> Dict[str, List[float]]:
         # Token counts
         # implicit assumption from vectorizer: first element has count for #vocab size set
         vocabulary_len = max(X[0].keys()) + 1
-        token_counts_negative = [self.alpha] * vocabulary_len
-        token_counts_positive = [self.alpha] * vocabulary_len
+        token_counts_negative = [alpha] * vocabulary_len
+        token_counts_positive = [alpha] * vocabulary_len
         for x, y_ in zip(X, y):
             for idx, cnt in x.items():
                 if y_ == 1:
@@ -49,12 +64,12 @@ class MultinomialNaiveBayes:
             log_likelihood_negative.append(
                 log(token_counts_negative[token_ind]) - log(token_neg_class_sum)
             )
-        self.log_likelihood = {'negative_class': log_likelihood_negative,
-                               'positive_class': log_likelihood_positive}
+        return {'negative_class': log_likelihood_negative,
+                'positive_class': log_likelihood_positive}
 
     def fit(self, X: Sequence[Dict[int, int]], y: Sequence[int]) -> 'MultinomialNaiveBayes':
-        self._construct_log_class_prior(y)
-        self._construct_log_likelihood(X, y)
+        self.class_prior = self._construct_log_class_prior(y)
+        self.log_likelihood = self._construct_log_likelihood(X, y, self.alpha)
         return self
 
     def predict_log_probability(self, X: Sequence[Dict[int, int]]) -> Sequence[Tuple[float, float]]:
