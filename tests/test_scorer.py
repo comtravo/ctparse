@@ -1,9 +1,12 @@
 import datetime
 import random
+import bz2
+import pickle
 
-from ctparse.nb_scorer import NaiveBayesScorer, train_naive_bayes
+from ctparse.nb_scorer import NaiveBayesScorer, train_naive_bayes, save_naive_bayes
 from ctparse.partial_parse import PartialParse
 from ctparse.scorer import DummyScorer, RandomScorer
+from ctparse.pipeline import CTParsePipeline
 from ctparse.types import Interval, Time
 
 
@@ -43,3 +46,18 @@ def test_nbscorer():
 
     assert 0.0 <= scorer.score("ab", datetime.datetime(2019, 1, 1), pp) <= 1.0
     assert 0.0 <= scorer.score_final("ab", datetime.datetime(2019, 1, 1), pp, pp.prod[1]) <= 1.0
+
+
+def test_naive_bayes_from_file(tmp_path):
+    nb = NaiveBayesScorer(None)
+    path = tmp_path / "model.pkl"
+    with bz2.open(path, 'w') as f:
+        pickle.dump(nb, f)
+    nb = NaiveBayesScorer.from_model_file(path)
+    assert nb
+
+
+def test_save_naive_bayes(tmp_path):
+    path = tmp_path / "model.pkl"
+    model = CTParsePipeline(None, None)
+    assert save_naive_bayes(model, path) is None
