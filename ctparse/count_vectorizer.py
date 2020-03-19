@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, Sequence, Tuple, Optional, Set
+from typing import Dict, Sequence, Tuple, Optional
 
 
 class CountVectorizer:
@@ -59,13 +59,18 @@ class CountVectorizer:
 
         return [_create(d) for d in documents]
 
+    @staticmethod
     def _get_feature_counts(
-        self, documents: Sequence[Sequence[str]]
-    ) -> Tuple[Sequence[Dict[str, int]], Set[str]]:
+        ngram_range: Tuple[int, int],
+        documents: Sequence[Sequence[str]]
+    ) -> Sequence[Dict[str, int]]:
         """Count (ngram) features appearing in each document
 
         Parameters
         ----------
+        ngram_range : Tuple[int, int]
+            Min and max number of ngrams to generate
+
         documents : Sequence[Sequence[str]]
             Sequence of documents tokenized as sequence of string
 
@@ -76,24 +81,41 @@ class CountVectorizer:
             set of all features in all documents. Features are according to this vectorizers
             n-gram settings.
         """
-        documents = self._create_ngrams(self.ngram_range, documents)
-        all_features = set()
+        documents = CountVectorizer._create_ngrams(ngram_range, documents)
         count_matrix = []
 
         for document in documents:
             # This is 5x faster than using a build in Counter
-            feature_counts: Dict[str, int] = {}
+            feature_counts: Dict[str, int] = defaultdict(int)
             for feature in document:
-                if feature in feature_counts:
-                    feature_counts[feature] += 1
-                else:
-                    all_features.add(feature)
-                    feature_counts[feature] = 1
+                feature_counts[feature] += 1
             count_matrix.append(feature_counts)
-        return count_matrix, sorted(all_features)
+        return count_matrix
 
+    @staticmethod
+    def _build_vocabulary(count_matrix: Sequence[Dict[str, int]]) -> Dict[str, int]:
+        """Build the vocabulary from feature counts
+
+        Parameters
+        ----------
+        count_matrix : Sequence[Dict[str, int]]
+            Sequence of dicts with counts (values) per feature (keys)
+
+        Returns
+        -------
+        Dict[str, int]
+            The vocabulary as {feature: index} pairs
+        """
+        all_features = set()
+        for feature_counts in count_matrix:
+            for feature in feature_counts.keys():
+                all_features.add(feature)
+        return {word: idx for idx, word in enumerate(sorted(all_features))}
+
+    @staticmethod
     def _create_feature_matrix(
-        self, count_matrix: Sequence[Dict[str, int]]
+        vocabulary: Dict[str, int],
+        count_matrix: Sequence[Dict[str, int]]
     ) -> Sequence[Dict[int, int]]:
         """Map counts of string features to numerical data (sparse maps of
         `{feature_index: count}`). Here `feature_index` is relative to the vocabulary of
@@ -101,6 +123,9 @@ class CountVectorizer:
 
         Parameters
         ----------
+        vocabulary : Dict[str, int]
+            Vocabulary with {feature: index} mappings
+
         count_matrix : Sequence[Dict[str, int]]
             Sequence of dictionaries with feature counts
 
@@ -110,15 +135,13 @@ class CountVectorizer:
             For each document a mapping of `feature_index` to a count how often this
             feature appeared in the document.
         """
-        if not self.vocabulary:
-            raise ValueError("no vocabulary - vectorizer not fitted?")
-        len_vocab = len(self.vocabulary)
+        len_vocab = len(vocabulary)
         count_vectors_matrix = []
         # Build document frequency matrix
         for count_dict in count_matrix:
             doc_vector: Dict[int, int] = defaultdict(int)
             for word, cnt in count_dict.items():
-                idx = self.vocabulary.get(word, None)
+                idx = vocabulary.get(word, None)
                 if idx is not None:
                     doc_vector[idx] = cnt
             count_vectors_matrix.append(doc_vector)
@@ -158,10 +181,9 @@ class CountVectorizer:
         Sequence[Dict[int, int]]
             Document-term matrix.
         """
-        count_matrix, all_features = self._get_feature_counts(documents)
-        self.vocabulary = {word: idx for idx, word in enumerate(all_features)}
-        X = self._create_feature_matrix(count_matrix)
-        return X
+        count_matrix = CountVectorizer._get_feature_counts(self.ngram_range, documents)
+        self.vocabulary = CountVectorizer._build_vocabulary(count_matrix)
+        return CountVectorizer._create_feature_matrix(self.vocabulary, count_matrix)
 
     def transform(self, documents: Sequence[Sequence[str]]) -> Sequence[Dict[int, int]]:
         """Create term-document matrix based on pre-generated vocabulary. Does *not*
@@ -177,6 +199,7 @@ class CountVectorizer:
         Sequence[Dict[int, int]]
             Document-term matrix.
         """
-        count_matrix, _ = self._get_feature_counts(documents)
-        X = self._create_feature_matrix(count_matrix)
-        return X
+        if not self.vocabulary:
+            raise ValueError("no vocabulary - vectorizer not fitted?")
+        count_matrix = CountVectorizer._get_feature_counts(self.ngram_range, documents)
+        return CountVectorizer._create_feature_matrix(self.vocabulary, count_matrix)
