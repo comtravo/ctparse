@@ -19,14 +19,18 @@ class CountVectorizer:
         self.ngram_range = ngram_range
         self.vocabulary: Optional[Dict[str, int]] = None
 
+    @staticmethod
     def _create_ngrams(
-        self, documents: Sequence[Sequence[str]]
+        ngram_range, documents: Sequence[Sequence[str]]
     ) -> Sequence[Sequence[str]]:
         """For each document in documents, replace original tokens by a list of
         all min_n:max_n = self.ngram_range ngrams in that document.
 
         Parameters
         ----------
+        ngram_range : Tuple[int, int]
+            Min and max number of ngrams to generate
+
         documents : Sequence[Sequence[str]]
             A sequence of already tokenized documents
 
@@ -35,7 +39,7 @@ class CountVectorizer:
         Sequence[Sequence[str]]
             For each document all ngrams of tokens in the desired range
         """
-        min_n, max_n = self.ngram_range
+        min_n, max_n = ngram_range
         space_join = " ".join
 
         def _create(document: Sequence[str]) -> Sequence[str]:
@@ -46,17 +50,18 @@ class CountVectorizer:
                 min_nn = min_n + 1
             else:
                 ngrams = []
-                min_nn = 1
+                min_nn = min_n
 
             for n in range(min_nn, doc_max_n):
                 for i in range(0, doc_len - n + 1):
-                    ngrams.append(space_join(document[i:i + n]))
+                    ngrams.append(space_join(document[i : i + n]))
             return ngrams
 
         return [_create(d) for d in documents]
 
-    def _get_feature_counts(self, documents: Sequence[Sequence[str]]) -> \
-            Tuple[Sequence[Dict[str, int]], Set[str]]:
+    def _get_feature_counts(
+        self, documents: Sequence[Sequence[str]]
+    ) -> Tuple[Sequence[Dict[str, int]], Set[str]]:
         """Count (ngram) features appearing in each document
 
         Parameters
@@ -71,7 +76,7 @@ class CountVectorizer:
             set of all features in all documents. Features are according to this vectorizers
             n-gram settings.
         """
-        documents = self._create_ngrams(documents)
+        documents = self._create_ngrams(self.ngram_range, documents)
         all_features = set()
         count_matrix = []
 
@@ -85,10 +90,11 @@ class CountVectorizer:
                     all_features.add(feature)
                     feature_counts[feature] = 1
             count_matrix.append(feature_counts)
-        return count_matrix, all_features
+        return count_matrix, sorted(all_features)
 
     def _create_feature_matrix(
-            self, count_matrix: Sequence[Dict[str, int]]) -> Sequence[Dict[int, int]]:
+        self, count_matrix: Sequence[Dict[str, int]]
+    ) -> Sequence[Dict[int, int]]:
         """Map counts of string features to numerical data (sparse maps of
         `{feature_index: count}`). Here `feature_index` is relative to the vocabulary of
         this vectorizer.
@@ -105,7 +111,7 @@ class CountVectorizer:
             feature appeared in the document.
         """
         if not self.vocabulary:
-            raise ValueError('no vocabulary - vectorizer not fitted?')
+            raise ValueError("no vocabulary - vectorizer not fitted?")
         len_vocab = len(self.vocabulary)
         count_vectors_matrix = []
         # Build document frequency matrix
@@ -157,9 +163,7 @@ class CountVectorizer:
         X = self._create_feature_matrix(count_matrix)
         return X
 
-    def transform(
-        self, documents: Sequence[Sequence[str]]
-    ) -> Sequence[Dict[int, int]]:
+    def transform(self, documents: Sequence[Sequence[str]]) -> Sequence[Dict[int, int]]:
         """Create term-document matrix based on pre-generated vocabulary. Does *not*
         update the internal state of the vocabulary.
 
