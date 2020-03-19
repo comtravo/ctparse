@@ -17,9 +17,11 @@ class MultinomialNaiveBayes:
     def __init__(self, alpha: float = 1.0):
         """Create new un-trained model
 
-        :param alpha: Additive (Laplace/Lidstone) smoothing parameter (0 for no smoothing),
-                      defaults to 1.0
-        :type alpha: float, optional
+        Parameters
+        ----------
+        alpha : Optional[float]
+            Additive (Laplace/Lidstone) smoothing parameter (0 for no smoothing),
+            defaults to 1.0
         """
         self.alpha = alpha
         self.class_prior = (0.0, 0.0)
@@ -36,9 +38,9 @@ class MultinomialNaiveBayes:
         return (neg_log_prior, pos_log_prior)
 
     @staticmethod
-    def _construct_log_likelihood(X: Sequence[Dict[int, int]],
-                                  y: Sequence[int],
-                                  alpha: float) -> Dict[str, List[float]]:
+    def _construct_log_likelihood(
+        X: Sequence[Dict[int, int]], y: Sequence[int], alpha: float
+    ) -> Dict[str, List[float]]:
         # Token counts
         # implicit assumption from vectorizer: first element has count for #vocab size set
         vocabulary_len = max(X[0].keys()) + 1
@@ -64,24 +66,55 @@ class MultinomialNaiveBayes:
             log_likelihood_negative.append(
                 log(token_counts_negative[token_ind]) - log(token_neg_class_sum)
             )
-        return {'negative_class': log_likelihood_negative,
-                'positive_class': log_likelihood_positive}
+        return {
+            "negative_class": log_likelihood_negative,
+            "positive_class": log_likelihood_positive,
+        }
 
-    def fit(self, X: Sequence[Dict[int, int]], y: Sequence[int]) -> 'MultinomialNaiveBayes':
+    def fit(
+        self, X: Sequence[Dict[int, int]], y: Sequence[int]
+    ) -> "MultinomialNaiveBayes":
+        """Fit a naive Bayes model from a count of feature matrix
+
+        Parameters
+        ----------
+        X : Sequence[Dict[int, int]]
+            Sequence of sparse {feature_index: count} dictionaries
+        y : Sequence[int]
+            Labels +1/-1
+
+        Returns
+        -------
+        MultinomialNaiveBayes
+            The fitted model
+        """
         self.class_prior = self._construct_log_class_prior(y)
         self.log_likelihood = self._construct_log_likelihood(X, y, self.alpha)
         return self
 
-    def predict_log_probability(self, X: Sequence[Dict[int, int]]) -> Sequence[Tuple[float, float]]:
-        """ Calculate the posterior log probability of new sample X"""
+    def predict_log_probability(
+        self, X: Sequence[Dict[int, int]]
+    ) -> Sequence[Tuple[float, float]]:
+        """Calculate the posterior log probability of new sample X
+
+        Parameters
+        ----------
+        X : Sequence[Dict[int, int]]
+            Sequence of data to predict on as sparse {feature_index: count} dictionarie
+
+        Returns
+        -------
+        Sequence[Tuple[float, float]]
+            Tuple of (negative-class, positive-class) log likelihoods
+        """
         scores = []
         for x in X:
             # Initialise the scores with priors of positive and negative class
             neg_score = self.class_prior[0]
             pos_score = self.class_prior[1]
             for idx, cnt in x.items():
-                pos_score += self.log_likelihood['positive_class'][idx] * cnt
-                neg_score += self.log_likelihood['negative_class'][idx] * cnt
+                pos_score += self.log_likelihood["positive_class"][idx] * cnt
+                neg_score += self.log_likelihood["negative_class"][idx] * cnt
             joint_log_likelihood = [neg_score, pos_score]
             # Normalize the scores
             log_prob_x = _log_sum_exp(joint_log_likelihood)

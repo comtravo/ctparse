@@ -51,6 +51,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint: ## check style with flake8
+	black --check ctparse tests
 	flake8 ctparse tests
 	mypy -p ctparse -p tests
 

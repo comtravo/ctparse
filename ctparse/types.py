@@ -4,16 +4,16 @@ from typing import Any, Dict, Optional, Tuple, Type, TypeVar
 import regex
 from regex import Regex
 
-T = TypeVar('T', bound='Artifact')
+T = TypeVar("T", bound="Artifact")
 
 
 class Artifact:
     def __init__(self) -> None:
         self.mstart = 0
         self.mend = 0
-        self._attrs = ['mstart', 'mend']
+        self._attrs = ["mstart", "mend"]
 
-    def update_span(self: T, *args: 'Artifact') -> T:
+    def update_span(self: T, *args: "Artifact") -> T:
         self.mstart = args[0].mstart
         self.mend = args[-1].mend
         return self
@@ -25,16 +25,16 @@ class Artifact:
         return True
 
     def __str__(self) -> str:
-        return ''
+        return ""
 
     def __repr__(self) -> str:
-        return '{}[{}-{}]{{{}}}'.format(
-            self.__class__.__name__, self.mstart, self.mend, str(self))
+        return "{}[{}-{}]{{{}}}".format(
+            self.__class__.__name__, self.mstart, self.mend, str(self)
+        )
 
     def nb_str(self) -> str:
         """Return a string representation without the bounds information."""
-        return '{}[]{{{}}}'.format(
-            self.__class__.__name__, str(self))
+        return "{}[]{{{}}}".format(self.__class__.__name__, str(self))
 
     def __eq__(self, other: Any) -> bool:
         if type(other) != type(self):
@@ -46,27 +46,28 @@ class Artifact:
         return hash(tuple(getattr(self, a) for a in self._attrs))
 
     def _hasOnly(self, *args: str) -> bool:
-        '''check that all attributes set to True are set (i.e. not None) and
+        """check that all attributes set to True are set (i.e. not None) and
         all set to False are not set (i.e. None)
 
-        '''
+        """
         return all(
             getattr(self, a) is not None if a in args else getattr(self, a) is None
-            for a in self._attrs)
+            for a in self._attrs
+        )
 
     def _hasAtLeast(self, *args: str) -> bool:
-        '''check that all attributes set to True are set (i.e. not None) and
+        """check that all attributes set to True are set (i.e. not None) and
         all set to False are not set (i.e. None)
 
-        '''
+        """
         return all(getattr(self, a) is not None for a in args)
 
 
 class RegexMatch(Artifact):
     def __init__(self, id: int, m: Regex) -> None:
         super().__init__()
-        self._attrs = ['mstart', 'mend', 'id']
-        self.key = 'R{}'.format(id)
+        self._attrs = ["mstart", "mend", "id"]
+        self.key = "R{}".format(id)
         self.id = id
         self.match = m
         self.mstart = m.span(self.key)[0]
@@ -74,117 +75,180 @@ class RegexMatch(Artifact):
         self._text = m.group(self.key)
 
     def __str__(self) -> str:
-        return '{}:{}'.format(self.id, self._text)
+        return "{}:{}".format(self.id, self._text)
 
 
 _pod_hours = {
-    'earlymorning': {'offset': (4, 7),
-                     'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                               'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                               'very': {'offset': (0, 0)},
-                               'offset': (-1, -1)},
-                     'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                              'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                              'very': {'offset': (0, 0)},
-                              'offset': (1, 1)}},
-    'morning': {'offset': (6, 9),
-                'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                          'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                          'very': {'offset': (0, 0)},
-                          'offset': (-1, -1)},
-                'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                         'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                         'very': {'offset': (0, 0)},
-                         'offset': (1, 1)}},
-    'forenoon': {'offset': (9, 12),
-                 'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                           'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                           'very': {'offset': (0, 0)},
-                           'offset': (-1, -1)},
-                 'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                          'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                          'very': {'offset': (0, 0)},
-                          'offset': (1, 1)}},
-    'noon': {'offset': (11, 13),
-             'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                       'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                       'very': {'offset': (0, 0)},
-                       'offset': (-1, -1)},
-             'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                      'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                      'very': {'offset': (0, 0)},
-                      'offset': (1, 1)}},
-    'afternoon': {'offset': (12, 17),
-                  'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                            'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                            'very': {'offset': (0, 0)},
-                            'offset': (-1, -1)},
-                  'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                           'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                           'very': {'offset': (0, 0)},
-                           'offset': (1, 1)}},
-    'evening': {'offset': (17, 20),
-                'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                          'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                          'very': {'offset': (0, 0)},
-                          'offset': (-1, -1)},
-                'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                         'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                         'very': {'offset': (0, 0)},
-                         'offset': (1, 1)}},
-    'lateevening': {'offset': (18, 21),
-                    'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                              'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                              'very': {'offset': (0, 0)},
-                              'offset': (-1, -1)},
-                    'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                             'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                             'very': {'offset': (0, 0)},
-                             'offset': (1, 1)}},
-    'night': {'offset': (19, 22),
-              'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                        'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                        'very': {'offset': (0, 0)},
-                        'offset': (-1, -1)},
-              'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                       'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                       'very': {'offset': (0, 0)},
-                       'offset': (1, 1)}},
-    'first': {'offset': (0, 0),
-              'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                        'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                        'very': {'offset': (0, 0)},
-                        'offset': (0, 0)},
-              'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                       'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                       'very': {'offset': (0, 0)},
-                       'offset': (0, 0)}},
-    'last': {'offset': (23, 23),
-             'early': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                       'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                       'very': {'offset': (0, 0)},
-                       'offset': (0, 0)},
-             'late': {'early': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                      'late': {'offset': (0, 0), 'very': {'offset': (0, 0)}},
-                      'very': {'offset': (0, 0)},
-                      'offset': (0, 0)}}}
+    "earlymorning": {
+        "offset": (4, 7),
+        "early": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (-1, -1),
+        },
+        "late": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (1, 1),
+        },
+    },
+    "morning": {
+        "offset": (6, 9),
+        "early": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (-1, -1),
+        },
+        "late": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (1, 1),
+        },
+    },
+    "forenoon": {
+        "offset": (9, 12),
+        "early": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (-1, -1),
+        },
+        "late": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (1, 1),
+        },
+    },
+    "noon": {
+        "offset": (11, 13),
+        "early": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (-1, -1),
+        },
+        "late": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (1, 1),
+        },
+    },
+    "afternoon": {
+        "offset": (12, 17),
+        "early": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (-1, -1),
+        },
+        "late": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (1, 1),
+        },
+    },
+    "evening": {
+        "offset": (17, 20),
+        "early": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (-1, -1),
+        },
+        "late": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (1, 1),
+        },
+    },
+    "lateevening": {
+        "offset": (18, 21),
+        "early": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (-1, -1),
+        },
+        "late": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (1, 1),
+        },
+    },
+    "night": {
+        "offset": (19, 22),
+        "early": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (-1, -1),
+        },
+        "late": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (1, 1),
+        },
+    },
+    "first": {
+        "offset": (0, 0),
+        "early": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (0, 0),
+        },
+        "late": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (0, 0),
+        },
+    },
+    "last": {
+        "offset": (23, 23),
+        "early": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (0, 0),
+        },
+        "late": {
+            "early": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "late": {"offset": (0, 0), "very": {"offset": (0, 0)}},
+            "very": {"offset": (0, 0)},
+            "offset": (0, 0),
+        },
+    },
+}
 
 
 def _mk_pod_hours() -> Dict[str, Tuple[int, int]]:
     def _add_ts(t1: Tuple[int, int], t2: Tuple[int, int]) -> Tuple[int, int]:
         return (t1[0] + t2[0], t1[1] + t2[1])
 
-    def _mk(pod: str, pod_data: Dict[str, Any], t: Tuple[int, int]) -> Dict[str, Tuple[int, int]]:
-        r = {pod: _add_ts(t, pod_data['offset'])}
+    def _mk(
+        pod: str, pod_data: Dict[str, Any], t: Tuple[int, int]
+    ) -> Dict[str, Tuple[int, int]]:
+        r = {pod: _add_ts(t, pod_data["offset"])}
         for k, v in pod_data.items():
-            if k == 'offset':
+            if k == "offset":
                 continue
             r.update(_mk(k + pod, v, r[pod]))
         return r
 
     res = {}
     for k, v in _pod_hours.items():
-        if k == 'offset':
+        if k == "offset":
             continue
         res.update(_mk(k, v, (0, 0)))
     return res
@@ -193,20 +257,24 @@ def _mk_pod_hours() -> Dict[str, Tuple[int, int]]:
 pod_hours = _mk_pod_hours()
 
 
-_TIME_REGEX = regex.compile(r"(\d{4}|X)-(\d{2}|X)-(\d{2}|X) (\d{2}|X):(\d{2}|X) \((\d|X)\/(\w+)\)")
+_TIME_REGEX = regex.compile(
+    r"(\d{4}|X)-(\d{2}|X)-(\d{2}|X) (\d{2}|X):(\d{2}|X) \((\d|X)\/(\w+)\)"
+)
 
 
 class Time(Artifact):
-    def __init__(self,
-                 year: Optional[int] = None,
-                 month: Optional[int] = None,
-                 day: Optional[int] = None,
-                 hour: Optional[int] = None,
-                 minute: Optional[int] = None,
-                 DOW: Optional[int] = None,
-                 POD: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        year: Optional[int] = None,
+        month: Optional[int] = None,
+        day: Optional[int] = None,
+        hour: Optional[int] = None,
+        minute: Optional[int] = None,
+        DOW: Optional[int] = None,
+        POD: Optional[str] = None,
+    ) -> None:
         super().__init__()
-        self._attrs = ['year', 'month', 'day', 'hour', 'minute', 'DOW', 'POD']
+        self._attrs = ["year", "month", "day", "hour", "minute", "DOW", "POD"]
         # Might add some validation here, did not to avoid the overhead
         self.year = year
         self.month = month
@@ -221,104 +289,109 @@ class Time(Artifact):
     # ------------------------------------------------------------------------------------
     @property
     def isDOY(self) -> bool:
-        '''isDayOfYear <=> a dd.mm but not year
-        '''
-        return self._hasOnly('month', 'day')
+        """isDayOfYear <=> a dd.mm but not year
+        """
+        return self._hasOnly("month", "day")
 
     @property
     def isDOM(self) -> bool:
-        '''isDayOfMonth <=> a dd but no month
-        '''
-        return self._hasOnly('day')
+        """isDayOfMonth <=> a dd but no month
+        """
+        return self._hasOnly("day")
 
     @property
     def isDOW(self) -> bool:
-        '''isDayOfWeek <=> DOW is the 0=Monday index; fragile test, as the DOW
+        """isDayOfWeek <=> DOW is the 0=Monday index; fragile test, as the DOW
         could be accompanied by e.g. a full date etc.; in practice,
         however, the production rules do not do that.
 
-        '''
-        return self._hasOnly('DOW')
+        """
+        return self._hasOnly("DOW")
 
     @property
     def isMonth(self) -> bool:
-        return self._hasOnly('month')
+        return self._hasOnly("month")
 
     @property
     def isPOD(self) -> bool:
-        '''isPartOfDay <=> morning, etc.; fragile, tests only that there is a
+        """isPartOfDay <=> morning, etc.; fragile, tests only that there is a
         POD and neither a full date nor a full time
-        '''
-        return self._hasOnly('POD')
+        """
+        return self._hasOnly("POD")
 
     @property
     def isHour(self) -> bool:
-        '''only has an hour'''
-        return self._hasOnly('hour')
+        """only has an hour"""
+        return self._hasOnly("hour")
 
     @property
     def isTOD(self) -> bool:
-        '''isTimeOfDay - only a time, not date'''
-        return self._hasOnly('hour') or self._hasOnly('hour', 'minute')
+        """isTimeOfDay - only a time, not date"""
+        return self._hasOnly("hour") or self._hasOnly("hour", "minute")
 
     @property
     def isDate(self) -> bool:
-        '''isDate - only a date, not time'''
-        return self._hasOnly('year', 'month', 'day')
+        """isDate - only a date, not time"""
+        return self._hasOnly("year", "month", "day")
 
     @property
     def isDateTime(self) -> bool:
-        '''a date and a time'''
-        return (self._hasOnly('year', 'month', 'day', 'hour') or
-                self._hasOnly('year', 'month', 'day', 'hour', 'minute'))
+        """a date and a time"""
+        return self._hasOnly("year", "month", "day", "hour") or self._hasOnly(
+            "year", "month", "day", "hour", "minute"
+        )
 
     @property
     def isYear(self) -> bool:
-        '''just a year'''
-        return self._hasOnly('year')
+        """just a year"""
+        return self._hasOnly("year")
 
     @property
     def hasDate(self) -> bool:
-        '''at least a date'''
-        return self._hasAtLeast('year', 'month', 'day')
+        """at least a date"""
+        return self._hasAtLeast("year", "month", "day")
 
     @property
     def hasDOY(self) -> bool:
-        '''at least a day of year'''
-        return self._hasAtLeast('month', 'day')
+        """at least a day of year"""
+        return self._hasAtLeast("month", "day")
 
     @property
     def hasDOW(self) -> bool:
-        '''at least a day of week'''
-        return self._hasAtLeast('DOW')
+        """at least a day of week"""
+        return self._hasAtLeast("DOW")
 
     @property
     def hasTime(self) -> bool:
-        '''at least a time to the hour'''
-        return self._hasAtLeast('hour')
+        """at least a time to the hour"""
+        return self._hasAtLeast("hour")
 
     @property
     def hasPOD(self) -> bool:
-        '''at least a part of day'''
-        return self._hasAtLeast('POD')
+        """at least a part of day"""
+        return self._hasAtLeast("POD")
 
     def __str__(self) -> str:
-        return '{}-{}-{} {}:{} ({}/{})'.format(
-            '{:04d}'.format(self.year) if self.year is not None else 'X',
-            '{:02d}'.format(self.month) if self.month is not None else 'X',
-            '{:02d}'.format(self.day) if self.day is not None else 'X',
-            '{:02d}'.format(self.hour) if self.hour is not None else 'X',
-            '{:02d}'.format(self.minute) if self.minute is not None else 'X',
-            '{:d}'.format(self.DOW) if self.DOW is not None else 'X',
-            '{}'.format(self.POD) if self.POD is not None else 'X')
+        return "{}-{}-{} {}:{} ({}/{})".format(
+            "{:04d}".format(self.year) if self.year is not None else "X",
+            "{:02d}".format(self.month) if self.month is not None else "X",
+            "{:02d}".format(self.day) if self.day is not None else "X",
+            "{:02d}".format(self.hour) if self.hour is not None else "X",
+            "{:02d}".format(self.minute) if self.minute is not None else "X",
+            "{:d}".format(self.DOW) if self.DOW is not None else "X",
+            "{}".format(self.POD) if self.POD is not None else "X",
+        )
 
     @classmethod
-    def from_str(cls: Type['Time'], text: str) -> 'Time':
+    def from_str(cls: Type["Time"], text: str) -> "Time":
         match = _TIME_REGEX.match(text)
         if not match:
             raise ValueError("Invalid format")
         else:
-            def parse_opt_int(x): return None if x == 'X' else int(x)
+
+            def parse_opt_int(x: str) -> Optional[int]:
+                return None if x == "X" else int(x)
+
             pod = match.group(7)
             return cls(
                 year=parse_opt_int(match.group(1)),
@@ -327,43 +400,55 @@ class Time(Artifact):
                 hour=parse_opt_int(match.group(4)),
                 minute=parse_opt_int(match.group(5)),
                 DOW=parse_opt_int(match.group(6)),
-                POD=None if pod == 'X' else pod)
+                POD=None if pod == "X" else pod,
+            )
 
     @property
-    def start(self) -> 'Time':
+    def start(self) -> "Time":
         if self.hour is None and self.hasPOD:
             hour = pod_hours[self.POD][0]  # type: ignore
         else:
             hour = self.hour or 0
-        return Time(year=self.year, month=self.month, day=self.day,
-                    hour=hour, minute=self.minute or 0)
+        return Time(
+            year=self.year,
+            month=self.month,
+            day=self.day,
+            hour=hour,
+            minute=self.minute or 0,
+        )
 
     @property
-    def end(self) -> 'Time':
+    def end(self) -> "Time":
         if self.hour is None and self.hasPOD:
             hour = pod_hours[self.POD][1]  # type: ignore
         else:
             hour = self.hour if self.hour is not None else 23
-        return Time(year=self.year, month=self.month, day=self.day,
-                    hour=hour,
-                    minute=self.minute if self.minute is not None else 59)
+        return Time(
+            year=self.year,
+            month=self.month,
+            day=self.day,
+            hour=hour,
+            minute=self.minute if self.minute is not None else 59,
+        )
 
     @property
     def dt(self) -> datetime:
         # Use the start time, in case we have a POD specification
         t = self.start
         if t.year is None or t.month is None or t.day is None:
-            raise ValueError('cannot convert underspecified Time into datetime'
-                             ', missing at least one of year, month or day')
-        return datetime(t.year, t.month, t.day,
-                        t.hour or 0,
-                        t.minute or 0)
+            raise ValueError(
+                "cannot convert underspecified Time into datetime"
+                ", missing at least one of year, month or day"
+            )
+        return datetime(t.year, t.month, t.day, t.hour or 0, t.minute or 0)
 
 
 class Interval(Artifact):
-    def __init__(self, t_from: Optional[Time] = None, t_to: Optional[Time] = None) -> None:
+    def __init__(
+        self, t_from: Optional[Time] = None, t_to: Optional[Time] = None
+    ) -> None:
         super().__init__()
-        self._attrs = ['t_from', 't_to']
+        self._attrs = ["t_from", "t_to"]
         self.t_from = t_from
         self.t_to = t_to
 
@@ -375,18 +460,16 @@ class Interval(Artifact):
             return self.t_from.isTOD and self.t_to.isTOD
 
     def __str__(self) -> str:
-        return '{} - {}'.format(
-            str(self.t_from),
-            str(self.t_to))
+        return "{} - {}".format(str(self.t_from), str(self.t_to))
 
     @classmethod
-    def from_str(cls: Type['Interval'], text: str) -> 'Interval':
-        bounds = text.split(' - ')
+    def from_str(cls: Type["Interval"], text: str) -> "Interval":
+        bounds = text.split(" - ")
         if len(bounds) != 2:
             raise ValueError("Invalid format")
 
-        t_from = None if bounds[0] == 'None' else Time.from_str(bounds[0])
-        t_to = None if bounds[1] == 'None' else Time.from_str(bounds[1])
+        t_from = None if bounds[0] == "None" else Time.from_str(bounds[0])
+        t_to = None if bounds[1] == "None" else Time.from_str(bounds[1])
         return cls(t_from=t_from, t_to=t_to)
 
     @property

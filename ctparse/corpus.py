@@ -14,16 +14,18 @@ logger = logging.getLogger(__name__)
 # A triplet of text, reference timestamp and correct parse.
 # It can be used as raw data to build datasets for ctparse.
 TimeParseEntry = NamedTuple(
-    'TimeParseEntry', [('text', str), ('ts', datetime), ('gold', Union[Time, Interval])])
+    "TimeParseEntry", [("text", str), ("ts", datetime), ("gold", Union[Time, Interval])]
+)
 
 
 def make_partial_rule_dataset(
-        entries: Sequence[TimeParseEntry],
-        scorer: Scorer,
-        timeout: Union[float, int],
-        max_stack_depth: int,
-        relative_match_len: float = 1.0,
-        progress=False) -> Iterator[Tuple[List[str], bool]]:
+    entries: Sequence[TimeParseEntry],
+    scorer: Scorer,
+    timeout: Union[float, int],
+    max_stack_depth: int,
+    relative_match_len: float = 1.0,
+    progress: bool = False,
+) -> Iterator[Tuple[List[str], bool]]:
     """Build a data set from a list of TimeParseEntry.
 
     The text is run through ctparse and all parses (within the specified timeout,
@@ -58,8 +60,14 @@ def make_partial_rule_dataset(
         entries = tqdm(entries, total=len(entries))
 
     for entry in entries:
-        for parse in ctparse_gen(entry.text, entry.ts, relative_match_len=relative_match_len,
-                                 timeout=timeout, max_stack_depth=max_stack_depth, scorer=scorer):
+        for parse in ctparse_gen(
+            entry.text,
+            entry.ts,
+            relative_match_len=relative_match_len,
+            timeout=timeout,
+            max_stack_depth=max_stack_depth,
+            scorer=scorer,
+        ):
             # TODO: we should make sure ctparse_gen never returns None. If there is no result
             # it should return an empty list
             if parse is None:
@@ -69,7 +77,7 @@ def make_partial_rule_dataset(
             # Build data set, one sample for each applied rule in
             # the sequence of rules applied in this production
             # *after* the matched regular expressions
-            for i in range(1, len(parse.production)+1):
+            for i in range(1, len(parse.production) + 1):
                 X = [str(p) for p in parse.production[:i]]
                 yield X, y
 
@@ -80,13 +88,15 @@ def load_timeparse_corpus(fname: str) -> Sequence[TimeParseEntry]:
     For more information about the format of the time parse corpus,
     refer to the documentation.
     """
-    with open(fname, "r", encoding='utf-8') as fd:
+    with open(fname, "r", encoding="utf-8") as fd:
         entries = json.load(fd)
 
     return [
-        TimeParseEntry(text=e["text"],
-                       ts=datetime.strptime(e["ref_time"], "%Y-%m-%dT%H:%M:%S"),
-                       gold=parse_nb_string(e["gold_parse"]))
+        TimeParseEntry(
+            text=e["text"],
+            ts=datetime.strptime(e["ref_time"], "%Y-%m-%dT%H:%M:%S"),
+            gold=parse_nb_string(e["gold_parse"]),
+        )
         for e in entries
     ]
 
@@ -96,16 +106,17 @@ def parse_nb_string(gold_parse: str) -> Union[Time, Interval]:
 
     The no-bound string representations are generated from ``Artifact.nb_str``.
     """
-    if gold_parse.startswith('Time'):
+    if gold_parse.startswith("Time"):
         return Time.from_str(gold_parse[7:-1])
-    if gold_parse.startswith('Interval'):
+    if gold_parse.startswith("Interval"):
         return Interval.from_str(gold_parse[11:-1])
     else:
         raise ValueError("'{}' has an invalid format".format(gold_parse))
 
 
 def run_corpus(
-        corpus: Sequence[Tuple[str, str, Sequence[str]]]) -> Tuple[List[List[str]], List[bool]]:
+    corpus: Sequence[Tuple[str, str, Sequence[str]]]
+) -> Tuple[List[List[str]], List[bool]]:
     """Load the corpus (currently hard coded), run it through ctparse with
     no timeout and no limit on the stack depth.
 
@@ -138,21 +149,27 @@ def run_corpus(
     Xs = []
     ys = []
     for target, ts, tests in tqdm(corpus):
-        ts = datetime.strptime(ts, '%Y-%m-%dT%H:%M')
+        ts = datetime.strptime(ts, "%Y-%m-%dT%H:%M")
         all_tests_pass = True
         for test in tests:
             one_prod_passes = False
             first_prod = True
             y_score = []
-            for parse in ctparse_gen(test, ts, relative_match_len=1.0,
-                                     timeout=0, max_stack_depth=0, scorer=DummyScorer()):
+            for parse in ctparse_gen(
+                test,
+                ts,
+                relative_match_len=1.0,
+                timeout=0,
+                max_stack_depth=0,
+                scorer=DummyScorer(),
+            ):
                 assert parse is not None
 
                 y = parse.resolution.nb_str() == target
                 # Build data set, one sample for each applied rule in
                 # the sequence of rules applied in this production
                 # *after* the matched regular expressions
-                for i in range(1, len(parse.production)+1):
+                for i in range(1, len(parse.production) + 1):
                     Xs.append([str(p) for p in parse.production[:i]])
                     ys.append(y)
 
@@ -163,23 +180,36 @@ def run_corpus(
                 first_prod = False
                 y_score.append((parse.score, y))
             if not one_prod_passes:
-                logger.warning('failure: target "{}" never produced in "{}"'.format(target, test))
+                logger.warning(
+                    'failure: target "{}" never produced in "{}"'.format(target, test)
+                )
             pos_best_scored += int(max(y_score, key=lambda x: x[0])[1])
             total_tests += len(tests)
             all_tests_pass &= one_prod_passes
         if not all_tests_pass:
             logger.warning('failure: "{}" not always produced'.format(target))
             at_least_one_failed = True
-    logger.info('run {} tests on {} targets with a total of '
-                '{} positive and {} negative parses (={})'.format(
-                    total_tests, len(corpus), pos_parses, neg_parses,
-                    pos_parses+neg_parses))
-    logger.info('share of correct parses in all parses: {:.2%}'.format(
-        pos_parses/(pos_parses + neg_parses)))
-    logger.info('share of correct parses being produced first: {:.2%}'.format(
-        pos_first_parses/(pos_parses + neg_parses)))
-    logger.info('share of correct parses being scored highest: {:.2%}'.format(
-        pos_best_scored/total_tests))
+    logger.info(
+        "run {} tests on {} targets with a total of "
+        "{} positive and {} negative parses (={})".format(
+            total_tests, len(corpus), pos_parses, neg_parses, pos_parses + neg_parses
+        )
+    )
+    logger.info(
+        "share of correct parses in all parses: {:.2%}".format(
+            pos_parses / (pos_parses + neg_parses)
+        )
+    )
+    logger.info(
+        "share of correct parses being produced first: {:.2%}".format(
+            pos_first_parses / (pos_parses + neg_parses)
+        )
+    )
+    logger.info(
+        "share of correct parses being scored highest: {:.2%}".format(
+            pos_best_scored / total_tests
+        )
+    )
     if at_least_one_failed:
-        raise Exception('ctparse corpus has errors')
+        raise Exception("ctparse corpus has errors")
     return Xs, ys

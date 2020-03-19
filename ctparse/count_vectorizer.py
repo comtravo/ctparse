@@ -21,7 +21,7 @@ class CountVectorizer:
 
     @staticmethod
     def _create_ngrams(
-        ngram_range, documents: Sequence[Sequence[str]]
+        ngram_range: Tuple[int, int], documents: Sequence[Sequence[str]]
     ) -> Sequence[Sequence[str]]:
         """For each document in documents, replace original tokens by a list of
         all min_n:max_n = self.ngram_range ngrams in that document.
@@ -61,8 +61,7 @@ class CountVectorizer:
 
     @staticmethod
     def _get_feature_counts(
-        ngram_range: Tuple[int, int],
-        documents: Sequence[Sequence[str]]
+        ngram_range: Tuple[int, int], documents: Sequence[Sequence[str]]
     ) -> Sequence[Dict[str, int]]:
         """Count (ngram) features appearing in each document
 
@@ -114,8 +113,7 @@ class CountVectorizer:
 
     @staticmethod
     def _create_feature_matrix(
-        vocabulary: Dict[str, int],
-        count_matrix: Sequence[Dict[str, int]]
+        vocabulary: Dict[str, int], count_matrix: Sequence[Dict[str, int]]
     ) -> Sequence[Dict[int, int]]:
         """Map counts of string features to numerical data (sparse maps of
         `{feature_index: count}`). Here `feature_index` is relative to the vocabulary of

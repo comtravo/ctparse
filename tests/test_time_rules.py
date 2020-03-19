@@ -1,8 +1,14 @@
 from unittest import TestCase
 
 from ctparse.types import Time
-from ctparse.time.rules import ruleDateDate, ruleDOMDate, ruleDateTimeDateTime, \
-    ruleDOYDate, ruleQuarterBeforeHH, ruleQuarterAfterHH
+from ctparse.time.rules import (
+    ruleDateDate,
+    ruleDOMDate,
+    ruleDateTimeDateTime,
+    ruleDOYDate,
+    ruleQuarterBeforeHH,
+    ruleQuarterAfterHH,
+)
 
 
 class TestRules(TestCase):

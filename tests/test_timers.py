@@ -4,7 +4,6 @@ import time
 
 
 class TimersTest(TestCase):
-
     def test_timeout(self):
         t_fun = timeout(0.5)
         with self.assertRaises(CTParseTimeoutError):

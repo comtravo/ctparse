@@ -3,18 +3,17 @@ import bz2
 import math
 import pickle
 from datetime import datetime
-from typing import Sequence, Union
+from typing import Sequence
 
 from ctparse.nb_estimator import MultinomialNaiveBayes
 from ctparse.count_vectorizer import CountVectorizer
 from ctparse.pipeline import CTParsePipeline
 from .scorer import Scorer
 from .partial_parse import PartialParse
-from .types import Time, Interval
+from .types import Artifact
 
 
 class NaiveBayesScorer(Scorer):
-
     def __init__(self, nb_model: CTParsePipeline) -> None:
         """Scorer based on a naive bayes estimator.
 
@@ -34,8 +33,8 @@ class NaiveBayesScorer(Scorer):
         self._model = nb_model
 
     @classmethod
-    def from_model_file(cls, fname: str) -> 'NaiveBayesScorer':
-        with bz2.open(fname, 'rb') as fd:
+    def from_model_file(cls, fname: str) -> "NaiveBayesScorer":
+        with bz2.open(fname, "rb") as fd:
             return cls(pickle.load(fd))
 
     def score(self, txt: str, ts: datetime, partial_parse: PartialParse) -> float:
@@ -51,8 +50,9 @@ class NaiveBayesScorer(Scorer):
 
         return model_score + len_score
 
-    def score_final(self, txt: str, ts: datetime,
-                    partial_parse: PartialParse, prod: Union[Time, Interval]) -> float:
+    def score_final(
+        self, txt: str, ts: datetime, partial_parse: PartialParse, prod: Artifact
+    ) -> float:
         # The difference between the original score and final score is that in the
         # final score, the len_score is calculated based on the length of the final
         # production
@@ -67,7 +67,9 @@ class NaiveBayesScorer(Scorer):
         return model_score + len_score
 
 
-def _feature_extractor(txt: str, ts: datetime, partial_parse: PartialParse) -> Sequence[str]:
+def _feature_extractor(
+    txt: str, ts: datetime, partial_parse: PartialParse
+) -> Sequence[str]:
     return [str(r) for r in partial_parse.rules]
 
 
@@ -75,8 +77,9 @@ def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]) -> CTParseP
     """Train a naive bayes model for NaiveBayesScorer"""
     y_binary = [1 if y_i else -1 for y_i in y]
     # Create and train the pipeline
-    pipeline = CTParsePipeline(CountVectorizer(ngram_range=(1, 3)),
-                               MultinomialNaiveBayes(alpha=1.0))
+    pipeline = CTParsePipeline(
+        CountVectorizer(ngram_range=(1, 3)), MultinomialNaiveBayes(alpha=1.0)
+    )
     model = pipeline.fit(X, y_binary)
     return model
 
@@ -84,5 +87,5 @@ def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]) -> CTParseP
 def save_naive_bayes(model: CTParsePipeline, fname: str) -> None:
     """Save a naive bayes model for NaiveBayesScorer"""
     # TODO: version this model and dump metadata with lots of information
-    with bz2.open(fname, 'wb') as fd:
+    with bz2.open(fname, "wb") as fd:
         pickle.dump(model, fd)

@@ -11,7 +11,7 @@ from .nb_scorer import NaiveBayesScorer
 logger = logging.getLogger(__name__)
 
 # Location of the default model, included with ctparse
-DEFAULT_MODEL_FILE = os.path.join(os.path.dirname(__file__), 'models', 'model.pbz')
+DEFAULT_MODEL_FILE = os.path.join(os.path.dirname(__file__), "models", "model.pbz")
 
 
 def load_default_scorer() -> Scorer:
@@ -20,11 +20,11 @@ def load_default_scorer() -> Scorer:
     If the scorer is not found, the scorer defaults to `DummyScorer`.
     """
     if os.path.exists(DEFAULT_MODEL_FILE):
-        logger.info('Loading model from {}'.format(DEFAULT_MODEL_FILE))
-        with bz2.open(DEFAULT_MODEL_FILE, 'rb') as fd:
+        logger.info("Loading model from {}".format(DEFAULT_MODEL_FILE))
+        with bz2.open(DEFAULT_MODEL_FILE, "rb") as fd:
             mdl = pickle.load(fd)
         return NaiveBayesScorer(mdl)
 
     else:
-        logger.warning('No model found, initializing empty scorer')
+        logger.warning("No model found, initializing empty scorer")
         return DummyScorer()

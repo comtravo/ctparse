@@ -1,26 +1,37 @@
 import logging
 from datetime import datetime
-from typing import Callable, Optional, Sequence, Tuple, TypeVar, Union
+from typing import (
+    Callable,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    Dict,
+    List,
+    Generator,
+)
 
-from .rule import rules as global_rules, ProductionRule
+from .rule import rules as global_rules, ProductionRule, Predicate
 from .timers import timeit
 from .types import Artifact, RegexMatch
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class PartialParse:
-
-    def __init__(self, prod: Tuple[Artifact, ...], rules: Tuple[Union[int, str], ...]) -> None:
-        '''A data structure representing a partial parse.
+    def __init__(
+        self, prod: Tuple[Artifact, ...], rules: Tuple[Union[int, str], ...]
+    ) -> None:
+        """A data structure representing a partial parse.
 
 
         * prod: the current partial production
         * rules: the sequence of regular expressions and rules used/applied to produce prod
         * score: the score assigned to this production
-        '''
+        """
         if len(prod) < 1:
             raise ValueError("prod should have at least one element")
 
@@ -31,34 +42,41 @@ class PartialParse:
         self.score = 0.0
 
     @classmethod
-    def from_regex_matches(cls, regex_matches: Tuple[RegexMatch, ...]) -> 'PartialParse':
-        '''Create partial production from a series of RegexMatch
+    def from_regex_matches(
+        cls, regex_matches: Tuple[RegexMatch, ...]
+    ) -> "PartialParse":
+        """Create partial production from a series of RegexMatch
 
         This usually is called when no production rules (with the exception of
         regex matches) have been applied.
 
-        '''
+        """
         se = cls(prod=regex_matches, rules=tuple(r.id for r in regex_matches))
 
-        logger.debug('='*80)
-        logger.debug('-> checking rule applicability')
+        logger.debug("=" * 80)
+        logger.debug("-> checking rule applicability")
         # Reducing rules to only those applicable has no effect for
         # small stacks, but on larger there is a 10-20% speed
         # improvement
         se.applicable_rules, _ts = timeit(se._filter_rules)(global_rules)
-        logger.debug('of {} total rules {} are applicable in {}'.format(
-            len(global_rules), len(se.applicable_rules), se.prod))
-        logger.debug('time in _filter_rules: {:.0f}ms'.format(1000*_ts))
-        logger.debug('='*80)
+        logger.debug(
+            "of {} total rules {} are applicable in {}".format(
+                len(global_rules), len(se.applicable_rules), se.prod
+            )
+        )
+        logger.debug("time in _filter_rules: {:.0f}ms".format(1000 * _ts))
+        logger.debug("=" * 80)
 
         return se
 
-    def apply_rule(self,
-                   ts: datetime,
-                   rule: ProductionRule,
-                   rule_name: Union[str, int],
-                   match: Tuple[int, int]) -> Optional['PartialParse']:
-        '''Check whether the production in rule can be applied to this stack
+    def apply_rule(
+        self,
+        ts: datetime,
+        rule: ProductionRule,
+        rule_name: Union[str, int],
+        match: Tuple[int, int],
+    ) -> Optional["PartialParse"]:
+        """Check whether the production in rule can be applied to this stack
         element.
 
         If yes, return a copy where this update is
@@ -69,13 +87,13 @@ class PartialParse:
         :param rule: a tuple where the first element is the production rule to apply
         :param rule_name: the name of the rule
         :param match: the start and end index of the parameters that the rule needs.
-        '''
-        prod = rule(ts, *self.prod[match[0]:match[1]])
+        """
+        prod = rule(ts, *self.prod[match[0] : match[1]])
 
         if prod is not None:
             pp = PartialParse(
-                prod=self.prod[:match[0]] + (prod,) + self.prod[match[1]:],
-                rules=self.rules + (rule_name,)
+                prod=self.prod[: match[0]] + (prod,) + self.prod[match[1] :],
+                rules=self.rules + (rule_name,),
             )
 
             pp.applicable_rules = self.applicable_rules
@@ -83,36 +101,45 @@ class PartialParse:
         else:
             return None
 
-    def __lt__(self, other):
-        '''Sort stack elements by (a) the length of text they can
+    def __lt__(self, other: "PartialParse") -> bool:
+        """Sort stack elements by (a) the length of text they can
         (potentially) cover and (b) the score assigned to the
         production.
 
         a < b <=> a.max_covered_chars < b.max_covered_chars or
                   (a.max_covered_chars <= b.max_covered_chars and a.score < b.score)
-        '''
-        return ((self.max_covered_chars < other.max_covered_chars) or
-                (self.max_covered_chars == other.max_covered_chars and
-                 self.score < other.score))
+        """
+        return (self.max_covered_chars < other.max_covered_chars) or (
+            self.max_covered_chars == other.max_covered_chars
+            and self.score < other.score
+        )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "PartialParse(prod={}, rules={}, score={})".format(
-            repr(self.prod), repr(self.rules), repr(self.score))
+            repr(self.prod), repr(self.rules), repr(self.score)
+        )
 
-    def _filter_rules(self, rules):
+    def _filter_rules(
+        self, rules: Dict[str, Tuple[ProductionRule, List[Predicate]]]
+    ) -> Dict[str, Tuple[ProductionRule, List[Predicate]]]:
         # find all rules that can be applied to the current prod sequence
-        def _hasNext(it):
+        def _hasNext(it: Generator[List[int], None, None]) -> bool:
             try:
                 next(it)
                 return True
             except StopIteration:
                 return False
 
-        return {rule_name: r for rule_name, r in rules.items()
-                if _hasNext(_seq_match(self.prod, r[1]))}
+        return {
+            rule_name: r
+            for rule_name, r in rules.items()
+            if _hasNext(_seq_match(self.prod, r[1]))
+        }
 
 
-def _seq_match(seq: Sequence[T], pat: Sequence[Callable[[T], bool]], offset=0):
+def _seq_match(
+    seq: Sequence[T], pat: Sequence[Callable[[T], bool]], offset: int = 0
+) -> Generator[List[int], None, None]:
     # :param seq: a list of intermediate productions, either of type
     # RegexMatch or some other Artifact
     #
@@ -151,7 +178,7 @@ def _seq_match(seq: Sequence[T], pat: Sequence[Callable[[T], bool]], offset=0):
     elif not seq or not pat:
         # if either seq or pat is empty there will be no match
         return
-    elif pat[-1].__name__ != '_regex_match':
+    elif pat[-1].__name__ != "_regex_match":
         # there must be at least one additional element in seq at the
         # end
         yield from _seq_match(seq[:-1], pat[:-1], offset)
@@ -162,18 +189,18 @@ def _seq_match(seq: Sequence[T], pat: Sequence[Callable[[T], bool]], offset=0):
         p1 = pat[0]
         # if p1 is not a RegexMatch, then continue on next pat and
         # advance sequence by one
-        if p1.__name__ != '_regex_match':
-            yield from _seq_match(seq[1:], pat[1:], offset+1)
+        if p1.__name__ != "_regex_match":
+            yield from _seq_match(seq[1:], pat[1:], offset + 1)
         else:
             # Get number of RegexMatch in p
-            n_regex = sum(1 for p in pat if p.__name__ == '_regex_match')
+            n_regex = sum(1 for p in pat if p.__name__ == "_regex_match")
             # For each occurance of RegexMatch pat[0] in seq
             for iseq, s in enumerate(seq):
                 # apply _regex_match check
                 if p1(s):
                     # for each match of pat[1:] in seq[iseq+1:], yield a result
-                    for subm in _seq_match(seq[iseq+1:], pat[1:], offset+iseq+1):
+                    for subm in _seq_match(seq[iseq + 1 :], pat[1:], offset + iseq + 1):
                         if len(subm) == n_regex - 1:
                             # only yield if all subsequent RegexMatch
                             # have been aligned!
-                            yield [iseq+offset] + subm
+                            yield [iseq + offset] + subm

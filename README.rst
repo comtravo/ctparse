@@ -23,7 +23,8 @@ ctparse - Parse natural language time expressions in python
      :target: https://ctparse.readthedocs.io/en/latest/?badge=latest
      :alt: Documentation Status
 
-
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/psf/black
 
 
 **This code is in early alpha stage. There can and will be potentially

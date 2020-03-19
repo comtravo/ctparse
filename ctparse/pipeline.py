@@ -5,9 +5,7 @@ from .count_vectorizer import CountVectorizer
 
 
 class CTParsePipeline:
-    def __init__(
-        self, transformer: CountVectorizer, estimator: MultinomialNaiveBayes
-    ):
+    def __init__(self, transformer: CountVectorizer, estimator: MultinomialNaiveBayes):
         """Setup a pipeline of feature extraction and naive bayes. Overkill for what it does
         but leaves room to use different models/features in the future
 
@@ -27,7 +25,7 @@ class CTParsePipeline:
         Returns
         -------
         CTParsePipeline
-            Returns the fitter pipeline
+            Returns the fitted pipeline
         """
         X_transformed = self.transformer.fit_transform(X)
         self.estimator = self.estimator.fit(X_transformed, y)
