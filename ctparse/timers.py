@@ -8,7 +8,7 @@ from time import perf_counter
 from typing import Any, Callable, TypeVar, Union, Tuple
 from functools import wraps
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def timeout(timeout: Union[float, int]) -> Callable[[], None]:
@@ -34,6 +34,7 @@ def timeout(timeout: Union[float, int]) -> Callable[[], None]:
             return
         if perf_counter() - start_time > timeout:
             raise CTParseTimeoutError()
+
     return _tt
 
 
@@ -51,11 +52,13 @@ def timeit(f: Callable[..., T]) -> Callable[..., Tuple[T, float]]:
         result, exec_time = timeit(fun)(3)
 
     """
+
     @wraps(f)
     def _wrapper(*args: Any, **kwargs: Any) -> Tuple[T, float]:
         start_time = perf_counter()
         res = f(*args, **kwargs)
         return res, perf_counter() - start_time
+
     return _wrapper
 
 

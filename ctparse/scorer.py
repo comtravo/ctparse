@@ -5,10 +5,10 @@ implement scoring strategies for ctparse.
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from random import Random
-from typing import Optional, Union
+from typing import Optional
 
 from .partial_parse import PartialParse
-from .types import Time, Interval
+from .types import Artifact
 
 
 class Scorer(metaclass=ABCMeta):
@@ -24,8 +24,9 @@ class Scorer(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def score_final(self, txt: str, ts: datetime,
-                    partial_parse: PartialParse, prod: Union[Time, Interval]) -> float:
+    def score_final(
+        self, txt: str, ts: datetime, partial_parse: PartialParse, prod: Artifact
+    ) -> float:
         """Produce the final score for a production.
 
         :param txt: the text that is being parsed
@@ -41,13 +42,13 @@ class DummyScorer(Scorer):
     def score(self, txt: str, ts: datetime, partial_parse: PartialParse) -> float:
         return 0.0
 
-    def score_final(self, txt: str, ts: datetime,
-                    partial_parse: PartialParse, prod: Union[Time, Interval]) -> float:
+    def score_final(
+        self, txt: str, ts: datetime, partial_parse: PartialParse, prod: Artifact
+    ) -> float:
         return 0.0
 
 
 class RandomScorer(Scorer):
-
     def __init__(self, rng: Optional[Random] = None) -> None:
         """A score that returns a random number between 0 and 1.
 
@@ -59,6 +60,7 @@ class RandomScorer(Scorer):
     def score(self, txt: str, ts: datetime, partial_parse: PartialParse) -> float:
         return self.rng.random()
 
-    def score_final(self, txt: str, ts: datetime,
-                    partial_parse: PartialParse, prod: Union[Time, Interval]) -> float:
+    def score_final(
+        self, txt: str, ts: datetime, partial_parse: PartialParse, prod: Artifact
+    ) -> float:
         return self.rng.random()

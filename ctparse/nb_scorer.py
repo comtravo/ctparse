@@ -3,21 +3,18 @@ import bz2
 import math
 import pickle
 from datetime import datetime
-from typing import Sequence, Union
+from typing import Sequence
 
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.pipeline import make_pipeline
-from sklearn.base import BaseEstimator
-
+from ctparse.nb_estimator import MultinomialNaiveBayes
+from ctparse.count_vectorizer import CountVectorizer
+from ctparse.pipeline import CTParsePipeline
 from .scorer import Scorer
 from .partial_parse import PartialParse
-from .types import Time, Interval
+from .types import Artifact
 
 
 class NaiveBayesScorer(Scorer):
-
-    def __init__(self, nb_model: BaseEstimator) -> None:
+    def __init__(self, nb_model: CTParsePipeline) -> None:
         """Scorer based on a naive bayes estimator.
 
         This scorer models the probability of having a correct parse, conditioned
@@ -36,64 +33,59 @@ class NaiveBayesScorer(Scorer):
         self._model = nb_model
 
     @classmethod
-    def from_model_file(cls, fname: str) -> 'NaiveBayesScorer':
-        with bz2.open(fname, 'rb') as fd:
+    def from_model_file(cls, fname: str) -> "NaiveBayesScorer":
+        with bz2.open(fname, "rb") as fd:
             return cls(pickle.load(fd))
 
     def score(self, txt: str, ts: datetime, partial_parse: PartialParse) -> float:
         # Penalty for partial matches
         max_covered_chars = partial_parse.prod[-1].mend - partial_parse.prod[0].mstart
-        len_score = math.log(max_covered_chars/len(txt))
+        len_score = math.log(max_covered_chars / len(txt))
 
         X = _feature_extractor(txt, ts, partial_parse)
         pred = self._model.predict_log_proba([X])
 
         # NOTE: the prediction is log-odds, or logit
-        model_score = float(pred[:, 1] - pred[:, 0])
+        model_score = pred[0][1] - pred[0][0]
 
         return model_score + len_score
 
-    def score_final(self, txt: str, ts: datetime,
-                    partial_parse: PartialParse, prod: Union[Time, Interval]) -> float:
+    def score_final(
+        self, txt: str, ts: datetime, partial_parse: PartialParse, prod: Artifact
+    ) -> float:
         # The difference between the original score and final score is that in the
         # final score, the len_score is calculated based on the length of the final
         # production
-        len_score = math.log(len(prod)/len(txt))
+        len_score = math.log(len(prod) / len(txt))
 
         X = _feature_extractor(txt, ts, partial_parse)
         pred = self._model.predict_log_proba([X])
 
         # NOTE: the prediction is log-odds, or logit
-        model_score = float(pred[:, 1] - pred[:, 0])
+        model_score = pred[0][1] - pred[0][0]
 
         return model_score + len_score
 
 
-def _feature_extractor(txt: str, ts: datetime, partial_parse: PartialParse) -> Sequence[str]:
+def _feature_extractor(
+    txt: str, ts: datetime, partial_parse: PartialParse
+) -> Sequence[str]:
     return [str(r) for r in partial_parse.rules]
 
 
-def _identity(x):
-    return x
-
-
-def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]) -> BaseEstimator:
+def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]) -> CTParsePipeline:
     """Train a naive bayes model for NaiveBayesScorer"""
     y_binary = [1 if y_i else -1 for y_i in y]
     # Create and train the pipeline
-    model = make_pipeline(
-        CountVectorizer(ngram_range=(1, 3), lowercase=False,
-                        tokenizer=_identity),
-        MultinomialNB(alpha=1.0))
-    model.fit(X, y_binary)
-
-    # Make sure that class order is -1, 1
-    assert model.classes_[0] == -1
+    pipeline = CTParsePipeline(
+        CountVectorizer(ngram_range=(1, 3)), MultinomialNaiveBayes(alpha=1.0)
+    )
+    model = pipeline.fit(X, y_binary)
     return model
 
 
-def save_naive_bayes(model: BaseEstimator, fname: str) -> None:
+def save_naive_bayes(model: CTParsePipeline, fname: str) -> None:
     """Save a naive bayes model for NaiveBayesScorer"""
     # TODO: version this model and dump metadata with lots of information
-    with bz2.open(fname, 'wb') as fd:
+    with bz2.open(fname, "wb") as fd:
         pickle.dump(model, fd)
