@@ -128,10 +128,7 @@ def dimension(dim: Type[Artifact]) -> Predicate:
 
 def predicate(pred: str) -> Predicate:
     def _predicate(d: Artifact) -> Any:
-        try:
-            return getattr(d, pred)
-        except AttributeError:
-            return False
+        return getattr(d, pred, False)
 
     return _predicate
 

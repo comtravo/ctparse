@@ -2,7 +2,7 @@
 History
 =======
 
-0.1.1 (2020-03-18)
+0.1.0 (2020-03-20)
 -------------------
 
 * Major refactor of code underlying predictive model
