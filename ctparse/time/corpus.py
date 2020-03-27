@@ -704,4 +704,10 @@ corpus = [
     ),
     # Military time tests
     ("Time[]{2020-02-03 X:X (X/X)}", "2020-02-25T12:34", ["3 Feb 2020"]),
+    # Diration tests
+    (
+        "Duration[]{X/X/01 X:X}",
+        "2020-02-25T12:34",
+        ["one night", "ein nacht", "ein tag"],
+    ),
 ]

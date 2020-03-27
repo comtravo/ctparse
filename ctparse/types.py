@@ -485,3 +485,34 @@ class Interval(Artifact):
             return self.t_to.end
         else:
             return None
+
+
+class Duration(Artifact):
+    def __init__(
+        self,
+        years: Optional[int] = None,
+        months: Optional[int] = None,
+        days: Optional[int] = None,
+        hours: Optional[int] = None,
+        minutes: Optional[int] = None,
+    ):
+        super().__init__()
+        self.years = years
+        self.months = months
+        self.days = days
+        self.hours = hours
+        self.minutes = minutes
+
+    def __str__(self) -> str:
+        return "{}/{}/{} {}:{}".format(
+            self._fmt_num(self.years),
+            self._fmt_num(self.months),
+            self._fmt_num(self.days),
+            self._fmt_num(self.hours),
+            self._fmt_num(self.minutes),
+        )
+
+    def _fmt_num(self, num: Optional[int]) -> str:
+        if num is None:
+            return "X"
+        return "{:02d}".format(num)

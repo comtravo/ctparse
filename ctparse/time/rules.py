@@ -3,7 +3,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY
 from ..rule import rule, predicate, dimension, _regex_to_join
-from ..types import Time, Interval, pod_hours, RegexMatch
+from ..types import Time, Duration, Interval, pod_hours, RegexMatch
 
 
 @rule(
@@ -67,7 +67,7 @@ def ruleNamedMonth(ts: datetime, m: RegexMatch) -> Optional[Time]:
 
 
 _named_ts = (
-    (1, r"one|eins"),
+    (1, r"one|eins?"),
     (2, r"two|zwei"),
     (3, r"three|drei"),
     (4, r"four|vier"),
@@ -486,7 +486,8 @@ def _maybe_apply_am_pm(t: Time, ampm_match: str) -> Time:
 
 
 @rule(
-    r"(?<!\d|\.)(?P<hour>(?:[01]\d)|(?:2[0-3]))(?P<minute>(?&_minute))"  # match hhmm
+    # match hhmm
+    r"(?<!\d|\.)(?P<hour>(?:[01]\d)|(?:2[0-3]))(?P<minute>(?&_minute))"
     r"\s*(?P<clock>uhr|h)?"  # optional uhr
     r"\s*(?P<ampm>\s*[ap]\.?m\.?)?(?!\d)"  # optional am/pm
 )
@@ -500,7 +501,8 @@ def ruleHHMMmilitary(ts: datetime, m: RegexMatch) -> Optional[Time]:
 @rule(
     r"(?<!\d|\.)"  # We don't start matching with another number, or a dot
     r"(?P<hour>(?&_hour))"  # We certainly match an hour
-    r"((?P<sep>:|uhr|h|\.)(?P<minute>(?&_minute)))?"  # We try to match also the minute
+    # We try to match also the minute
+    r"((?P<sep>:|uhr|h|\.)(?P<minute>(?&_minute)))?"
     r"\s*(?P<clock>uhr|h)?"  # We match uhr with no minute
     r"(?P<ampm>\s*[ap]\.?m\.?)?"  # AM PM
     r"(?!\d)"
@@ -779,3 +781,16 @@ def rulePODInterval(ts: datetime, p: Time, i: Interval) -> Optional[Interval]:
             DOW=i.t_from.DOW,
         )
     return Interval(t_from=t_from, t_to=t_to)
+
+
+# Rules regarding durations
+@rule(_rule_named_ts + _regex_to_join + r"(nights?|n[aä]chte?|days?|tage?)")
+def ruleNamedLatentDurationDays(ts: datetime, m: RegexMatch) -> Optional[Duration]:
+    for n, _, in _named_ts:
+        if m.match.group("t_{}".format(n)):
+            return Duration(days=n)
+            # start = Time(year=ts.year, month=ts.month, day=ts.day)
+            # end_ts = ts + relativedelta(days=1)
+            # end = Time(year=end_ts.year, month=end_ts.month, day=end_ts.day)
+            # return Interval(t_from=start, t_to=end)
+    return None
