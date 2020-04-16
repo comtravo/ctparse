@@ -785,12 +785,9 @@ def rulePODInterval(ts: datetime, p: Time, i: Interval) -> Optional[Interval]:
 
 # Rules regarding durations
 @rule(_rule_named_ts + _regex_to_join + r"(nights?|n[aä]chte?|days?|tage?)")
-def ruleNamedLatentDurationDays(ts: datetime, m: RegexMatch) -> Optional[Duration]:
+def ruleNamedDurationDays(ts: datetime, m: RegexMatch) -> Optional[Duration]:
+    # 1 day, 1 night etc.
     for n, _, in _named_ts:
         if m.match.group("t_{}".format(n)):
             return Duration(days=n)
-            # start = Time(year=ts.year, month=ts.month, day=ts.day)
-            # end_ts = ts + relativedelta(days=1)
-            # end = Time(year=end_ts.year, month=end_ts.month, day=end_ts.day)
-            # return Interval(t_from=start, t_to=end)
     return None
