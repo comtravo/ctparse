@@ -705,9 +705,14 @@ corpus = [
     # Military time tests
     ("Time[]{2020-02-03 X:X (X/X)}", "2020-02-25T12:34", ["3 Feb 2020"]),
     # Diration tests
+    ("Duration[]{1 night}", "2020-02-25T12:34", ["one night", "ein nacht"],),
+    ("Duration[]{30 day}", "2020-02-25T12:34", ["30 days"],),
+    ("Duration[]{7 week}", "2020-02-25T12:34", ["7 weeks"],),
+    ("Duration[]{20 minute}", "2020-02-25T12:34", ["20 minutes", "twenty minutes"],),
+    ("Duration[]{1 month}", "2020-02-25T12:34", ["1 month", "one month"]),
     (
-        "Duration[]{X/X/01 X:X}",
+        "Duration[]{30 minute}",
         "2020-02-25T12:34",
-        ["one night", "ein nacht", "ein tag"],
+        ["half an hour", "half hour", "1/2 hour", "1/2h", "1/2 h"],
     ),
 ]

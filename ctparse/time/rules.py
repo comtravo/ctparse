@@ -81,6 +81,7 @@ _named_ts = (
     (12, r"twelve|zwölf"),
 )
 _rule_named_ts = "|".join(r"(?P<t_{}>{})".format(n, expr) for n, expr in _named_ts)
+_rule_named_ts = r"({})\s*".format(_rule_named_ts)
 
 
 @rule(_rule_named_ts + r"(uhr|h|o\'?clock)?")
@@ -783,11 +784,101 @@ def rulePODInterval(ts: datetime, p: Time, i: Interval) -> Optional[Interval]:
     return Interval(t_from=t_from, t_to=t_to)
 
 
+# We add named numbers at least until 31 (max number of days in a month)
+_named_number = (
+    (1, r"an?|one|eins?"),
+    (2, r"two|zwei"),
+    (3, r"three|drei"),
+    (4, r"four|vier"),
+    (5, r"five|fünf"),
+    (6, r"six|sechs"),
+    (7, r"seven|sieben"),
+    (8, r"eight|acht"),
+    (9, r"nine|neun"),
+    (10, r"ten|zehn"),
+    (11, r"eleven|elf"),
+    (12, r"twelve|zwölf"),
+    (13, r"thirteen|dreizehn"),
+    (14, r"fourteen|vierzehn"),
+    (15, r"fifteen|fünfzehn"),
+    (16, r"sixteen|sechszehn"),
+    (17, r"seventeen|siebzehn"),
+    (18, r"eighteen|achtzehn"),
+    (19, r"nineteen|neunzehn"),
+    (20, r"twenty|zwanzig"),
+    (21, r"twentyone|einunzwanzig"),
+    (22, r"twentytwo|zweiunzwanzig"),
+    (23, r"twentythree|dreiunzwanzig"),
+    (24, r"twentyfour|vierunzwanzig"),
+    (25, r"twentyfive|fünfunzwanzig"),
+    (26, r"twentysix|sechsunzwanzig"),
+    (27, r"twentyseven|siebenunzwanzig"),
+    (28, r"twentyeight|achtunzwanzig"),
+    (29, r"twentynine|neunundzwanzig"),
+    (30, r"thirty|dreißig"),
+    (31, r"thirtyone|einundreißig"),
+)
+_rule_named_number = "|".join(
+    r"(?P<n_{}>{}\b)".format(n, expr) for n, expr in _named_number
+)
+_rule_named_number = r"({})\s*".format(_rule_named_number)
+
+_durations = {
+    "night": r"n[aä]chte?|nights?",
+    "day": r"tage?|days?",
+    "minute": r"m(inute[ns]?)?",
+    "hour": r"stunden?|h(ours?)?",
+    "week": r"weeks?|wochen?",
+    "month": r"monate?|months?",
+}
+
+_rule_durations = r"|".join(
+    r"(?P<d_{}>{}\b)".format(dow, expr) for dow, expr in _durations.items()
+)
+_rule_durations = r"({})\s*".format(_rule_durations)
+
 # Rules regarding durations
-@rule(_rule_named_ts + _regex_to_join + r"(nights?|n[aä]chte?|days?|tage?)")
-def ruleNamedDurationDays(ts: datetime, m: RegexMatch) -> Optional[Duration]:
+@rule(r"(?P<num>\d+)\s*" + _rule_durations)
+def ruleDigitDuration(ts: datetime, m: RegexMatch) -> Optional[Duration]:
     # 1 day, 1 night etc.
-    for n, _, in _named_ts:
-        if m.match.group("t_{}".format(n)):
-            return Duration(days=n)
+    num = m.match.group("num")
+
+    if num:
+        for n, _, in _durations.items():
+            unit = m.match.group("d_" + n)
+            if unit:
+                return Duration(int(num), n)
+
+    return None
+
+
+@rule(_rule_named_number + _rule_durations)
+def ruleNamedNumberDuration(ts: datetime, m: RegexMatch) -> Optional[Duration]:
+    # one day, two nights, thirty days etc.
+    num = None
+    for n, _ in _named_number:
+        match = m.match.group("n_{}".format(n))
+        if match:
+            num = n
+            continue
+
+    if num:
+        for d, _, in _durations.items():
+            unit = m.match.group("d_" + d)
+            if unit:
+                return Duration(num, d)
+
+    return None
+
+
+@rule(r"(hal[fb]|1/2)(\s+an?)?\s*" + _rule_durations)
+def ruleDurationHalf(ts: datetime, m: RegexMatch) -> Optional[Duration]:
+    # half day, half hour, 1/2 hour
+    for n, _, in _durations.items():
+        if m.match.group("d_" + n):
+            if n == "hour":
+                return Duration(30, "minute")
+            if n == "day":
+                return Duration(12, "hour")
+
     return None

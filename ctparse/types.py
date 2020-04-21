@@ -488,31 +488,16 @@ class Interval(Artifact):
 
 
 class Duration(Artifact):
-    def __init__(
-        self,
-        years: Optional[int] = None,
-        months: Optional[int] = None,
-        days: Optional[int] = None,
-        hours: Optional[int] = None,
-        minutes: Optional[int] = None,
-    ):
+    def __init__(self, value: int, unit: str):
+        """Create a Duration using value and unit.
+
+        Typical values for unit are:
+
+        minute, hour, day, night, week, month, year
+        """
         super().__init__()
-        self.years = years
-        self.months = months
-        self.days = days
-        self.hours = hours
-        self.minutes = minutes
+        self.value = value
+        self.unit = unit
 
     def __str__(self) -> str:
-        return "{}/{}/{} {}:{}".format(
-            self._fmt_num(self.years),
-            self._fmt_num(self.months),
-            self._fmt_num(self.days),
-            self._fmt_num(self.hours),
-            self._fmt_num(self.minutes),
-        )
-
-    def _fmt_num(self, num: Optional[int]) -> str:
-        if num is None:
-            return "X"
-        return "{:02d}".format(num)
+        return "{} {}".format(self.value, self.unit)
