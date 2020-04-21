@@ -786,7 +786,7 @@ def rulePODInterval(ts: datetime, p: Time, i: Interval) -> Optional[Interval]:
 
 # We add named numbers at least until 31 (max number of days in a month)
 _named_number = (
-    (1, r"an?|one|eins?"),
+    (1, r"an?|one|ein[es]?"),
     (2, r"two|zwei"),
     (3, r"three|drei"),
     (4, r"four|vier"),
@@ -824,7 +824,7 @@ _rule_named_number = "|".join(
 _rule_named_number = r"({})\s*".format(_rule_named_number)
 
 _durations = {
-    "night": r"n[aä]chte?|nights?",
+    "night": r"n[aä]chte?|nights?|übernachtung",
     "day": r"tage?|days?",
     "minute": r"m(inute[ns]?)?",
     "hour": r"stunden?|h(ours?)?",
@@ -871,7 +871,7 @@ def ruleNamedNumberDuration(ts: datetime, m: RegexMatch) -> Optional[Duration]:
     return None
 
 
-@rule(r"(hal[fb]|1/2)(\s+an?)?\s*" + _rule_durations)
+@rule(r"(hal[fb]e?|1/2)(\s+an?)?\s*" + _rule_durations)
 def ruleDurationHalf(ts: datetime, m: RegexMatch) -> Optional[Duration]:
     # half day, half hour, 1/2 hour
     for n, _, in _durations.items():
