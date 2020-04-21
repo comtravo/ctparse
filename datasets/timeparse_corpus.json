@@ -32,7 +32,7 @@
  {
   "text": "one night",
   "ref_time": "2017-10-03T14:30:35",
-  "gold_parse": "Duration[]{1 night}",
+  "gold_parse": "Duration[]{1 nights}",
   "language": "en"
  },
  {
@@ -1994,7 +1994,7 @@
  {
   "text": "Eine Übernachtung",
   "ref_time": "2017-11-08T12:59:30",
-  "gold_parse": "Duration[]{1 night}",
+  "gold_parse": "Duration[]{1 nights}",
   "language": "de"
  },
  {
@@ -5324,7 +5324,7 @@
  {
   "text": "1 night",
   "ref_time": "2017-09-14T09:18:11",
-  "gold_parse": "Duration[]{1 night}",
+  "gold_parse": "Duration[]{1 nights}",
   "language": "en"
  },
  {
@@ -5570,7 +5570,7 @@
  {
   "text": "2 nights",
   "ref_time": "2017-07-17T12:57:50",
-  "gold_parse": "Duration[]{2 night}",
+  "gold_parse": "Duration[]{2 nights}",
   "language": "en"
  },
  {
@@ -6434,7 +6434,7 @@
  {
   "text": "eine Übernachtung",
   "ref_time": "2017-10-09T08:37:35",
-  "gold_parse": "Duration[]{1 night}",
+  "gold_parse": "Duration[]{1 nights}",
   "language": "de"
  },
  {
@@ -7220,7 +7220,7 @@
  {
   "text": "1 night",
   "ref_time": "2017-07-21T05:22:51",
-  "gold_parse": "Duration[]{1 night}",
+  "gold_parse": "Duration[]{1 nights}",
   "language": "en"
  },
  {
@@ -7316,7 +7316,7 @@
  {
   "text": "eine Übernachtung",
   "ref_time": "2017-10-18T12:42:21",
-  "gold_parse": "Duration[]{1 night}",
+  "gold_parse": "Duration[]{1 nights}",
   "language": "de"
  },
  {
@@ -7784,7 +7784,7 @@
  {
   "text": "eine Übernachtung",
   "ref_time": "2017-10-24T12:40:56",
-  "gold_parse": "Duration[]{1 night}",
+  "gold_parse": "Duration[]{1 nights}",
   "language": "de"
  },
  {
@@ -8288,7 +8288,7 @@
  {
   "text": "1 night",
   "ref_time": "2017-10-24T12:30:29",
-  "gold_parse": "Duration[]{1 night}",
+  "gold_parse": "Duration[]{1 nights}",
   "language": "en"
  },
  {
@@ -10646,7 +10646,7 @@
  {
   "text": "1 Nacht",
   "ref_time": "2017-06-07T09:36:05",
-  "gold_parse": "Duration[]{1 night}",
+  "gold_parse": "Duration[]{1 nights}",
   "language": "de"
  },
  {
@@ -11732,7 +11732,7 @@
  {
   "text": "one night",
   "ref_time": "2017-09-06T05:40:32",
-  "gold_parse": "Duration[]{1 night}",
+  "gold_parse": "Duration[]{1 nights}",
   "language": "en"
  },
  {

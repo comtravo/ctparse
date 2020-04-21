@@ -704,23 +704,40 @@ corpus = [
     ),
     # Military time tests
     ("Time[]{2020-02-03 X:X (X/X)}", "2020-02-25T12:34", ["3 Feb 2020"]),
-    # Diration tests
+    # Duration tests
     (
-        "Duration[]{1 night}",
+        "Duration[]{1 nights}",
         "2020-02-25T12:34",
         ["one night", "ein nacht", "eine übernachtung"],
     ),
-    ("Duration[]{30 day}", "2020-02-25T12:34", ["30 days", "30 tage"],),
-    ("Duration[]{7 week}", "2020-02-25T12:34", ["7 weeks", "7 wochen"],),
+    ("Duration[]{30 days}", "2020-02-25T12:34", ["30 days", "30 tage"],),
+    ("Duration[]{7 weeks}", "2020-02-25T12:34", ["7 weeks", "7 wochen"],),
     (
-        "Duration[]{20 minute}",
+        "Duration[]{20 minutes}",
         "2020-02-25T12:34",
         ["20 minutes", "twenty minutes", "zwanzig Minuten"],
     ),
-    ("Duration[]{1 month}", "2020-02-25T12:34", ["1 month", "one month", "ein Monat"]),
+    ("Duration[]{1 months}", "2020-02-25T12:34", ["1 month", "one month", "ein Monat"]),
     (
-        "Duration[]{30 minute}",
+        "Duration[]{30 minutes}",
         "2020-02-25T12:34",
         ["half an hour", "half hour", "1/2 hour", "1/2h", "1/2 h", "halbe Stunde"],
+    ),
+    # ruleTimeDuration
+    (
+        "Interval[]{2020-02-27 X:X (X/X) - 2020-02-28 X:X (X/X)}",
+        "2020-02-25T12:34",
+        ["on the 27th for one day", "on the 27th for one night"],
+    ),
+    (
+        "Interval[]{2020-02-25 15:00 (X/X) - 2020-02-25 16:00 (X/X)}",
+        "2020-02-25T12:34",
+        ["today 15:00 for one hour"],
+    ),
+    # ruleDurationInterval, ruleIntervalDuration
+    (
+        "Interval[]{2020-11-15 X:X (X/X) - 2020-11-18 X:X (X/X)}",
+        "2020-02-25T12:34",
+        ["3 days 15-18 Nov", "15-18 Nov 3 Nächte", "15-18 Nov für 3 Nächte"],
     ),
 ]

@@ -3,7 +3,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY
 from ..rule import rule, predicate, dimension, _regex_to_join
-from ..types import Time, Duration, Interval, pod_hours, RegexMatch
+from ..types import Time, Duration, Interval, pod_hours, RegexMatch, DurationUnit
 
 
 @rule(
@@ -815,25 +815,26 @@ _named_number = (
     (27, r"twentyseven|siebenunzwanzig"),
     (28, r"twentyeight|achtunzwanzig"),
     (29, r"twentynine|neunundzwanzig"),
-    (30, r"thirty|dreißig"),
-    (31, r"thirtyone|einundreißig"),
+    (30, r"thirty|drei(ß|ss)ig"),
+    (31, r"thirtyone|einundrei(ß|ss)ig"),
 )
 _rule_named_number = "|".join(
     r"(?P<n_{}>{}\b)".format(n, expr) for n, expr in _named_number
 )
 _rule_named_number = r"({})\s*".format(_rule_named_number)
 
-_durations = {
-    "night": r"n[aä]chte?|nights?|übernachtung",
-    "day": r"tage?|days?",
-    "minute": r"m(inute[ns]?)?",
-    "hour": r"stunden?|h(ours?)?",
-    "week": r"weeks?|wochen?",
-    "month": r"monate?|months?",
-}
+_durations = [
+    (DurationUnit.NIGHTS, r"n[aä]chte?|nights?|[üu]bernachtung"),
+    (DurationUnit.DAYS, r"tage?|days?"),
+    (DurationUnit.MINUTES, r"m(inute[ns]?)?"),
+    (DurationUnit.HOURS, r"stunden?|h(ours?)?"),
+    (DurationUnit.WEEKS, r"weeks?|wochen?"),
+    (DurationUnit.MONTHS, r"monate?|months?"),
+]
+
 
 _rule_durations = r"|".join(
-    r"(?P<d_{}>{}\b)".format(dow, expr) for dow, expr in _durations.items()
+    r"(?P<d_{}>{}\b)".format(dur.value, expr) for dur, expr in _durations
 )
 _rule_durations = r"({})\s*".format(_rule_durations)
 
@@ -842,10 +843,10 @@ _rule_durations = r"({})\s*".format(_rule_durations)
 def ruleDigitDuration(ts: datetime, m: RegexMatch) -> Optional[Duration]:
     # 1 day, 1 night etc.
     num = m.match.group("num")
-
+    print("here")
     if num:
-        for n, _, in _durations.items():
-            unit = m.match.group("d_" + n)
+        for n, _, in _durations:
+            unit = m.match.group("d_" + n.value)
             if unit:
                 return Duration(int(num), n)
 
@@ -863,8 +864,8 @@ def ruleNamedNumberDuration(ts: datetime, m: RegexMatch) -> Optional[Duration]:
             continue
 
     if num:
-        for d, _, in _durations.items():
-            unit = m.match.group("d_" + d)
+        for d, _, in _durations:
+            unit = m.match.group("d_" + d.value)
             if unit:
                 return Duration(num, d)
 
@@ -874,11 +875,92 @@ def ruleNamedNumberDuration(ts: datetime, m: RegexMatch) -> Optional[Duration]:
 @rule(r"(hal[fb]e?|1/2)(\s+an?)?\s*" + _rule_durations)
 def ruleDurationHalf(ts: datetime, m: RegexMatch) -> Optional[Duration]:
     # half day, half hour, 1/2 hour
-    for n, _, in _durations.items():
-        if m.match.group("d_" + n):
-            if n == "hour":
-                return Duration(30, "minute")
-            if n == "day":
-                return Duration(12, "hour")
+    for n, _, in _durations:
+        if m.match.group("d_" + n.value):
+            if n == DurationUnit.HOURS:
+                return Duration(30, DurationUnit.MINUTES)
+            if n == DurationUnit.DAYS:
+                return Duration(12, DurationUnit.HOURS)
 
     return None
+
+
+@rule(dimension(Interval), r"f[üo]r", dimension(Duration))
+def ruleIntervalConjDuration(
+    ts: datetime, interval: Interval, _: RegexMatch, dur: Duration
+) -> Optional[Interval]:
+    # Example: people tend to repeat themselves when specifying durations
+    # 15-16 Nov für 1 Nacht
+    return ruleDurationInterval(ts, dur, interval)  # type: ignore
+
+
+@rule(dimension(Interval), dimension(Duration))
+def ruleIntervalDuration(
+    ts: datetime, interval: Interval, dur: Duration
+) -> Optional[Interval]:
+    # Variant without conjunction
+    # 15-16 Nov 1 Nacht
+    return ruleDurationInterval(ts, dur, interval)  # type: ignore
+
+
+@rule(dimension(Duration), dimension(Interval))
+def ruleDurationInterval(
+    ts: datetime, dur: Duration, interval: Interval
+) -> Optional[Interval]:
+    # 3 days 15-18 Nov
+    if interval.isDateInterval:
+        delta = interval.t_to.dt - interval.t_from.dt
+        dur_delta = _duration_to_relativedelta(dur)
+        if delta.days == dur_delta.days:
+            return interval
+    return None
+
+
+@rule(dimension(Time), r"f[üo]r", dimension(Duration))
+def ruleTimeDuration(
+    ts: datetime, t: Time, _: RegexMatch, dur: Duration
+) -> Optional[Interval]:
+    # Examples:
+    # on the 27th for one day
+    # heute eine Übernachtung
+    if t.hasDate:
+        # To make an interval we should at least have a date
+        if (
+            dur.unit
+            in (
+                DurationUnit.DAYS,
+                DurationUnit.NIGHTS,
+                DurationUnit.WEEKS,
+                DurationUnit.MONTHS,
+            )
+            and t.hasDate
+        ):
+            delta = _duration_to_relativedelta(dur)
+            end_ts = t.dt + delta
+            # We the end of the interval is a date without particular times
+            end = Time(year=end_ts.year, month=end_ts.month, day=end_ts.day)
+            return Interval(t_from=t, t_to=end)
+
+        if dur.unit in (DurationUnit.HOURS, DurationUnit.MINUTES) and t.hasTime:
+            delta = _duration_to_relativedelta(dur)
+            end_ts = t.dt + delta
+            end = Time(
+                year=end_ts.year,
+                month=end_ts.month,
+                day=end_ts.day,
+                hour=end_ts.hour,
+                minute=end_ts.minute,
+            )
+            return Interval(t_from=t, t_to=end)
+    return None
+
+
+def _duration_to_relativedelta(dur: Duration) -> relativedelta:
+    return {
+        DurationUnit.DAYS: relativedelta(days=dur.value),
+        DurationUnit.NIGHTS: relativedelta(days=dur.value),
+        DurationUnit.WEEKS: relativedelta(weeks=dur.value),
+        DurationUnit.MONTHS: relativedelta(months=dur.value),
+        DurationUnit.HOURS: relativedelta(hours=dur.value),
+        DurationUnit.MINUTES: relativedelta(minutes=dur.value),
+    }[dur.unit]
