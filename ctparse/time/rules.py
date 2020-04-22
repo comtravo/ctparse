@@ -812,7 +812,7 @@ _named_number = (
     (24, r"twentyfour|vierund?zwanzig"),
     (25, r"twentyfive|fünfund?zwanzig"),
     (26, r"twentysix|sechsund?zwanzig"),
-    (27, r"twentyseven|siebenud?nzwanzig"),
+    (27, r"twentyseven|siebenud?zwanzig"),
     (28, r"twentyeight|achtund?zwanzig"),
     (29, r"twentynine|neunund?zwanzig"),
     (30, r"thirty|drei(ß|ss)ig"),
