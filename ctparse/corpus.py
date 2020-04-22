@@ -62,7 +62,7 @@ def make_partial_rule_dataset(
     for entry in entries:
         if progress:
             # Adding a fancy progress bar description
-            entries.set_description("  {: <70}".format(entry.text), refresh=True)
+            entries.set_description("  {: <70}".format(entry.text), refresh=True)  # type: ignore
         for parse in ctparse_gen(
             entry.text,
             entry.ts,
