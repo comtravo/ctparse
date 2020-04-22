@@ -60,6 +60,9 @@ def make_partial_rule_dataset(
         entries = tqdm(entries, total=len(entries))
 
     for entry in entries:
+        if progress:
+            # Adding a fancy progress bar description
+            entries.set_description("  {: <70}".format(entry.text), refresh=True)
         for parse in ctparse_gen(
             entry.text,
             entry.ts,
