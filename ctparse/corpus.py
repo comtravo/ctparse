@@ -1,13 +1,13 @@
 import json
 import logging
 from datetime import datetime
-from typing import Iterator, List, NamedTuple, Sequence, Tuple, Union
+from typing import Callable, Iterable, List, NamedTuple, Sequence, Tuple, TypeVar, Union
 
 from tqdm import tqdm
 
 from .ctparse import ctparse_gen
 from .scorer import DummyScorer, Scorer
-from .types import Interval, Time, Duration, Artifact
+from .types import Artifact, Duration, Interval, Time
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,8 @@ TimeParseEntry = NamedTuple(
     "TimeParseEntry", [("text", str), ("ts", datetime), ("gold", Artifact)],
 )
 
+T = TypeVar("T")
+
 
 def make_partial_rule_dataset(
     entries: Sequence[TimeParseEntry],
@@ -25,8 +27,8 @@ def make_partial_rule_dataset(
     max_stack_depth: int,
     relative_match_len: float = 1.0,
     progress: bool = False,
-) -> Iterator[Tuple[List[str], bool]]:
-    """Build a data set from a list of TimeParseEntry.
+) -> Iterable[Tuple[List[str], bool]]:
+    """Build a data set from an iterable of TimeParseEntry.
 
     The text is run through ctparse and all parses (within the specified timeout,
     max_stack_depth and scorer) are obtained. Each parse contains a sequence
@@ -57,12 +59,15 @@ def make_partial_rule_dataset(
     # list.
 
     if progress:
-        entries = tqdm(entries, total=len(entries))
+        entries_it = _progress_bar(
+            entries,
+            total=len(entries),
+            status_text=lambda entry: "  {: <70}".format(entry.text),
+        )
+    else:
+        entries_it = entries
 
-    for entry in entries:
-        if progress:
-            # Adding a fancy progress bar description
-            entries.set_description("  {: <70}".format(entry.text), refresh=True)  # type: ignore
+    for entry in entries_it:
         for parse in ctparse_gen(
             entry.text,
             entry.ts,
@@ -83,6 +88,16 @@ def make_partial_rule_dataset(
             for i in range(1, len(parse.production) + 1):
                 X = [str(p) for p in parse.production[:i]]
                 yield X, y
+
+
+def _progress_bar(
+    it: Iterable[T], total: int, status_text: Callable[[T], str]
+) -> Iterable[T]:
+    # Progress bar that can update text
+    pbar = tqdm(it)
+    for val in pbar:
+        pbar.set_description(status_text(val))
+        yield val
 
 
 def load_timeparse_corpus(fname: str) -> Sequence[TimeParseEntry]:
