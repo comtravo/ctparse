@@ -884,7 +884,7 @@ def ruleDurationHalf(ts: datetime, m: RegexMatch) -> Optional[Duration]:
     return None
 
 
-@rule(dimension(Interval), r"f[üo]r", dimension(Duration))
+@rule(predicate("isDateInterval"), r"f[üo]r", dimension(Duration))
 def ruleIntervalConjDuration(
     ts: datetime, interval: Interval, _: RegexMatch, dur: Duration
 ) -> Optional[Interval]:
@@ -893,7 +893,7 @@ def ruleIntervalConjDuration(
     return ruleDurationInterval(ts, dur, interval)  # type: ignore
 
 
-@rule(dimension(Interval), dimension(Duration))
+@rule(predicate("isDateInterval"), dimension(Duration))
 def ruleIntervalDuration(
     ts: datetime, interval: Interval, dur: Duration
 ) -> Optional[Interval]:
@@ -902,55 +902,50 @@ def ruleIntervalDuration(
     return ruleDurationInterval(ts, dur, interval)  # type: ignore
 
 
-@rule(dimension(Duration), dimension(Interval))
+@rule(dimension(Duration), predicate("isDateInterval"))
 def ruleDurationInterval(
     ts: datetime, dur: Duration, interval: Interval
 ) -> Optional[Interval]:
     # 3 days 15-18 Nov
-    if interval.isDateInterval:
-        delta = interval.t_to.dt - interval.t_from.dt
-        dur_delta = _duration_to_relativedelta(dur)
-        if delta.days == dur_delta.days:
-            return interval
+    delta = interval.t_to.dt - interval.t_from.dt
+    dur_delta = _duration_to_relativedelta(dur)
+    if delta.days == dur_delta.days:
+        return interval
     return None
 
 
-@rule(dimension(Time), r"f[üo]r", dimension(Duration))
+@rule(predicate("hasDate"), r"f[üo]r", dimension(Duration))
 def ruleTimeDuration(
     ts: datetime, t: Time, _: RegexMatch, dur: Duration
 ) -> Optional[Interval]:
     # Examples:
     # on the 27th for one day
     # heute eine Übernachtung
-    if t.hasDate:
-        # To make an interval we should at least have a date
-        if (
-            dur.unit
-            in (
-                DurationUnit.DAYS,
-                DurationUnit.NIGHTS,
-                DurationUnit.WEEKS,
-                DurationUnit.MONTHS,
-            )
-            and t.hasDate
-        ):
-            delta = _duration_to_relativedelta(dur)
-            end_ts = t.dt + delta
-            # We the end of the interval is a date without particular times
-            end = Time(year=end_ts.year, month=end_ts.month, day=end_ts.day)
-            return Interval(t_from=t, t_to=end)
 
-        if dur.unit in (DurationUnit.HOURS, DurationUnit.MINUTES) and t.hasTime:
-            delta = _duration_to_relativedelta(dur)
-            end_ts = t.dt + delta
-            end = Time(
-                year=end_ts.year,
-                month=end_ts.month,
-                day=end_ts.day,
-                hour=end_ts.hour,
-                minute=end_ts.minute,
-            )
-            return Interval(t_from=t, t_to=end)
+    # To make an interval we should at least have a date
+    if dur.unit in (
+        DurationUnit.DAYS,
+        DurationUnit.NIGHTS,
+        DurationUnit.WEEKS,
+        DurationUnit.MONTHS,
+    ):
+        delta = _duration_to_relativedelta(dur)
+        end_ts = t.dt + delta
+        # We the end of the interval is a date without particular times
+        end = Time(year=end_ts.year, month=end_ts.month, day=end_ts.day)
+        return Interval(t_from=t, t_to=end)
+
+    if dur.unit in (DurationUnit.HOURS, DurationUnit.MINUTES):
+        delta = _duration_to_relativedelta(dur)
+        end_ts = t.dt + delta
+        end = Time(
+            year=end_ts.year,
+            month=end_ts.month,
+            day=end_ts.day,
+            hour=end_ts.hour,
+            minute=end_ts.minute,
+        )
+        return Interval(t_from=t, t_to=end)
     return None
 
 
