@@ -94,7 +94,7 @@ def _progress_bar(
     it: Iterable[T], total: int, status_text: Callable[[T], str]
 ) -> Iterable[T]:
     # Progress bar that can update text
-    pbar = tqdm(it)
+    pbar = tqdm(it, len=total)
     for val in pbar:
         pbar.set_description(status_text(val))
         yield val
