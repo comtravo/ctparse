@@ -843,7 +843,6 @@ _rule_durations = r"({})\s*".format(_rule_durations)
 def ruleDigitDuration(ts: datetime, m: RegexMatch) -> Optional[Duration]:
     # 1 day, 1 night etc.
     num = m.match.group("num")
-    print("here")
     if num:
         for n, _, in _durations:
             unit = m.match.group("d_" + n.value)

@@ -518,3 +518,8 @@ class Duration(Artifact):
 
     def __str__(self) -> str:
         return "{} {}".format(self.value, self.unit.value)
+
+    @classmethod
+    def from_str(cls: Type["Duration"], text: str) -> "Duration":
+        value, unit = text.split()
+        return Duration(int(value), DurationUnit(unit))

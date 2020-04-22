@@ -7,14 +7,14 @@ from tqdm import tqdm
 
 from .ctparse import ctparse_gen
 from .scorer import DummyScorer, Scorer
-from .types import Interval, Time
+from .types import Interval, Time, Duration, Artifact
 
 logger = logging.getLogger(__name__)
 
 # A triplet of text, reference timestamp and correct parse.
 # It can be used as raw data to build datasets for ctparse.
 TimeParseEntry = NamedTuple(
-    "TimeParseEntry", [("text", str), ("ts", datetime), ("gold", Union[Time, Interval])]
+    "TimeParseEntry", [("text", str), ("ts", datetime), ("gold", Artifact)],
 )
 
 
@@ -101,7 +101,7 @@ def load_timeparse_corpus(fname: str) -> Sequence[TimeParseEntry]:
     ]
 
 
-def parse_nb_string(gold_parse: str) -> Union[Time, Interval]:
+def parse_nb_string(gold_parse: str) -> Union[Time, Interval, Duration]:
     """Parse a Time or an Interval from their no-bound string representation.
 
     The no-bound string representations are generated from ``Artifact.nb_str``.
@@ -110,6 +110,8 @@ def parse_nb_string(gold_parse: str) -> Union[Time, Interval]:
         return Time.from_str(gold_parse[7:-1])
     if gold_parse.startswith("Interval"):
         return Interval.from_str(gold_parse[11:-1])
+    if gold_parse.startswith("Duration"):
+        return Duration.from_str(gold_parse[11:-1])
     else:
         raise ValueError("'{}' has an invalid format".format(gold_parse))
 
