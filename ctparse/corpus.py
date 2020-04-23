@@ -1,21 +1,23 @@
 import json
 import logging
 from datetime import datetime
-from typing import Iterator, List, NamedTuple, Sequence, Tuple, Union
+from typing import Callable, Iterable, List, NamedTuple, Sequence, Tuple, TypeVar, Union
 
 from tqdm import tqdm
 
 from .ctparse import ctparse_gen
 from .scorer import DummyScorer, Scorer
-from .types import Interval, Time
+from .types import Artifact, Duration, Interval, Time
 
 logger = logging.getLogger(__name__)
 
 # A triplet of text, reference timestamp and correct parse.
 # It can be used as raw data to build datasets for ctparse.
 TimeParseEntry = NamedTuple(
-    "TimeParseEntry", [("text", str), ("ts", datetime), ("gold", Union[Time, Interval])]
+    "TimeParseEntry", [("text", str), ("ts", datetime), ("gold", Artifact)],
 )
+
+T = TypeVar("T")
 
 
 def make_partial_rule_dataset(
@@ -25,8 +27,8 @@ def make_partial_rule_dataset(
     max_stack_depth: int,
     relative_match_len: float = 1.0,
     progress: bool = False,
-) -> Iterator[Tuple[List[str], bool]]:
-    """Build a data set from a list of TimeParseEntry.
+) -> Iterable[Tuple[List[str], bool]]:
+    """Build a data set from an iterable of TimeParseEntry.
 
     The text is run through ctparse and all parses (within the specified timeout,
     max_stack_depth and scorer) are obtained. Each parse contains a sequence
@@ -57,9 +59,15 @@ def make_partial_rule_dataset(
     # list.
 
     if progress:
-        entries = tqdm(entries, total=len(entries))
+        entries_it = _progress_bar(
+            entries,
+            total=len(entries),
+            status_text=lambda entry: "  {: <70}".format(entry.text),
+        )
+    else:
+        entries_it = entries
 
-    for entry in entries:
+    for entry in entries_it:
         for parse in ctparse_gen(
             entry.text,
             entry.ts,
@@ -82,6 +90,16 @@ def make_partial_rule_dataset(
                 yield X, y
 
 
+def _progress_bar(
+    it: Iterable[T], total: int, status_text: Callable[[T], str]
+) -> Iterable[T]:
+    # Progress bar that can update text
+    pbar = tqdm(it, total=total)
+    for val in pbar:
+        pbar.set_description(status_text(val))
+        yield val
+
+
 def load_timeparse_corpus(fname: str) -> Sequence[TimeParseEntry]:
     """Load a corpus from disk.
 
@@ -101,8 +119,8 @@ def load_timeparse_corpus(fname: str) -> Sequence[TimeParseEntry]:
     ]
 
 
-def parse_nb_string(gold_parse: str) -> Union[Time, Interval]:
-    """Parse a Time or an Interval from their no-bound string representation.
+def parse_nb_string(gold_parse: str) -> Union[Time, Interval, Duration]:
+    """Parse a Time, Interval or Duration from their no-bound string representation.
 
     The no-bound string representations are generated from ``Artifact.nb_str``.
     """
@@ -110,6 +128,8 @@ def parse_nb_string(gold_parse: str) -> Union[Time, Interval]:
         return Time.from_str(gold_parse[7:-1])
     if gold_parse.startswith("Interval"):
         return Interval.from_str(gold_parse[11:-1])
+    if gold_parse.startswith("Duration"):
+        return Duration.from_str(gold_parse[11:-1])
     else:
         raise ValueError("'{}' has an invalid format".format(gold_parse))
 

@@ -2,8 +2,16 @@
 History
 =======
 
+0.2.0 (2020-04-23)
+------------------
+
+* Implemented new type `Duration`, to handle lengths of time
+* Adapted the dataset to include `Duration`
+* Implemented basic rule to merge `Duration`, `Time` and `Interval` in simple cases.
+* Created a make target to train the model `make train`
+
 0.1.0 (2020-03-20)
--------------------
+------------------
 
 * Major refactor of code underlying predictive model
 * Based on a contribution from @bharathi-srini: replace naive bayes from sklearn by own implementation
