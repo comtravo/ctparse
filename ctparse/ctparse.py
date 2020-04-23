@@ -21,7 +21,7 @@ from .timers import CTParseTimeoutError, timeit
 
 # Avoid collision with variable "timeout"
 from .timers import timeout as timeout_
-from .types import Artifact, Interval, RegexMatch, Time
+from .types import Artifact, RegexMatch
 from .loader import load_default_scorer
 
 logger = logging.getLogger(__name__)
@@ -32,13 +32,13 @@ _DEFAULT_SCORER = load_default_scorer()
 class CTParse:
     def __init__(
         self,
-        resolution: Union[Time, Interval],
+        resolution: Artifact,
         production: Tuple[Union[int, str], ...],
         score: float,
     ) -> None:
         """A possible parse returned by ctparse.
 
-        :param resolution: the parsed `Time` or `Interval`
+        :param resolution: the parsed `Time`, `Interval` or `Duration`
         :param production: the sequence of rules (productions) used to arrive
           at the parse
         :param score: a numerical score used to rank parses. A high score means
@@ -183,7 +183,7 @@ def _ctparse(
         # if the score is not better
         stack_prod = {}  # type: Dict[Tuple[Artifact, ...], float]
         # track what has been emitted and do not emit again
-        parse_prod = {}  # type: Dict[Union[Time, Interval], float]
+        parse_prod = {}  # type: Dict[Artifact, float]
         while stack:
             t_fun()
             s = stack.pop()
@@ -221,8 +221,6 @@ def _ctparse(
                 # emit all (probably partial) production
                 for x in s.prod:
                     if not isinstance(x, RegexMatch):
-                        x = cast(Union[Time, Interval], x)
-
                         # TODO: why do we have a different method for scoring
                         # final productions? This is because you may have non-reducible parses
                         # of the kind [Time, RegexMatch, Interval] or [Time, Time] etc.

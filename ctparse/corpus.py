@@ -120,7 +120,7 @@ def load_timeparse_corpus(fname: str) -> Sequence[TimeParseEntry]:
 
 
 def parse_nb_string(gold_parse: str) -> Union[Time, Interval, Duration]:
-    """Parse a Time or an Interval from their no-bound string representation.
+    """Parse a Time, Interval or Duration from their no-bound string representation.
 
     The no-bound string representations are generated from ``Artifact.nb_str``.
     """
