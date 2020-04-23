@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional, Tuple, Type, TypeVar
 
 import regex
 from regex import Regex
+import enum
 
 T = TypeVar("T", bound="Artifact")
 
@@ -459,6 +460,12 @@ class Interval(Artifact):
         else:
             return self.t_from.isTOD and self.t_to.isTOD
 
+    @property
+    def isDateInterval(self) -> bool:
+        if self.t_from is None or self.t_to is None:
+            return False
+        return self.t_from.isDate and self.t_to.isDate
+
     def __str__(self) -> str:
         return "{} - {}".format(str(self.t_from), str(self.t_to))
 
@@ -485,3 +492,34 @@ class Interval(Artifact):
             return self.t_to.end
         else:
             return None
+
+
+@enum.unique
+class DurationUnit(enum.Enum):
+    MINUTES = "minutes"
+    HOURS = "hours"
+    DAYS = "days"
+    NIGHTS = "nights"
+    WEEKS = "weeks"
+    MONTHS = "months"
+
+
+class Duration(Artifact):
+    def __init__(self, value: int, unit: DurationUnit):
+        """Create a Duration using value and unit.
+
+        Typical values for unit are:
+
+        minute, hour, day, night, week, month, year
+        """
+        super().__init__()
+        self.value = value
+        self.unit = unit
+
+    def __str__(self) -> str:
+        return "{} {}".format(self.value, self.unit.value)
+
+    @classmethod
+    def from_str(cls: Type["Duration"], text: str) -> "Duration":
+        value, unit = text.split()
+        return Duration(int(value), DurationUnit(unit))

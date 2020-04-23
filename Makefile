@@ -61,6 +61,9 @@ test: ## run tests quickly with the default Python
 test-all: ## run tests on every Python version with tox
 	tox
 
+train:
+	python scripts/train_default_model.py --legacy --dataset datasets/timeparse_corpus.json
+
 coverage: ## check code coverage quickly with the default Python
 	coverage run --source ctparse -m pytest
 	coverage report -m
