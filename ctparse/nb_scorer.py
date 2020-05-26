@@ -80,7 +80,7 @@ def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]) -> CTParseP
     y_binary = [1 if y_i else -1 for y_i in y]
     # Create and train the pipeline
     pipeline = CTParsePipeline(
-        CountVectorizer(ngram_range=(2, 3)), MultinomialNaiveBayes(alpha=5.0)
+        CountVectorizer(ngram_range=(1, 3)), MultinomialNaiveBayes(alpha=1.0)
     )
     model = pipeline.fit(X, y_binary)
     return model
