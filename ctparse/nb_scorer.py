@@ -56,21 +56,23 @@ class NaiveBayesScorer(Scorer):
         # The difference between the original score and final score is that in the
         # final score, the len_score is calculated based on the length of the final
         # production
-        len_score = math.log(len(prod) / len(txt))
-
+        len_score = math.log(len(prod) / len(txt)) * 100
         X = _feature_extractor(txt, ts, partial_parse)
         pred = self._model.predict_log_proba([X])
 
         # NOTE: the prediction is log-odds, or logit
         model_score = pred[0][1] - pred[0][0]
+        parsimony_score = len(X) * math.log(len(X))
 
-        return model_score + len_score
+        print(partial_parse.rules)
+        print("scores", model_score, len_score, parsimony_score)
+        return model_score + len_score - parsimony_score
 
 
 def _feature_extractor(
     txt: str, ts: datetime, partial_parse: PartialParse
 ) -> Sequence[str]:
-    return [str(r) for r in partial_parse.rules]
+    return ["startRule"] + [str(r) for r in partial_parse.rules]
 
 
 def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]) -> CTParsePipeline:
@@ -78,7 +80,7 @@ def train_naive_bayes(X: Sequence[Sequence[str]], y: Sequence[bool]) -> CTParseP
     y_binary = [1 if y_i else -1 for y_i in y]
     # Create and train the pipeline
     pipeline = CTParsePipeline(
-        CountVectorizer(ngram_range=(1, 3)), MultinomialNaiveBayes(alpha=1.0)
+        CountVectorizer(ngram_range=(2, 3)), MultinomialNaiveBayes(alpha=5.0)
     )
     model = pipeline.fit(X, y_binary)
     return model

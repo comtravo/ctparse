@@ -190,7 +190,8 @@ def run_corpus(
                 # the sequence of rules applied in this production
                 # *after* the matched regular expressions
                 for i in range(1, len(parse.production) + 1):
-                    Xs.append([str(p) for p in parse.production[:i]])
+                    # TODO: feature extractor here.
+                    Xs.append(["startRule"] + [str(p) for p in parse.production[:i]])
                     ys.append(y)
 
                 one_prod_passes |= y

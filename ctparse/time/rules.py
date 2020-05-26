@@ -884,7 +884,7 @@ def ruleDurationHalf(ts: datetime, m: RegexMatch) -> Optional[Duration]:
     return None
 
 
-@rule(predicate("isDateInterval"), r"f[üo]r", dimension(Duration))
+@rule(predicate("isDateInterval"), r"(f[üo]r|,|\()", dimension(Duration))
 def ruleIntervalConjDuration(
     ts: datetime, interval: Interval, _: RegexMatch, dur: Duration
 ) -> Optional[Interval]:

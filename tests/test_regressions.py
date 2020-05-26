@@ -11,5 +11,13 @@ def test_military_time():
 
 def test_parse_years_ahead():
     result = ctparse.ctparse("3 March 2023", ts=datetime(2020, 2, 25))
+    # result = list(result)
+    # [print(r) for r in result]
     assert result
     assert str(result.resolution) == "2023-03-03 X:X (X/X)"
+
+
+def test_one_night():
+    result = ctparse.ctparse("1 Nacht", ts=datetime(2020, 2, 25))
+    assert result
+    assert str(result.resolution) == "1 nights"
