@@ -2,6 +2,12 @@
 History
 =======
 
+0.2.1 (2020-05-27)
+------------------
+
+* Update development dependencies
+* Add flake8-bugbear and fixed issues
+
 0.2.0 (2020-04-23)
 ------------------
 

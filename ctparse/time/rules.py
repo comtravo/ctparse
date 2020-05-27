@@ -149,7 +149,7 @@ _rule_pods = "|".join("(?P<{}>{})".format(pod, expr) for pod, expr in _pods)
 
 @rule(_rule_pods)
 def rulePOD(ts: datetime, m: RegexMatch) -> Optional[Time]:
-    for i, (pod, _) in enumerate(_pods):
+    for _, (pod, _) in enumerate(_pods):
         if m.match.group(pod):
             return Time(POD=pod)
     return None
@@ -249,7 +249,8 @@ def ruleEOM(ts: datetime, _: RegexMatch) -> Time:
 
 
 @rule(
-    r"(das )?(EOY|jahr(es)? ?ende|ende (des )?jahr(es)?)|(the )?(EOY|end of (the )?year)"
+    r"(das )?(EOY|jahr(es)? ?ende|ende (des )?jahr(es)?)|"
+    r"(the )?(EOY|end of (the )?year)"
 )
 def ruleEOY(ts: datetime, _: RegexMatch) -> Time:
     dm = ts + relativedelta(day=1, month=1, years=1, days=-1)
@@ -403,7 +404,8 @@ def ruleLatentPOD(ts: datetime, pod: Time) -> Time:
     r"((?P<month>(?&_month))|(?P<named_month>({})))\.?"
     r"(?!\d|am|\s*pm)".format(_rule_months)
 )
-# do not allow dd.ddam, dd.ddpm, but allow dd.dd am - e.g. in the German "13.06 am Nachmittag"
+# do not allow dd.ddam, dd.ddpm, but allow dd.dd am - e.g. in the German
+# "13.06 am Nachmittag"
 def ruleDDMM(ts: datetime, m: RegexMatch) -> Time:
     if m.match.group("month"):
         month = int(m.match.group("month"))
@@ -837,6 +839,7 @@ _rule_durations = r"|".join(
     r"(?P<d_{}>{}\b)".format(dur.value, expr) for dur, expr in _durations
 )
 _rule_durations = r"({})\s*".format(_rule_durations)
+
 
 # Rules regarding durations
 @rule(r"(?P<num>\d+)\s*" + _rule_durations)

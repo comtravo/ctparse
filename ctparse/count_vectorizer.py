@@ -8,8 +8,8 @@ class CountVectorizer:
 
         A count vectorizer builds an internal vocabulary and embeds each input
         by counting for each term in the document how often it appearsin the vocabulary.
-        Here also n-grams are considered to be part of the vocabulary and the document terms,
-        respectively
+        Here also n-grams are considered to be part of the vocabulary and the document
+        terms, respectively
 
         Parameters
         ----------
@@ -76,9 +76,9 @@ class CountVectorizer:
         Returns
         -------
         Tuple[Sequence[Dict[str, int]], Set[str]]
-            For each document a dictionary counting how often which feature appeared and a
-            set of all features in all documents. Features are according to this vectorizers
-            n-gram settings.
+            For each document a dictionary counting how often which feature appeared and
+            a set of all features in all documents. Features are according to this
+            vectorizers n-gram settings.
         """
         documents = CountVectorizer._create_ngrams(ngram_range, documents)
         count_matrix = []

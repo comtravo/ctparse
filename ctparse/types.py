@@ -285,9 +285,10 @@ class Time(Artifact):
         self.DOW = DOW
         self.POD = POD
 
-    # ------------------------------------------------------------------------------------
-    # Make sure to not accidentially test bool(x) as False when x==0, but you meant x==None
-    # ------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    # Make sure to not accidentially test bool(x) as False when x==0, but you meant
+    # x==None
+    # -----------------------------------------------------------------------------
     @property
     def isDOY(self) -> bool:
         """isDayOfYear <=> a dd.mm but not year

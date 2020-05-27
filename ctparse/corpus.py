@@ -76,8 +76,8 @@ def make_partial_rule_dataset(
             max_stack_depth=max_stack_depth,
             scorer=scorer,
         ):
-            # TODO: we should make sure ctparse_gen never returns None. If there is no result
-            # it should return an empty list
+            # TODO: we should make sure ctparse_gen never returns None. If there is no
+            # result it should return an empty list
             if parse is None:
                 continue
 
@@ -157,7 +157,8 @@ def run_corpus(
     All samples from one production are given the same label which indicates if
     the production was correct.
 
-    To build a similar datasets without the strict checking, use `make_partial_rule_dataset`
+    To build a similar datasets without the strict checking, use
+    `make_partial_rule_dataset`
     """
     at_least_one_failed = False
     # pos_parses: number of parses that are correct
