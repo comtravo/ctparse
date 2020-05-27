@@ -29,7 +29,8 @@ class PartialParse:
 
 
         * prod: the current partial production
-        * rules: the sequence of regular expressions and rules used/applied to produce prod
+        * rules: the sequence of regular expressions and rules used/applied to produce
+                 prod
         * score: the score assigned to this production
         """
         if len(prod) < 1:

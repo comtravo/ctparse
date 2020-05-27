@@ -6,8 +6,8 @@ from .count_vectorizer import CountVectorizer
 
 class CTParsePipeline:
     def __init__(self, transformer: CountVectorizer, estimator: MultinomialNaiveBayes):
-        """Setup a pipeline of feature extraction and naive bayes. Overkill for what it does
-        but leaves room to use different models/features in the future
+        """Setup a pipeline of feature extraction and naive bayes. Overkill for what it
+        does but leaves room to use different models/features in the future
 
         Parameters
         ----------
@@ -20,7 +20,8 @@ class CTParsePipeline:
         self.estimator = estimator
 
     def fit(self, X: Sequence[Sequence[str]], y: Sequence[int]) -> "CTParsePipeline":
-        """Fit the transformer and then fit the Naive Bayes model on the transformed data
+        """Fit the transformer and then fit the Naive Bayes model on the transformed
+        data
 
         Returns
         -------
@@ -45,8 +46,8 @@ class CTParsePipeline:
         Returns
         -------
         Sequence[Tuple[float, float]]
-            For each document the tuple of negative/positive log probability from the naive
-            bayes model
+            For each document the tuple of negative/positive log probability from the
+            naive bayes model
         """
         X_transformed = self.transformer.transform(X)
         return self.estimator.predict_log_probability(X_transformed)

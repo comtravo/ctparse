@@ -26,9 +26,9 @@ class NaiveBayesScorer(Scorer):
 
         :param nb_model:
             A scikit-learn style Estimator that was trained on a corpus that takes
-            a Sequence[Sequence[str]] as X (each entry is a sequence of rule identifiers)
-            and a Sequence[int] in the set {-1, 1} that indicates if the parse
-            was correct or incorrect.
+            a Sequence[Sequence[str]] as X (each entry is a sequence of rule
+            identifiers) and a Sequence[int] in the set {-1, 1} that indicates if
+            the parse was correct or incorrect.
         """
         self._model = nb_model
 

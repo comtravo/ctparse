@@ -25,7 +25,8 @@ def timeout(timeout: Union[float, int]) -> Callable[[], None]:
     :param timeout:
        time in seconds. If it is equal to zero, it means to never raise an exception.
     :returns:
-        A function that raises a `CTParseTimeoutException` if `timeout` seconds have expired.
+        A function that raises a `CTParseTimeoutException` if `timeout` seconds have
+        expired.
     """
     start_time = perf_counter()
 

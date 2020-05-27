@@ -10,8 +10,8 @@ def _log_sum_exp(x: Sequence[float]) -> float:
 
 class MultinomialNaiveBayes:
     """Implements a multinomial naive Bayes classifier. For background information
-    (and what has inspired this, see e.g.
-    https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB.html)
+    (and what has inspired this, see e.g. https://scikit-learn.org/stable/...
+        ...modules/generated/sklearn.naive_bayes.MultinomialNB.html)
     """
 
     def __init__(self, alpha: float = 1.0):
@@ -42,7 +42,8 @@ class MultinomialNaiveBayes:
         X: Sequence[Dict[int, int]], y: Sequence[int], alpha: float
     ) -> Dict[str, List[float]]:
         # Token counts
-        # implicit assumption from vectorizer: first element has count for #vocab size set
+        # implicit assumption from vectorizer: first element has count for #vocab
+        # size set
         vocabulary_len = max(X[0].keys()) + 1
         token_counts_negative = [alpha] * vocabulary_len
         token_counts_positive = [alpha] * vocabulary_len

@@ -1,16 +1,17 @@
-pip==20.0.2
-bumpversion==0.5.3
+pip==20.1.1
+bumpversion==0.6.0
 watchdog==0.10.2
-flake8==3.7.9
-tox==3.14.5
-coverage==5.0.4
-sphinx==2.4.4
+flake8==3.8.2
+flake8-bugbear==20.1.4
+tox==3.15.1
+coverage==5.1
+sphinx==3.0.4
 sphinx-rtd-theme==0.4.3
 
 twine==3.1.1
 
-pytest==5.4.1
+pytest==5.4.2
 pytest-runner==5.2
-pytest-cov==2.8.1
+pytest-cov==2.9.0
 mypy==0.770
 black==19.10b0

@@ -80,9 +80,9 @@ def ctparse(
                                cover compared to the longest such sequence found
                                to be considered for productions (default=1.0)
     :type relative_match_len: float
-    :param max_stack_depth: limit the maximal number of highest scored candidate productions
-                            considered for future productions (default=10); set to 0 to not
-                            limit
+    :param max_stack_depth: limit the maximal number of highest scored candidate
+                            productions considered for future productions
+                            (default=10); set to 0 to not limit
     :type max_stack_depth: int
     :returns: Optional[CTParse]
     """
@@ -117,8 +117,8 @@ def ctparse_gen(
 ) -> Iterator[Optional[CTParse]]:
     """Generate parses for the string *txt*.
 
-    This function is equivalent to ctparse, with the exception that it returns an iterator
-    over the matches as soon as they are produced.
+    This function is equivalent to ctparse, with the exception that it returns an
+    iterator over the matches as soon as they are produced.
     """
     if scorer is None:
         scorer = _DEFAULT_SCORER
@@ -222,11 +222,12 @@ def _ctparse(
                 for x in s.prod:
                     if not isinstance(x, RegexMatch):
                         # TODO: why do we have a different method for scoring
-                        # final productions? This is because you may have non-reducible parses
-                        # of the kind [Time, RegexMatch, Interval] or [Time, Time] etc.
-                        # In this case we want to emit those Time, Interval parses separately
-                        # and score them appropriately (the default Scorer.score function
-                        # only operates on the whole PartialParse).
+                        # final productions? This is because you may have non-reducible
+                        # parses of the kind [Time, RegexMatch, Interval] or
+                        # [Time, Time] etc. In this case we want to emit those Time,
+                        # Interval parses separately and score them appropriately
+                        # (the default Scorer.score function only operates on the
+                        # whole PartialParse).
                         score_x = scorer.score_final(txt, ts, s, x)
                         # only emit productions not emitted before or
                         # productions emitted before but scored higher
@@ -252,7 +253,8 @@ def _ctparse(
         return
 
 
-# replace all comma, semicolon, whitespace, invisible control, opening and closing brackets
+# replace all comma, semicolon, whitespace, invisible control, opening and
+# closing brackets
 _repl1 = regex.compile(r"[,;\pZ\pC\p{Ps}\p{Pe}]+", regex.VERSION1)
 _repl2 = regex.compile(r"(\p{Pd}|[\u2010-\u2015]|\u2043)+", regex.VERSION1)
 
@@ -319,7 +321,8 @@ def _regex_stack(
     #
     # [Tomorrow] I want to go to the movies between [2] [pm] and [5] [pm].
     #
-    # This function will return the matches that are contiguous (excluding space characters)
+    # This function will return the matches that are contiguous (excluding space
+    # characters)
     # [Tomorrow]
     # [2], [pm]
     # [5], [pm]
@@ -334,10 +337,10 @@ def _regex_stack(
     #   (i.e. there is no gap between them):
     #
     #   - say A and B have no gap in between and all sequences starting
-    #     at A have already been produced. These by definition(which?: -) include as sub-sequences
-    #     all sequences starting at B. Any other sequences starting at B directly will not add valid
-    #     variations, as each of them could be prefixed with a sequence
-    #     starting at A
+    #     at A have already been produced. These by definition(which?: -) include as
+    #     sub-sequences all sequences starting at B. Any other sequences starting
+    #     at B directly will not add valid variations, as each of them could be
+    #     prefixed with a sequence starting at A
     #
     # * while the stack is not empty:
     #
@@ -347,8 +350,8 @@ def _regex_stack(
     #     i.e. sequences where expression can be appended to the last
     #     element s[-1] in s and put these extended sequences on the stack
     #
-    #   * if no new continuation could be generated for s, this sequence of RegexMatch is appended
-    #     to the list of results.
+    #   * if no new continuation could be generated for s, this sequence of
+    #     RegexMatch is appended to the list of results.
 
     prods = []
     n_rm = len(regex_matches)
