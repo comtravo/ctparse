@@ -1,3 +1,4 @@
+from ctparse.time.postprocess_latent import apply_postprocessing_rules
 import logging
 from datetime import datetime
 from typing import (
@@ -65,6 +66,7 @@ def ctparse(
     relative_match_len: float = 1.0,
     max_stack_depth: int = 10,
     scorer: Optional[Scorer] = None,
+    latent_time: bool = True,
 ) -> Optional[CTParse]:
     """Parse a string *txt* into a time expression
 
@@ -84,6 +86,9 @@ def ctparse(
                             productions considered for future productions
                             (default=10); set to 0 to not limit
     :type max_stack_depth: int
+    :param latent_time: if True, resolve expressions that contain only a time
+                        (e.g. 8:00 pm) to be the next matching time after
+                        reference time *ts*
     :returns: Optional[CTParse]
     """
     parsed = ctparse_gen(
@@ -93,6 +98,7 @@ def ctparse(
         relative_match_len=relative_match_len,
         max_stack_depth=max_stack_depth,
         scorer=scorer,
+        latent_time=latent_time,
     )
     # TODO: keep debug for back-compatibility, but remove it later
     if debug:
@@ -114,6 +120,7 @@ def ctparse_gen(
     relative_match_len: float = 1.0,
     max_stack_depth: int = 10,
     scorer: Optional[Scorer] = None,
+    latent_time: bool = True,
 ) -> Iterator[Optional[CTParse]]:
     """Generate parses for the string *txt*.
 
@@ -124,14 +131,22 @@ def ctparse_gen(
         scorer = _DEFAULT_SCORER
     if ts is None:
         ts = datetime.now()
-    return _ctparse(
+    for parse in _ctparse(
         _preprocess_string(txt),
         ts,
         timeout=timeout,
         relative_match_len=relative_match_len,
         max_stack_depth=max_stack_depth,
         scorer=scorer,
-    )
+    ):
+        if parse and latent_time:
+            # NOTE: we post-process after scoring because the model has been trained
+            # without using the latent time. This means also that the post processing
+            # step won't be added to the rules
+            prod = apply_postprocessing_rules(ts, parse.resolution)
+            parse.resolution = prod
+
+        yield parse
 
 
 def _ctparse(
