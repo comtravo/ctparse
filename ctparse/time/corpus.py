@@ -335,7 +335,6 @@ corpus = [
         "2018-03-07T12:43",
         ["5.8. 8Uhr - 16.8. 13Uhr", "August 5th 8h - August 16th 13h"],
     ),
-    # ruleTODTOD, ruleLatentTimeInterval
     (
         "Interval[]{X-X-X 08:00 (X/X) - X-X-X 13:00 (X/X)}",
         "2018-03-07T12:43",
