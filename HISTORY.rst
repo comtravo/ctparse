@@ -9,7 +9,6 @@ History
 * Removed latent rules regarding times (latent rules regarding dates are still present)
 * Added latent_time option to customize the new behavior, defauld behavior is backwards-compatible
 
-
 0.2.1 (2020-05-27)
 ------------------
 
