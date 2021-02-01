@@ -352,41 +352,6 @@ def ruleLatentDOY(ts: datetime, doy: Time) -> Time:
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
-@rule(predicate("isTOD"))
-def ruleLatentTOD(ts: datetime, tod: Time) -> Time:
-    dm = ts + relativedelta(hour=tod.hour, minute=tod.minute or 0)
-    if dm <= ts:
-        dm += relativedelta(days=1)
-    return Time(
-        year=dm.year, month=dm.month, day=dm.day, hour=dm.hour, minute=dm.minute
-    )
-
-
-@rule(predicate("isTimeInterval"))
-def ruleLatentTimeInterval(ts: datetime, ti: Interval) -> Interval:
-    dm_from = ts + relativedelta(hour=ti.t_from.hour, minute=ti.t_from.minute or 0)
-    dm_to = ts + relativedelta(hour=ti.t_to.hour, minute=ti.t_to.minute or 0)
-    if dm_from <= ts:
-        dm_from += relativedelta(days=1)
-        dm_to += relativedelta(days=1)
-    return Interval(
-        t_from=Time(
-            year=dm_from.year,
-            month=dm_from.month,
-            day=dm_from.day,
-            hour=dm_from.hour,
-            minute=dm_from.minute,
-        ),
-        t_to=Time(
-            year=dm_to.year,
-            month=dm_to.month,
-            day=dm_to.day,
-            hour=dm_to.hour,
-            minute=dm_to.minute,
-        ),
-    )
-
-
 @rule(predicate("isPOD"))
 def ruleLatentPOD(ts: datetime, pod: Time) -> Time:
     # Set the time to the pre-defined POD values, but keep the POD

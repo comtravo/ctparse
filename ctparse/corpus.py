@@ -75,6 +75,7 @@ def make_partial_rule_dataset(
             timeout=timeout,
             max_stack_depth=max_stack_depth,
             scorer=scorer,
+            latent_time=False,
         ):
             # TODO: we should make sure ctparse_gen never returns None. If there is no
             # result it should return an empty list
@@ -183,6 +184,7 @@ def run_corpus(
                 timeout=0,
                 max_stack_depth=0,
                 scorer=DummyScorer(),
+                latent_time=False,
             ):
                 assert parse is not None
 

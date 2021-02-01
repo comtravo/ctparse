@@ -742,7 +742,7 @@ corpus = [  # pragma: no cover
         ["12.06. um 13.15-14:15"],
     ],
     [
-        "Time[]{2016-11-03 08:15 (X/X)}",
+        "Interval[]{2016-11-03 08:15 (X/X) - None}",
         "2016-11-02T09:46",
         ["03.11. ab 08:15 Uhr", "03.11. ab 08:15 Uhr"],
     ],
@@ -1154,7 +1154,7 @@ corpus = [  # pragma: no cover
         ["am 07.06.2018 um 07.00 Uhr morgens"],
     ],
     [
-        "Interval[]{2017-06-15 08:00 (X/X) - None}",
+        "Interval[]{X-X-X 08:00 (X/X) - None}",
         "2017-06-14T15:35",
         ["ab 08:00 Uhr", "ab 08:00 Uhr", "ab 08:00 Uhr"],
     ],
@@ -1169,7 +1169,7 @@ corpus = [  # pragma: no cover
         ["ab 08:00 Uhr am 28.11.2016"],
     ],
     [
-        "Interval[]{2016-12-16 16:00 (X/X) - None}",
+        "Interval[]{X-X-X 16:00 (X/X) - None}",
         "2016-12-16T08:09",
         ["ab 16Uhr", "ab 16Uhr", "ab 16Uhr"],
     ],
@@ -1328,12 +1328,12 @@ corpus = [  # pragma: no cover
         ["nach 15:00 Uhr am 07.02.2018"],
     ],
     [
-        "Interval[]{2016-09-17 16:00 (X/X) - None}",
+        "Interval[]{X-X-X 16:00 (X/X) - None}",
         "2016-09-17T08:01",
         ["after 4pm", "after 4pm", "after 4pm"],
     ],
     [
-        "Interval[]{2017-11-22 19:00 (X/X) - None}",
+        "Interval[]{X-X-X 19:00 (X/X) - None}",
         "2017-11-22T07:12",
         ["abends ab 19:00", "abends ab 19:00", "abends ab 19:00"],
     ],

@@ -96,6 +96,24 @@ This should return a ``Time`` object represented as
 day of week (first ``X``) nor a part of day (second ``X``).
 
 
+Latent time
+~~~~~~~~~~~
+
+Normally, ``ctparse`` will anchor time expressions to the reference time. 
+For example, when parsing the time expression ``8:00 pm``, ctparse will
+resolve the expression to 8 pm after the reference time as follows
+
+.. code:: python
+   parse = ctparse("8:00 pm", ts=datetime(2020, 1, 1, 7, 0), latent_time=True) # default
+   # parse.resolution -> Time(2020, 1, 1, 20, 00)
+
+This behavior can be customized using the option ``latent_time=False``, which will
+return a time resolution not anchored to a particular date
+
+.. code:: python
+   parse = ctparse("8:00 pm", ts=datetime(2020, 1, 1, 7, 0), latent_time=False)
+   # parse.resolution -> Time(None, None, None, 20, 00)
+
 Implementation
 --------------
 

@@ -182,7 +182,7 @@
  {
   "text": "Abend",
   "ref_time": "2017-10-26T09:09:44",
-  "gold_parse": "Time[]{2017-11-16 X:X (X/evening)}",
+  "gold_parse": "Time[]{X-X-X X:X (X/evening)}",
   "language": "de"
  },
  {
@@ -1088,7 +1088,7 @@
  {
   "text": "evening",
   "ref_time": "2017-10-02T12:57:20",
-  "gold_parse": "Time[]{2017-10-13 X:X (X/evening)}",
+  "gold_parse": "Time[]{X-X-X X:X (X/evening)}",
   "language": "en"
  },
  {
@@ -1178,7 +1178,7 @@
  {
   "text": "18 Uhr",
   "ref_time": "2017-05-22T08:34:36",
-  "gold_parse": "Time[]{2017-05-23 18:00 (X/X)}",
+  "gold_parse": "Time[]{X-X-X 18:00 (X/X)}",
   "language": "de"
  },
  {
@@ -1448,7 +1448,7 @@
  {
   "text": "um 18:00 Uhr",
   "ref_time": "2017-09-05T09:48:10",
-  "gold_parse": "Interval[]{2017-09-11 18:00 (X/X) - None}",
+  "gold_parse": "Time[]{X-X-X 18:00 (X/X)}",
   "language": "de"
  },
  {
@@ -1532,7 +1532,7 @@
  {
   "text": "5pm",
   "ref_time": "2017-05-24T15:42:27",
-  "gold_parse": "Time[]{2017-06-07 17:00 (X/X)}",
+  "gold_parse": "Time[]{X-X-X 17:00 (X/X)}",
   "language": "en"
  },
  {
@@ -1838,7 +1838,7 @@
  {
   "text": "early afternoon",
   "ref_time": "2017-10-24T19:11:30",
-  "gold_parse": "Time[]{2017-10-25 X:X (X/earlyafternoon)}",
+  "gold_parse": "Time[]{X-X-X X:X (X/earlyafternoon)}",
   "language": "en"
  },
  {
@@ -1982,7 +1982,7 @@
  {
   "text": "um 21:00 h",
   "ref_time": "2017-10-24T06:31:58",
-  "gold_parse": "Time[]{2017-11-27 21:00 (X/X)}",
+  "gold_parse": "Time[]{X-X-X 21:00 (X/X)}",
   "language": "de"
  },
  {
@@ -2216,7 +2216,7 @@
  {
   "text": "Nachmittags",
   "ref_time": "2017-10-11T06:29:14",
-  "gold_parse": "Time[]{2017-11-16 X:X (X/afternoon)}",
+  "gold_parse": "Time[]{X-X-X X:X (X/afternoon)}",
   "language": "de"
  },
  {
@@ -10818,7 +10818,7 @@
   "language": "de"
  },
  {
-  "text": "24.10.2017 bis:                 10:00 Uhr",
+  "text": "24.10.2017 bis:     10:00 Uhr",
   "ref_time": "2017-10-20T08:26:48",
   "gold_parse": "Interval[]{None - 2017-10-24 10:00 (X/X)}",
   "language": "de"

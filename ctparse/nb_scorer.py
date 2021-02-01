@@ -64,7 +64,10 @@ class NaiveBayesScorer(Scorer):
         # NOTE: the prediction is log-odds, or logit
         model_score = pred[0][1] - pred[0][0]
 
-        return model_score + len_score
+        # We want the len_score to always take precedence. I believe a logit won't go up
+        # more than 1000. A better way would be to return an ordering tuple instead,
+        # but then we would need to change many interfaces.
+        return model_score + 1000 * len_score
 
 
 def _feature_extractor(
