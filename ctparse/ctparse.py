@@ -13,7 +13,10 @@ from typing import (
     Union,
 )
 
+import re
+
 import regex
+from itertools import chain
 
 from .partial_parse import PartialParse
 from .rule import _regex as global_regex
@@ -36,6 +39,7 @@ class CTParse:
         resolution: Artifact,
         production: Tuple[Union[int, str], ...],
         score: float,
+        subject: str,
     ) -> None:
         """A possible parse returned by ctparse.
 
@@ -48,14 +52,15 @@ class CTParse:
         self.resolution = resolution
         self.production = production
         self.score = score
+        self.subject = subject
 
     def __repr__(self) -> str:
-        return "CTParse({}, {}, {})".format(
-            self.resolution, self.production, self.score
+        return "CTParse({}, {}, {}, {})".format(
+            self.resolution, self.production, self.score, self.subject,
         )
 
     def __str__(self) -> str:
-        return "{} s={:.3f} p={}".format(self.resolution, self.score, self.production)
+        return "{} s={:.3f} p={} sb={}".format(self.resolution, self.score, self.production, self.subject) #self.subject
 
 
 def ctparse(
@@ -169,6 +174,7 @@ def _ctparse(
         logger.debug("-> building initial stack")
         regex_stack, _ts = timeit(_regex_stack)(txt, p, t_fun)
         logger.debug("time in _regex_stack: {:.0f}ms".format(1000 * _ts))
+
         # add empty production path + counter of contained regex
         stack = [PartialParse.from_regex_matches(s) for s in regex_stack]
         # TODO: the score should be kept separate from the partial parse
@@ -189,10 +195,25 @@ def _ctparse(
             for s in stack
             if s.max_covered_chars >= stack[-1].max_covered_chars * relative_match_len
         ]
+
         logger.debug("stack length after relative match length: {}".format(len(stack)))
         # limit depth of stack
         stack = stack[-max_stack_depth:]
         logger.debug("stack length after max stack depth limit: {}".format(len(stack)))
+
+        # ======================== DUMB-SUBJECT-NER ========================
+        # get subject by extracting regex stack from raw text
+        regex_matches = [match.prod for match in stack]
+        regex_matches = [product.match.captures() for tuple in regex_matches for product in tuple]
+        regex_matches = [match.split() for i in regex_matches for match in i]
+        regex_matches = list(chain.from_iterable(regex_matches))
+
+        raw = re.split(r'[\s-]+', txt)
+
+        # subject = list(set(raw) - set(matches)) # doesn't preserve order, but more efficient
+        subject = [i for i in raw if i not in regex_matches]
+        subject = ' '.join(subject)
+        # ===========================================================
 
         # track what has been added to the stack and do not add again
         # if the score is not better
@@ -251,7 +272,7 @@ def _ctparse(
                             logger.debug(
                                 " => {}, score={:.2f}, ".format(x.__repr__(), score_x)
                             )
-                            yield CTParse(x, s.rules, score_x)
+                            yield CTParse(x, s.rules, score_x, subject) # added subject output
             else:
                 # new productions generated, put on stack and sort
                 # stack by highst score
