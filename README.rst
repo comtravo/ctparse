@@ -34,10 +34,10 @@ breaking changes right on the ``master`` branch**
 * Documentation: https://ctparse.readthedocs.io.
 
 
-Contributions
+Modifications
 ----------
 
-Dumb NER extraction for subject 
+Dumb NER for subject 
 
 
 .. code:: python
