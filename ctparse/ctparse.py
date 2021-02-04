@@ -105,6 +105,7 @@ def ctparse(
         scorer=scorer,
         latent_time=latent_time,
     )
+
     # TODO: keep debug for back-compatibility, but remove it later
     if debug:
         return parsed  # type: ignore
@@ -112,8 +113,9 @@ def ctparse(
         parsed_list = list(parsed)
         # TODO: this way of testing a failure to find a match is a bit clunky with types
         if len(parsed_list) == 0 or (len(parsed_list) == 1 and parsed_list[0] is None):
-            logger.warning('Failed to produce result for "{}"'.format(txt))
-            return None
+            # logger.warning('Failed to produce result for "{}"'.format(txt))
+            subject = txt
+            return subject
         parsed_list.sort(key=lambda p: p.score)  # type: ignore
         return parsed_list[-1]
 
