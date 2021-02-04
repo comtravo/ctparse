@@ -1,7 +1,6 @@
 ===========================================================
-ctparse - Parse natural language time expressions in python
+modified ctparse - Parse natural language time expressions in python
 ===========================================================
-
 
 .. image:: https://travis-ci.org/comtravo/ctparse.svg?branch=master
      :target: https://travis-ci.org/comtravo/ctparse
@@ -34,6 +33,20 @@ breaking changes right on the ``master`` branch**
 * Free software: MIT license
 * Documentation: https://ctparse.readthedocs.io.
 
+
+Contributions
+----------
+
+Dumb NER extraction for subject 
+
+
+.. code:: python
+
+    r = ctparse("beers and burgers friday 8pm-9pm")
+    r.subject
+    Out[27]: 'beers and burgers'
+    
+    
 
 Background
 ----------
