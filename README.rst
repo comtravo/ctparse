@@ -1,37 +1,8 @@
 ===========================================================
-modified ctparse - Parse natural language time expressions in python
+Quick add built on ctparse_
 ===========================================================
 
-.. image:: https://travis-ci.org/comtravo/ctparse.svg?branch=master
-     :target: https://travis-ci.org/comtravo/ctparse
-     :alt: Travis
-
-.. image:: https://codecov.io/gh/comtravo/ctparse/branch/master/graph/badge.svg
-     :target: https://codecov.io/gh/comtravo/ctparse
-     :alt: Coverage
-
-.. image:: https://img.shields.io/pypi/v/ctparse.svg
-     :target: https://pypi.python.org/pypi/ctparse
-     :alt: PyPi
-
-.. image:: https://pyup.io/repos/github/comtravo/ctparse/shield.svg
-     :target: https://pyup.io/repos/github/comtravo/ctparse/
-     :alt: Updates
-
-.. image:: https://readthedocs.org/projects/ctparse/badge/?version=latest
-     :target: https://ctparse.readthedocs.io/en/latest/?badge=latest
-     :alt: Documentation Status
-
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/psf/black
-
-
-**This code is in early alpha stage. There can and will be potentially
-breaking changes right on the ``master`` branch**
-
-
-* Free software: MIT license
-* Documentation: https://ctparse.readthedocs.io.
+This fork implements additional features to complete a quick add function primarily for task management / calendar use cases.
 
 
 Modifications
@@ -44,11 +15,21 @@ Dumb NER for subject
 
     r = ctparse("beers and burgers friday 8pm-9pm")
     r.subject
-    Out[27]: 'beers and burgers'
+    Out[2]: 'beers and burgers'
     
     
+Label extraction
 
-Background
+
+.. code:: python
+
+    r = ctparse("beers and burgers friday 8pm-9pm #fun")
+    r.labels
+    Out[3]: ['fun']
+
+
+
+Ctparse
 ----------
 
 The package ``ctparse`` is a pure python package to parse time
@@ -217,6 +198,8 @@ sequences of rules applied on top lead to meaningful results. Here the
 -  Based on the same model from all resolutions the highest scoring is
    returned.
 
+
+.. _ctparse: https://github.com/comtravo/ctparse
 
 Credits
 -------
