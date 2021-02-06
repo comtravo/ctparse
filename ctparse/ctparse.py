@@ -116,8 +116,10 @@ def ctparse(
         # TODO: this way of testing a failure to find a match is a bit clunky with types
         if len(parsed_list) == 0 or (len(parsed_list) == 1 and parsed_list[0] is None):
             # logger.warning('Failed to produce result for "{}"'.format(txt))
+            labels = _get_labels(txt)
+            txt = re.sub('#[a-zA-Z0-9_-]+', '', txt).strip()
             subject = txt
-            return subject
+            return CTParse(None, None, None, subject, labels)
         parsed_list.sort(key=lambda p: p.score)  # type: ignore
         return parsed_list[-1]
 
