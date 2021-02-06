@@ -1,5 +1,5 @@
 ===========================================================
-Quick add built on ctparse_
+Quick-add built on ctparse_
 ===========================================================
 
 This fork implements additional features to complete a quick add function primarily for task management / calendar use cases.
