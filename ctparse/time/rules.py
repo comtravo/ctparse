@@ -694,6 +694,20 @@ def ruleDateInterval(ts: datetime, d: Time, i: Interval) -> Optional[Interval]:
             minute=i.t_to.minute,
             POD=i.t_to.POD,
         )
+
+    # "9-5" edge case, this is a common implicit am to pm interval
+    if t_from and t_to and t_from.dt >= t_to.dt and (t_from.hour <= 12 and t_to.hour <= 12) and (t_from.hour >= t_to.hour):
+        t_to_dt = t_to.dt + relativedelta(hours=12)
+        t_to = Time(
+            year=t_to_dt.year,
+            month=t_to_dt.month,
+            day=t_to_dt.day,
+            hour=t_to_dt.hour,
+            minute=t_to_dt.minute,
+            POD=t_to.POD,
+        )
+        return Interval(t_from=t_from, t_to=t_to)
+
     # This is for wrapping time around a date.
     # Mon, Nov 13 11:30 PM - 3:35 AM
     if t_from and t_to and t_from.dt >= t_to.dt:
