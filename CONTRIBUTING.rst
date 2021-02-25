@@ -18,7 +18,7 @@ new one.
 The following steps are probably a helpful guideline.
 
 * Add your case to the ``corpus.py`` file and run the corpus tests
-  using ``py.test tests/test_run_corpus.py``. Now basically two things can happen:
+  using ``py.test tests/test_corpus.py``. Now basically two things can happen:
 
   #. **The tests pass**, which means ``ctparse`` can correctly resolve
      the expression. It might not score it highest. To check this,
