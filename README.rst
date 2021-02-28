@@ -26,7 +26,9 @@ Label extraction
     r = ctparse("beers and burgers friday 8pm-9pm #fun")
     r.labels
     Out[3]: ['fun']
-
+    
+   
+``+`` **performance improvements**
 
 
 Ctparse
