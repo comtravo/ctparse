@@ -307,7 +307,7 @@ _repl2 = regex.compile(r"(\p{Pd}|[\u2010-\u2015]|\u2043)+", regex.VERSION1)
 
 
 def _get_labels(txt: str) -> str:
-    labels = re.findall('#[a-zA-Z0-9_-]+', txt)
+    labels = re.findall('#[^\d][a-zA-Z0-9_-]*', txt)
     labels = [label.replace("#", "") for label in labels]
     return labels
 
