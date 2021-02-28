@@ -365,7 +365,7 @@ def ruleLatentPOD(ts: datetime, pod: Time) -> Time:
 
 
 @rule(
-    r"(?<!\d|\.)(?P<day>(?&_day))[\./\-]"
+    r"(?<!\d|\.)(?P<day>(?&_day))[\./]" # removed \-
     r"((?P<month>(?&_month))|(?P<named_month>({})))\.?"
     r"(?!\d|am|\s*pm)".format(_rule_months)
 )
@@ -660,7 +660,11 @@ def ruleDateTimeDateTime(
 
 @rule(predicate("isTOD"), _regex_to_join, predicate("isTOD"))
 def ruleTODTOD(ts: datetime, t1: Time, _: RegexMatch, t2: Time) -> Interval:
-    return Interval(t_from=t1, t_to=t2)
+    if (t1.hour > t2.hour) and (t1.hour <= 12 and t2.hour <= 12):
+        t2.hour = t2.hour + 12
+        return Interval(t_from=t1, t_to=t2)
+    else:
+        return Interval(t_from=t1, t_to=t2)
 
 
 @rule(predicate("isPOD"), _regex_to_join, predicate("isPOD"))
@@ -695,31 +699,31 @@ def ruleDateInterval(ts: datetime, d: Time, i: Interval) -> Optional[Interval]:
             POD=i.t_to.POD,
         )
 
-    # "9-5" edge case, this is a common implicit am to pm interval
-    if t_from and t_to and t_from.dt >= t_to.dt and (t_from.hour <= 12 and t_to.hour <= 12) and (t_from.hour >= t_to.hour):
-        t_to_dt = t_to.dt + relativedelta(hours=12)
-        t_to = Time(
-            year=t_to_dt.year,
-            month=t_to_dt.month,
-            day=t_to_dt.day,
-            hour=t_to_dt.hour,
-            minute=t_to_dt.minute,
-            POD=t_to.POD,
-        )
-        return Interval(t_from=t_from, t_to=t_to)
-
-    # This is for wrapping time around a date.
-    # Mon, Nov 13 11:30 PM - 3:35 AM
     if t_from and t_to and t_from.dt >= t_to.dt:
-        t_to_dt = t_to.dt + relativedelta(days=1)
-        t_to = Time(
-            year=t_to_dt.year,
-            month=t_to_dt.month,
-            day=t_to_dt.day,
-            hour=t_to_dt.hour,
-            minute=t_to_dt.minute,
-            POD=t_to.POD,
-        )
+        # "9-5" edge case, this is a common implicit am to pm interval
+        if (type(t_from.hour) == int and type(t_to.hour) == int) and (t_from.hour <= 12 and t_to.hour <= 12) and (t_from.hour >= t_to.hour):
+            t_to_dt = t_to.dt + relativedelta(hours=12)
+            t_to = Time(
+                year=t_to_dt.year,
+                month=t_to_dt.month,
+                day=t_to_dt.day,
+                hour=t_to_dt.hour,
+                minute=t_to_dt.minute,
+                POD=t_to.POD,
+            )
+            return Interval(t_from=t_from, t_to=t_to)
+        # This is for wrapping time around a date.
+        # Mon, Nov 13 11:30 PM - 3:35 AM
+        else:
+            t_to_dt = t_to.dt + relativedelta(days=1)
+            t_to = Time(
+                year=t_to_dt.year,
+                month=t_to_dt.month,
+                day=t_to_dt.day,
+                hour=t_to_dt.hour,
+                minute=t_to_dt.minute,
+                POD=t_to.POD,
+            )
     return Interval(t_from=t_from, t_to=t_to)
 
 
