@@ -441,10 +441,7 @@ def _is_valid_military_time(ts: datetime, t: Time) -> bool:
 def _maybe_apply_am_pm(t: Time, ampm_match: str) -> Time:
     if not t.hour:
         return t
-    #PM bias
     if ampm_match is None:
-        if t.hour <= 12:
-            t.hour += 12
         return t
     if ampm_match.lower().startswith("a") and t.hour <= 12:
         return t
@@ -663,14 +660,9 @@ def ruleDateTimeDateTime(
 
 @rule(predicate("isTOD"), _regex_to_join, predicate("isTOD"))
 def ruleTODTOD(ts: datetime, t1: Time, _: RegexMatch, t2: Time) -> Interval:
-    # PM BIAS 9-5 handling
-    if t1.hour > t2.hour:
-        t1.hour -= 12
+    if (t1.hour > t2.hour) and (t1.hour <= 12 and t2.hour <= 12):
+        t2.hour = t2.hour + 12
         return Interval(t_from=t1, t_to=t2)
-    # old AM bias 9-5 handling
-    # if (t1.hour > t2.hour) and (t1.hour <= 12 and t2.hour <= 12):
-    #     t2.hour = t2.hour + 12
-    #     return Interval(t_from=t1, t_to=t2)
     else:
         return Interval(t_from=t1, t_to=t2)
 
