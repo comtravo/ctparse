@@ -273,9 +273,10 @@ class Time(Artifact):
         minute: Optional[int] = None,
         DOW: Optional[int] = None,
         POD: Optional[str] = None,
+        period: Optional[str] = None,
     ) -> None:
         super().__init__()
-        self._attrs = ["year", "month", "day", "hour", "minute", "DOW", "POD"]
+        self._attrs = ["year", "month", "day", "hour", "minute", "DOW", "POD", "period"]
         # Might add some validation here, did not to avoid the overhead
         self.year = year
         self.month = month
@@ -284,6 +285,7 @@ class Time(Artifact):
         self.minute = minute
         self.DOW = DOW
         self.POD = POD
+        self.period = period
 
     # -----------------------------------------------------------------------------
     # Make sure to not accidentially test bool(x) as False when x==0, but you meant
@@ -329,7 +331,7 @@ class Time(Artifact):
     @property
     def isTOD(self) -> bool:
         """isTimeOfDay - only a time, not date"""
-        return self._hasOnly("hour") or self._hasOnly("hour", "minute")
+        return self._hasOnly("hour") or self._hasOnly("hour", "minute") or self._hasOnly("hour", "period") or self._hasOnly("hour", "minute", "period")
 
     @property
     def isDate(self) -> bool:
@@ -366,7 +368,12 @@ class Time(Artifact):
     @property
     def hasTime(self) -> bool:
         """at least a time to the hour"""
-        return self._hasAtLeast("hour")
+        return self._hasAtLeast("hour") or self._hasOnly("hour", "period")
+
+    @property
+    def hasPeriod(self) -> bool:
+        """at least a period"""
+        return self._hasAtLeast("period")
 
     @property
     def hasPOD(self) -> bool:
@@ -417,6 +424,7 @@ class Time(Artifact):
             day=self.day,
             hour=hour,
             minute=self.minute or 0,
+            period=self.period,
         )
 
     @property
@@ -431,6 +439,7 @@ class Time(Artifact):
             day=self.day,
             hour=hour,
             minute=self.minute if self.minute is not None else 59,
+            period=self.period,
         )
 
     @property

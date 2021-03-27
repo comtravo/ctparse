@@ -441,15 +441,18 @@ def _is_valid_military_time(ts: datetime, t: Time) -> bool:
 def _maybe_apply_am_pm(t: Time, ampm_match: str) -> Time:
     if not t.hour:
         return t
-    #PM bias
     if ampm_match is None:
-        if t.hour <= 12:
-            t.hour += 12
-        return t
+        # PM bias
+        if t.hour < 12:
+            return Time(hour=t.hour + 12, minute=t.minute)
+        else:
+            t.period = "pm"
+            return t
     if ampm_match.lower().startswith("a") and t.hour <= 12:
+        t.period = "am"
         return t
     if ampm_match.lower().startswith("p") and t.hour < 12:
-        return Time(hour=t.hour + 12, minute=t.minute)
+        return Time(hour=t.hour + 12, minute=t.minute, period='pm')
     # the case ampm_match.startswith('a') and t.hour >
     # 12 (e.g. 13:30am) makes no sense, lets ignore the ampm
     # likewise if hour >= 12 no 'pm' action is needed
@@ -663,14 +666,17 @@ def ruleDateTimeDateTime(
 
 @rule(predicate("isTOD"), _regex_to_join, predicate("isTOD"))
 def ruleTODTOD(ts: datetime, t1: Time, _: RegexMatch, t2: Time) -> Interval:
-    # PM BIAS 9-5 handling
-    if t1.hour > t2.hour:
+    # 9-5 handling on pm bias
+    if (t2.hour < t1.hour) and (t2.hour >= 12 and t1.hour >= 12):
         t1.hour -= 12
         return Interval(t_from=t1, t_to=t2)
-    # old AM bias 9-5 handling
-    # if (t1.hour > t2.hour) and (t1.hour <= 12 and t2.hour <= 12):
-    #     t2.hour = t2.hour + 12
-    #     return Interval(t_from=t1, t_to=t2)
+    # am override
+    if not t1.period and t2.period == "am" and t1.hour > 12:
+        t1.hour -= 12
+        return Interval(t_from=t1, t_to=t2)
+    # pm-am interval overlap (only works for TODTOD which is not grounded to a date -> "9pm-5am", disables every ruledateinterval grounded to a date)
+    # if t1.period == "pm" and t2.period == "am":
+    #     return ruleDateInterval(ts, Time(year=ts.year,month=ts.month,day=ts.day), Interval(t_from=t1,t_to=t2))
     else:
         return Interval(t_from=t1, t_to=t2)
 
@@ -708,30 +714,15 @@ def ruleDateInterval(ts: datetime, d: Time, i: Interval) -> Optional[Interval]:
         )
 
     if t_from and t_to and t_from.dt >= t_to.dt:
-        # "9-5" edge case, this is a common implicit am to pm interval
-        if (type(t_from.hour) == int and type(t_to.hour) == int) and (t_from.hour <= 12 and t_to.hour <= 12) and (t_from.hour >= t_to.hour):
-            t_to_dt = t_to.dt + relativedelta(hours=12)
-            t_to = Time(
-                year=t_to_dt.year,
-                month=t_to_dt.month,
-                day=t_to_dt.day,
-                hour=t_to_dt.hour,
-                minute=t_to_dt.minute,
-                POD=t_to.POD,
-            )
-            return Interval(t_from=t_from, t_to=t_to)
-        # This is for wrapping time around a date.
-        # Mon, Nov 13 11:30 PM - 3:35 AM
-        else:
-            t_to_dt = t_to.dt + relativedelta(days=1)
-            t_to = Time(
-                year=t_to_dt.year,
-                month=t_to_dt.month,
-                day=t_to_dt.day,
-                hour=t_to_dt.hour,
-                minute=t_to_dt.minute,
-                POD=t_to.POD,
-            )
+        t_to_dt = t_to.dt + relativedelta(days=1)
+        t_to = Time(
+            year=t_to_dt.year,
+            month=t_to_dt.month,
+            day=t_to_dt.day,
+            hour=t_to_dt.hour,
+            minute=t_to_dt.minute,
+            POD=t_to.POD,
+        )
     return Interval(t_from=t_from, t_to=t_to)
 
 
