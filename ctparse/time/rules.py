@@ -823,6 +823,7 @@ _durations = [
     (DurationUnit.HOURS, r"stunden?|h(ours?)?"),
     (DurationUnit.WEEKS, r"weeks?|wochen?"),
     (DurationUnit.MONTHS, r"monate?|months?"),
+    (DurationUnit.YEARS, r'jahre?|years?'),
 ]
 
 
