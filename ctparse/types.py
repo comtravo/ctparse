@@ -536,10 +536,7 @@ class Duration(Artifact):
         value, unit = text.split()
         return Duration(int(value), DurationUnit(unit))
 
-
-    @property
-    def time(self) -> Time:
-        ts = datetime.now()
+    def time(self, ts: datetime) -> Time:
         if self.unit == DurationUnit.MINUTES:
             dm = ts + relativedelta(minutes=+self.value)
             return Time(year=dm.year, month=dm.month, day=dm.day, hour=dm.hour, minute=dm.minute)
