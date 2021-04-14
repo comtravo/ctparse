@@ -3,7 +3,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY
 from ..rule import rule, predicate, dimension, _regex_to_join
-from ..types import Time, Duration, Interval, pod_hours, RegexMatch, DurationUnit
+from ..types import Time, Duration, Interval, pod_hours, RegexMatch, DurationUnit, Recurring, RecurringFrequency, RecurringArray
 
 
 @rule(
@@ -20,13 +20,13 @@ def ruleAbsorbFromInterval(ts: datetime, _: Any, i: Interval) -> Interval:
 
 
 _dows = [
-    ("mon", r"montags?|mondays?|mon?\.?"),
-    ("tue", r"die?nstags?|die?\.?|tuesdays?|tue?\.?"),
-    ("wed", r"mittwochs?|mi\.?|wednesday?|wed\.?"),
-    ("thu", r"donn?erstags?|don?\.?|thursdays?|thur?\.?"),
-    ("fri", r"freitags?|fridays?|fri?\.?"),
-    ("sat", r"samstags?|sonnabends?|saturdays?|sat?\.?"),
-    ("sun", r"sonntags?|so\.?|sundays?|sun?\.?"),
+    ("mon", r"montag|monday|mon?\.?"),
+    ("tue", r"die?nstag|die?\.?|tuesday|tue?\.?"),
+    ("wed", r"mittwoch|mi\.?|wednesday|wed\.?"),
+    ("thu", r"donn?erstag|don?\.?|thursday|thur?\.?"),
+    ("fri", r"freitag|friday|fri?\.?"),
+    ("sat", r"samstag|sonnabends?|saturday|sat?\.?"),
+    ("sun", r"sonntag|so\.?|sunday|sun?\.?"),
 ]
 _rule_dows = r"|".join(r"(?P<{}>{})".format(dow, expr) for dow, expr in _dows)
 _rule_dows = r"({})\s*".format(_rule_dows)
@@ -817,7 +817,6 @@ _durations = [
     (DurationUnit.YEARS, r'jahre?|years?'),
 ]
 
-
 _rule_durations = r"|".join(
     r"(?P<d_{}>{}\b)".format(dur.value, expr) for dur, expr in _durations
 )
@@ -944,3 +943,322 @@ def _duration_to_relativedelta(dur: Duration) -> relativedelta:
         DurationUnit.HOURS: relativedelta(hours=dur.value),
         DurationUnit.MINUTES: relativedelta(minutes=dur.value),
     }[dur.unit]
+
+
+######### Recurring events #########
+
+_named_interval = (
+    (2, r"2|2nd|second|other"),
+    (3, r"3|3rd|third"),
+)
+
+_rule_named_interval = "|".join(
+    r"(?P<n_{}>{}\b)".format(itv, expr) for itv, expr in _named_interval
+
+)
+_rule_named_interval = r"({})\s*".format(_rule_named_interval)
+
+
+_single_frequencies = [
+    (RecurringFrequency.DAILY, r"daily"),
+    (RecurringFrequency.WEEKLY, r"weekly"),
+    (RecurringFrequency.MONTHLY, r"monthly"),
+    (RecurringFrequency.YEARLY, r"yearly"),
+]
+
+_rule_single_frequencies = r"|".join(
+    r"(?P<f_{}>{}\b)".format(freq.value, expr) for freq, expr in _single_frequencies
+)
+_rule_single_frequencies = r"({})\s*".format(_rule_single_frequencies)
+
+
+_frequencies = [
+    (RecurringFrequency.DAILY, r"day|d"),
+    (RecurringFrequency.WEEKLY, r"week|w"),
+    (RecurringFrequency.MONTHLY, r"month|m"),
+    (RecurringFrequency.YEARLY, r"year|y"),
+]
+
+_rule_frequencies = r"|".join(
+    r"(?P<f_{}>{}\b)".format(freq.value, expr) for freq, expr in _frequencies
+)
+_rule_frequencies = r"({})\s*".format(_rule_frequencies)
+
+
+_recurring_dows = [
+    ("mon", r"montags|mondays|mons\.?"),
+    ("tue", r"die?nstags|dies\.?|tuesdays|tues\.?"),
+    ("wed", r"mittwochs|mis\.?|wednesdays|weds\.?"),
+    ("thu", r"donn?erstags|dons\.?|thursdays|thurs\.?"),
+    ("fri", r"freitags|fridays|fris\.?"),
+    ("sat", r"samstags|sonnabends|saturdays|sats\.?"),
+    ("sun", r"sonntags|sos\.?|sundays|suns\.?"),
+]
+_rule_recurring_dows = r"|".join(r"(?P<{}>{})".format(dow, expr) for dow, expr in _recurring_dows)
+_rule_recurring_dows = r"({})\s*".format(_rule_recurring_dows)
+
+
+@rule(_rule_single_frequencies)
+def ruleRecurringSingle(ts: datetime, m: RegexMatch) -> Optional[Recurring]:
+    # daily / weekly
+    for f, _ in _single_frequencies:
+        freq = m.match.group("f_" + f.value)
+        if freq:
+            time = Time(year=ts.year, month=ts.month, day=ts.day)
+            return Recurring(f.value, 1, start_time=time, end_time=time)
+    return None
+
+
+# r"(?<!\S)every(?!\S)\s*|(?<!\S)each(?!\S)\s*" old case sensitive regex
+@rule(r"(every|each)\s*" + _rule_frequencies)
+def ruleRecurring(ts: datetime, m: RegexMatch) -> Optional[Recurring]:
+    # every day / every week
+    for f, _ in _frequencies:
+        freq = m.match.group("f_" + f.value)
+        if freq:
+            time= Time(year=ts.year, month=ts.month, day=ts.day)
+            return Recurring(frequency=f.value, interval=1, start_time=time, end_time=time)
+
+    return None
+
+
+# r"(?<!\S)every(?!\S)\s*|(?<!\S)each(?!\S)\s*" old case sensitive regex
+@rule(r"(every|each)\s*" + _rule_named_interval + _rule_frequencies)
+def ruleRecurringIntervals(ts: datetime, m: RegexMatch) -> Optional[Recurring]:
+    # every other week / every 2nd day
+    for i, _ in _named_interval:
+        match = m.match.group("n_{}".format(i))
+        if match:
+            itv = i
+    for f, _ in _frequencies:
+        freq = m.match.group("f_" + f.value)
+        if freq:
+            time = Time(year=ts.year, month=ts.month, day=ts.day)
+            return Recurring(frequency=f.value, interval=itv, start_time=time, end_time=time)
+    return None
+
+
+@rule(dimension(Recurring), r"(starting|beginning|from|starts?|begins?)\s*", predicate("isDate"))
+def ruleDefinedRecurringIntervals(ts: datetime, r: Recurring, m: RegexMatch, start: Time) -> Optional[Recurring]:
+    # every other week from monday / every 2nd day from today / every day starting monday / beer 4am weekly from next monday
+    start_time = Time(
+        year=start.year,
+        month = start.month,
+        day=start.day,
+        hour=r.start_time.hour or None,
+        minute=r.start_time.minute
+    )
+    end_time = Time(
+        year=start.year,
+        month=start.month,
+        day=start.day,
+        hour=r.end_time.hour or None,
+        minute=r.end_time.minute
+    )
+
+    return Recurring(frequency=r.frequency, interval=r.interval, start_time=start_time, end_time=end_time)
+
+
+@rule(dimension(Recurring), predicate("isTOD"))
+def ruleRecurringTime(ts: datetime, r: Recurring, t: Time) -> Optional[Recurring]:
+    # every day 4 / daily 4pm
+    r_time = r.start_time.dt
+    dm = ts + relativedelta(hour=t.hour, minute=t.minute or 0, day=r_time.day)
+    if dm <= ts:
+        r_time += relativedelta(days=1)
+    time = Time(
+        year=r_time.year,
+        month=r_time.month,
+        day=r_time.day,
+        hour=dm.hour,
+        minute=dm.minute
+    )
+    return Recurring(frequency=r.frequency, interval=r.interval, start_time=time, end_time=time)
+
+
+@rule(predicate("isTOD"), dimension(Recurring))
+def ruleRecurringTime2(ts: datetime, t: Time, r: Recurring) -> Optional[Recurring]:
+    # 4 every day / 4pm daily
+    r_time = r.start_time.dt
+    dm = ts + relativedelta(hour=t.hour, minute=t.minute or 0, day=r_time.day)
+    if dm <= ts:
+        r_time += relativedelta(days=1)
+    time = Time(
+        year=r_time.year,
+        month=r_time.month,
+        day=r_time.day,
+        hour=dm.hour,
+        minute=dm.minute
+    )
+    return Recurring(frequency=r.frequency, interval=r.interval, start_time=time, end_time=time)
+
+
+@rule(dimension(Recurring), predicate("isTimeInterval"))
+def ruleRecurringTimeInterval(ts: datetime, r: Recurring, t: Interval) -> Optional[Recurring]:
+    # every day 4-6 / daily 9-5
+    r_time = r.start_time.dt
+    dm = ts + relativedelta(hour=t.t_from.hour, minute=t.t_from.minute or 0, day=r_time.day)
+    if dm <= ts:
+        r_time += relativedelta(days=1)
+    start_time = Time(
+        year=r_time.year,
+        month=r_time.month,
+        day=r_time.day,
+        hour=t.t_from.hour,
+        minute=t.t_from.minute
+    )
+    end_time = Time(
+        year=r_time.year,
+        month=r_time.month,
+        day=r_time.day,
+        hour=t.t_to.hour,
+        minute=t.t_to.minute
+    )
+
+    return Recurring(frequency=r.frequency, interval=r.interval, start_time=start_time, end_time=end_time)
+
+
+@rule(predicate("isTimeInterval"), dimension(Recurring))
+def ruleRecurringTimeInterval2(ts: datetime, t: Interval, r: Recurring) -> Optional[Recurring]:
+    # 4-6 every day / 9-5 daily
+    r_time = r.start_time.dt
+    dm = ts + relativedelta(hour=t.t_from.hour, minute=t.t_from.minute or 0, day=r_time.day)
+    if dm <= ts:
+        r_time += relativedelta(days=1)
+    start_time = Time(
+        year=r_time.year,
+        month=r_time.month,
+        day=r_time.day,
+        hour=t.t_from.hour,
+        minute=t.t_from.minute
+    )
+    end_time = Time(
+        year=r_time.year,
+        month=r_time.month,
+        day=r_time.day,
+        hour=t.t_to.hour,
+        minute=t.t_to.minute
+    )
+
+    return Recurring(frequency=r.frequency, interval=r.interval, start_time=start_time, end_time=end_time)
+
+
+@rule(r"(every|each)\s*", predicate("isDOW"))
+def ruleRecurringDOW(ts: datetime, m: RegexMatch, dow: Time) -> Optional[Recurring]:
+    # every thursday
+    dm = ts + relativedelta(weekday=dow.DOW)
+    if dm <= ts:
+        dm += relativedelta(weeks=1)
+    time = Time(year=dm.year, month=dm.month, day=dm.day, DOW=dow.DOW)
+    return Recurring(frequency='weekly', interval=1, start_time=time, end_time=time)
+
+
+@rule(r"(every|each)\s*" + _rule_named_interval, predicate("isDOW"))
+def ruleRecurringIntervalDOW(ts: datetime, m: RegexMatch, dow: Time) -> Optional[Recurring]:
+    # every other thursday
+    itv = None
+    for i, _ in _named_interval:
+        match = m.match.group("n_{}".format(i))
+        if match:
+            itv = i
+    dm = ts + relativedelta(weekday=dow.DOW)
+    if dm <= ts:
+        dm += relativedelta(weeks=1)
+    time = Time(year=dm.year, month=dm.month, day=dm.day, DOW=dow.DOW)
+    return Recurring(frequency='weekly', interval=itv, start_time=time, end_time=time)
+
+
+@rule(_rule_recurring_dows)
+def ruleRecurringDOWS(ts: datetime, m: RegexMatch) -> Optional[Recurring]:
+    # thursdays
+    for i, (name, _) in enumerate(_recurring_dows):
+        if m.match.group(name):
+            dow = i
+            dm = ts + relativedelta(weekday=dow)
+            if dm <= ts:
+                dm += relativedelta(weeks=1)
+            time = Time(year=dm.year, month=dm.month, day=dm.day, DOW=dow)
+            return Recurring(frequency="weekly", interval=1, start_time=time, end_time=time)
+    return None
+
+
+@rule(dimension(Recurring), r"(and)\s*", dimension(Recurring))
+def ruleRecurringSimpleDOWDOW(ts: datetime, rec1: Recurring, m: RegexMatch, rec2: Recurring) -> Optional[Recurring]:
+    # thursdays and wednesdays
+    rec_1 = rec1
+    rec_2 = rec2
+    return RecurringArray(rec_1=rec_1, rec_2=rec_2)
+
+
+@rule(r"(every|each)\s*", predicate("isDOW"), r"(and)\s*", predicate("isDOW"))
+def ruleRecurringDOWDOW(ts: datetime, m1: RegexMatch, dow1: Time, m2: RegexMatch, dow2: Time) -> Optional[Recurring]:
+    # every thursday and wednesday
+    dm = ts + relativedelta(weekday=dow1.DOW)
+    if dm <= ts:
+        dm += relativedelta(weeks=1)
+    time1 = Time(year=dm.year, month=dm.month, day=dm.day, DOW=dow1.DOW)
+    rec_1 = Recurring(frequency='weekly', interval=1, start_time=time1, end_time=time1)
+
+    dm2 = ts + relativedelta(weekday=dow2.DOW)
+    if dm2 <= ts:
+        dm2 += relativedelta(weeks=1)
+    time2 = Time(year=dm2.year, month=dm2.month, day=dm2.day, DOW=dow2.DOW)
+    rec_2 = Recurring(frequency='weekly', interval=1, start_time=time2, end_time=time2)
+
+    return RecurringArray(rec_1=rec_1, rec_2=rec_2)
+
+
+@rule(r"(weekdays|every weekday)\s*", predicate("isTOD"))
+def ruleRecurringWeekdays(ts: datetime, m: RegexMatch, t: Time) -> Optional[RecurringArray]:
+    # weekdays 5-6 / every weekday 4pm
+    dows = (0, 1, 2, 3, 4)
+    days = []
+
+    for dow in dows:
+        dm = ts + relativedelta(weekday=dow)
+        if dm <= ts:
+            dm += relativedelta(weeks=1)
+            time = Time(year=dm.year, month=dm.month, day=dm.day, hour=t.hour, minute=t.minute)
+            days.append(time)
+        if dm >= ts:
+            dm += relativedelta(weekday=dow)
+            time = Time(year=dm.year, month=dm.month, day=dm.day, hour=t.hour, minute=t.minute)
+            days.append(time)
+
+    days = list(set(days))
+    days.sort(key=lambda x: x.dt)
+
+    return RecurringArray(rec_1=Recurring('weekly', 1, days[0], days[0]),
+                          rec_2=Recurring('weekly', 1, days[1], days[1]),
+                          rec_3=Recurring('weekly', 1, days[2], days[2]),
+                          rec_4=Recurring('weekly', 1, days[3], days[3]),
+                          rec_5=Recurring('weekly', 1, days[4], days[4]),
+                          )
+
+
+@rule(predicate("isTOD"), r"(weekdays|every weekday)\s*")
+def ruleRecurringWeekdays2(ts: datetime, t: Time, m: RegexMatch) -> Optional[RecurringArray]:
+    # 5-6 weekdays / 10am every weekday
+    dows = (0, 1, 2, 3, 4)
+    days = []
+
+    for dow in dows:
+        dm = ts + relativedelta(weekday=dow)
+        if dm <= ts:
+            dm += relativedelta(weeks=1)
+            time = Time(year=dm.year, month=dm.month, day=dm.day, hour=t.hour, minute=t.minute)
+            days.append(time)
+        if dm >= ts:
+            dm += relativedelta(weekday=dow)
+            time = Time(year=dm.year, month=dm.month, day=dm.day, hour=t.hour, minute=t.minute)
+            days.append(time)
+
+    days = list(set(days))
+    days.sort(key=lambda x: x.dt)
+
+    return RecurringArray(rec_1=Recurring('weekly', 1, days[0], days[0]),
+                          rec_2=Recurring('weekly', 1, days[1], days[1]),
+                          rec_3=Recurring('weekly', 1, days[2], days[2]),
+                          rec_4=Recurring('weekly', 1, days[3], days[3]),
+                          rec_5=Recurring('weekly', 1, days[4], days[4]),
+                          )
