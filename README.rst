@@ -133,7 +133,7 @@ Rules
 At the core ``ctparse`` is a collection of production rules over
 sequences of regular expressions and (intermediate) productions.
 
-Productions are either of type ``Time``, ``Interval`` or ``Duration`` and can
+Productions are either of type ``Time``, ``Interval``, ``Duration`` or ``Recurring`` and can
 have certain predicates (e.g. whether a ``Time`` is a part of day like
 ``'afternoon'``).
 
