@@ -8,6 +8,16 @@ This fork implements additional features to complete a quick add function primar
 Modifications
 ----------
 
+Recurring events
+
+
+.. code:: python
+
+    r = ctparse("beer every thursday 4")
+    r.resolution
+    Out[3]: Recurring[5-21]{weekly 1 2021-04-15 16:00 (X/X) 2021-04-15 16:00 (X/X)}
+    
+
 Dumb NER for subject 
 
 
@@ -27,7 +37,7 @@ Label extraction
     r.labels
     Out[3]: ['fun']
     
-   
+
 ``+`` **performance improvements**
 
 
