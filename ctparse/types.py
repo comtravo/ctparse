@@ -553,3 +553,71 @@ class Duration(Artifact):
             dm = ts + relativedelta(years=+self.value)
 
         return Time(year=dm.year, month=dm.month, day=dm.day)
+
+
+@enum.unique
+class RecurringFrequency(enum.Enum):
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    YEARLY = "yearly"
+
+
+class Recurring(Artifact):
+    def __init__(
+        self,
+        frequency: Optional[RecurringFrequency] = None,
+        interval: Optional[int] = None,
+        start_time: Optional[Time] = None,
+        end_time: Optional[Time] = None,
+    ):
+        super().__init__()
+        self._attrs = ['start_time', 'end_time', 'frequency', 'interval']
+        self.start_time = start_time
+        self.end_time = end_time
+        self.frequency = frequency
+        self.interval = interval
+
+    def __str__(self) -> str:
+        return "{} {} {} {}".format(self.frequency, self.interval, self.start_time, self.end_time)
+
+    @property
+    def isRecurring(self) -> bool:
+        if self.frequency and self.interval is None:
+            return False
+        else:
+            return True
+
+    @property
+    def isRecurringDOW(self) -> bool:
+        if not self.start_time.DOW:
+            return False
+        else:
+            return True
+
+    @property
+    def isRecurringTime(self) -> bool:
+        if not self.start_time.hasTime:
+            return False
+        else:
+            return True
+
+
+class RecurringArray(Artifact):
+    def __init__(self,
+                 rec_1: Optional[Recurring] = None,
+                 rec_2: Optional[Recurring] = None,
+                 rec_3: Optional[Recurring] = None,
+                 rec_4: Optional[Recurring] = None,
+                 rec_5: Optional[Recurring] = None,
+                 ):
+        super().__init__()
+        self._attrs = ['rec_1', 'rec_2', 'rec_3', 'rec_4', 'rec_5']
+        self.rec_1 = rec_1
+        self.rec_2 = rec_2
+        self.rec_3 = rec_3
+        self.rec_4 = rec_4
+        self.rec_5 = rec_5
+
+    def __str__(self) -> str:
+        return "\n Recurring instance: {} \n Recurring instance: {} \n Recurring instance: {} \n Recurring instance: {} \n Recurring instance: {}".format(self.rec_1, self.rec_2, self.rec_3, self.rec_4, self.rec_5)
