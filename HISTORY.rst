@@ -2,6 +2,10 @@
 History
 =======
 
+0.3.1 (2021-07-07)
+------------------
+
+* Add support for python 3.9 on travis and in manifest; update build config
 
 0.3.0 (2021-02-01)
 ------------------
