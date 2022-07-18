@@ -114,7 +114,7 @@ def rule(*patterns: Union[str, Predicate]) -> Callable[[Any], ProductionRule]:
 
 def regex_match(r_id: int) -> Predicate:
     def _regex_match(r: Artifact) -> bool:
-        return type(r) == RegexMatch and r.id == r_id  # type: ignore
+        return type(r) == RegexMatch and r.id == r_id
 
     return _regex_match
 

@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    ctparse.time
 
@@ -106,7 +107,6 @@ ctparse.types module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------

@@ -709,8 +709,16 @@ corpus = [
         "2020-02-25T12:34",
         ["one night", "ein nacht", "eine übernachtung"],
     ),
-    ("Duration[]{30 days}", "2020-02-25T12:34", ["30 days", "30 tage"],),
-    ("Duration[]{7 weeks}", "2020-02-25T12:34", ["7 weeks", "7 wochen"],),
+    (
+        "Duration[]{30 days}",
+        "2020-02-25T12:34",
+        ["30 days", "30 tage"],
+    ),
+    (
+        "Duration[]{7 weeks}",
+        "2020-02-25T12:34",
+        ["7 weeks", "7 wochen"],
+    ),
     (
         "Duration[]{20 minutes}",
         "2020-02-25T12:34",
