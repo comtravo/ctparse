@@ -420,7 +420,7 @@ def ruleDDMMYYYY(ts: datetime, m: RegexMatch) -> Time:
 @rule(
     r"(?P<year>(?&_year))[-/\.]"
     r"(?P<month>(?&_month))[-/\.]"
-    r"(?P<day>(?&_day))(?!\d)".format(_rule_months)
+    r"(?P<day>(?&_day))(?!\d)"
 )
 def ruleYYYYMMDD(ts: datetime, m: RegexMatch) -> Time:
     y = int(m.match.group("year"))
