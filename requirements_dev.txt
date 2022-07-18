@@ -1,4 +1,4 @@
-bumpversion>=0.6.0,<1.0.0
+bumpver>=2022.1118
 watchdog>=0.10.2,<1.0.0
 flake8>=4.0.0,<5.0.0
 flake8-bugbear>=22.0.0,<23.0.0
