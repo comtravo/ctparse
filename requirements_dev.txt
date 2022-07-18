@@ -4,8 +4,8 @@ flake8>=4.0.0,<5.0.0
 flake8-bugbear>=22.0.0,<23.0.0
 tox>=3.15.1,<4.0.0
 coverage>=6.0,<7.0
-sphinx>=3.0.4,<4.0.0
-sphinx-rtd-theme>=0.4.3,<1.0.0
+sphinx>=5.0.0,<6.0.0
+sphinx-rtd-theme>=1.0.0,<2.0.0
 
 twine>=4.0.0,<5.0.0
 
