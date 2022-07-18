@@ -414,6 +414,24 @@ def ruleDDMMYYYY(ts: datetime, m: RegexMatch) -> Time:
     return Time(year=y, month=month, day=int(m.match.group("day")))
 
 
+@rule(
+    r"(?P<year>(?&_year))[-/\.]"
+    r"(?P<month>(?&_month))[-/\.]"
+    r"(?P<day>(?&_day))(?!\d)".format(_rule_months)
+)
+def ruleYYYYMMDD(ts: datetime, m: RegexMatch) -> Time:
+    y = int(m.match.group("year"))
+    if y < 100:
+        y += 2000
+    if m.match.group("month"):
+        month = int(m.match.group("month"))
+    else:
+        for i, (name, _) in enumerate(_months):
+            if m.match.group(name):
+                month = i + 1
+    return Time(year=y, month=month, day=int(m.match.group("day")))
+
+
 def _is_valid_military_time(ts: datetime, t: Time) -> bool:
     if t.hour is None or t.minute is None:
         return False
