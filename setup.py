@@ -37,7 +37,11 @@ setup(
         "Topic :: Text Processing :: Linguistic",
     ],
     description="Parse natural language time expressions in python",
-    install_requires=["python-dateutil>=2.7.3,<3.0.0", "regex>=2018.6.6", "tqdm>=4.23.4,<5.0.0"],
+    install_requires=[
+        "python-dateutil>=2.7.3,<3.0.0",
+        "regex>=2018.6.6",
+        "tqdm>=4.23.4,<5.0.0",
+    ],
     license="MIT license",
     long_description=readme + "\n\n" + history,
     include_package_data=True,
