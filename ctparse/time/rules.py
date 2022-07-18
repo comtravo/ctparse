@@ -87,7 +87,10 @@ _rule_named_ts = r"({})\s*".format(_rule_named_ts)
 @rule(_rule_named_ts + r"(uhr|h|o\'?clock)?")
 def ruleNamedHour(ts: datetime, m: RegexMatch) -> Optional[Time]:
     match = m.match
-    for n, _, in _named_ts:
+    for (
+        n,
+        _,
+    ) in _named_ts:
         if match.group("t_{}".format(n)):
             return Time(hour=n, minute=0)
     return None
@@ -812,7 +815,10 @@ def ruleDigitDuration(ts: datetime, m: RegexMatch) -> Optional[Duration]:
     # 1 day, 1 night etc.
     num = m.match.group("num")
     if num:
-        for n, _, in _durations:
+        for (
+            n,
+            _,
+        ) in _durations:
             unit = m.match.group("d_" + n.value)
             if unit:
                 return Duration(int(num), n)
@@ -831,7 +837,10 @@ def ruleNamedNumberDuration(ts: datetime, m: RegexMatch) -> Optional[Duration]:
             continue
 
     if num:
-        for d, _, in _durations:
+        for (
+            d,
+            _,
+        ) in _durations:
             unit = m.match.group("d_" + d.value)
             if unit:
                 return Duration(num, d)
@@ -842,7 +851,10 @@ def ruleNamedNumberDuration(ts: datetime, m: RegexMatch) -> Optional[Duration]:
 @rule(r"(hal[fb]e?|1/2)(\s+an?)?\s*" + _rule_durations)
 def ruleDurationHalf(ts: datetime, m: RegexMatch) -> Optional[Duration]:
     # half day, half hour, 1/2 hour
-    for n, _, in _durations:
+    for (
+        n,
+        _,
+    ) in _durations:
         if m.match.group("d_" + n.value):
             if n == DurationUnit.HOURS:
                 return Duration(30, DurationUnit.MINUTES)
