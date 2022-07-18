@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 # A triplet of text, reference timestamp and correct parse.
 # It can be used as raw data to build datasets for ctparse.
 TimeParseEntry = NamedTuple(
-    "TimeParseEntry", [("text", str), ("ts", datetime), ("gold", Artifact)],
+    "TimeParseEntry",
+    [("text", str), ("ts", datetime), ("gold", Artifact)],
 )
 
 T = TypeVar("T")

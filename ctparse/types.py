@@ -291,14 +291,12 @@ class Time(Artifact):
     # -----------------------------------------------------------------------------
     @property
     def isDOY(self) -> bool:
-        """isDayOfYear <=> a dd.mm but not year
-        """
+        """isDayOfYear <=> a dd.mm but not year"""
         return self._hasOnly("month", "day")
 
     @property
     def isDOM(self) -> bool:
-        """isDayOfMonth <=> a dd but no month
-        """
+        """isDayOfMonth <=> a dd but no month"""
         return self._hasOnly("day")
 
     @property
