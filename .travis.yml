@@ -1,6 +1,6 @@
 language: python
 sudo: required
-dist: xenial
+dist: focal
 python:
   - 3.9
   - 3.8
