@@ -49,6 +49,13 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr htmlcov/
 	rm -fr .pytest_cache
 
+init: ## install all deps, including development ones
+	pip install -U pip wheel
+	pip install -U -r requirements.txt
+	pip install -U -r requirements_dev.txt
+	pip check
+	pip install pipdeptree && pipdeptree --warn fail
+
 lint: ## check style with flake8
 	black --check ctparse tests
 	flake8 ctparse tests
