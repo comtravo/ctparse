@@ -276,9 +276,7 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-3. The pull request should work for Python 3.6., 3.7. and 3.8. Check
-   https://travis-ci.org/comtravo/ctparse/pull_requests
-   and make sure that the tests pass for all supported Python versions.
+3. The pull request should work for Python 3.7. - 3.10.
 
 Tips
 ----
@@ -300,5 +298,4 @@ $ git push
 $ git push --tags
 $ make release
 
-You will need a username and password to upload to pypi (might be
-automated on Travis).
+You will need a username and password to upload to pypi
