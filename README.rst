@@ -2,22 +2,9 @@
 ctparse - Parse natural language time expressions in python
 ===========================================================
 
-
-.. image:: https://travis-ci.org/comtravo/ctparse.svg?branch=master
-     :target: https://travis-ci.org/comtravo/ctparse
-     :alt: Travis
-
-.. image:: https://codecov.io/gh/comtravo/ctparse/branch/master/graph/badge.svg
-     :target: https://codecov.io/gh/comtravo/ctparse
-     :alt: Coverage
-
 .. image:: https://img.shields.io/pypi/v/ctparse.svg
      :target: https://pypi.python.org/pypi/ctparse
      :alt: PyPi
-
-.. image:: https://pyup.io/repos/github/comtravo/ctparse/shield.svg
-     :target: https://pyup.io/repos/github/comtravo/ctparse/
-     :alt: Updates
 
 .. image:: https://readthedocs.org/projects/ctparse/badge/?version=latest
      :target: https://ctparse.readthedocs.io/en/latest/?badge=latest
@@ -25,10 +12,6 @@ ctparse - Parse natural language time expressions in python
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
-
-
-**This code is in early alpha stage. There can and will be potentially
-breaking changes right on the ``master`` branch**
 
 
 * Free software: MIT license
@@ -99,7 +82,7 @@ day of week (first ``X``) nor a part of day (second ``X``).
 Latent time
 ~~~~~~~~~~~
 
-Normally, ``ctparse`` will anchor time expressions to the reference time. 
+Normally, ``ctparse`` will anchor time expressions to the reference time.
 For example, when parsing the time expression ``8:00 pm``, ctparse will
 resolve the expression to 8 pm after the reference time as follows
 
