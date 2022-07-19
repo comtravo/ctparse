@@ -216,7 +216,9 @@ def ruleToday(ts: datetime, _: RegexMatch) -> Time:
     r"((just|right)\s*)?now|immediately"
 )
 def ruleNow(ts: datetime, _: RegexMatch) -> Time:
-    return Time(year=ts.year, month=ts.month, day=ts.day, hour=ts.hour, minute=ts.minute)
+    return Time(
+        year=ts.year, month=ts.month, day=ts.day, hour=ts.hour, minute=ts.minute
+    )
 
 
 @rule(r"morgen|tmrw?|tomm?or?rows?")
@@ -249,7 +251,10 @@ def ruleEOM(ts: datetime, _: RegexMatch) -> Time:
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
-@rule(r"(das )?(EOY|jahr(es)? ?ende|ende (des )?jahr(es)?)|" r"(the )?(EOY|end of (the )?year)")
+@rule(
+    r"(das )?(EOY|jahr(es)? ?ende|ende (des )?jahr(es)?)|"
+    r"(the )?(EOY|end of (the )?year)"
+)
 def ruleEOY(ts: datetime, _: RegexMatch) -> Time:
     dm = ts + relativedelta(day=1, month=1, years=1, days=-1)
     return Time(year=dm.year, month=dm.month, day=dm.day)
@@ -412,7 +417,11 @@ def ruleDDMMYYYY(ts: datetime, m: RegexMatch) -> Time:
     return Time(year=y, month=month, day=int(m.match.group("day")))
 
 
-@rule(r"(?P<year>(?&_year))[-/\.]" r"(?P<month>(?&_month))[-/\.]" r"(?P<day>(?&_day))(?!\d)")
+@rule(
+    r"(?P<year>(?&_year))[-/\.]"
+    r"(?P<month>(?&_month))[-/\.]"
+    r"(?P<day>(?&_day))(?!\d)"
+)
 def ruleYYYYMMDD(ts: datetime, m: RegexMatch) -> Time:
     y = int(m.match.group("year"))
     if y < 100:
@@ -540,10 +549,15 @@ def ruleTODPOD(ts: datetime, tod: Time, pod: Time) -> Optional[Time]:
     # time of day may only be an hour as in "3 in the afternoon"; this
     # is only relevant for time <= 12
     if tod.hour < 12 and (
-        "afternoon" in pod.POD or "evening" in pod.POD or "night" in pod.POD or "last" in pod.POD
+        "afternoon" in pod.POD
+        or "evening" in pod.POD
+        or "night" in pod.POD
+        or "last" in pod.POD
     ):
         h = tod.hour + 12
-    elif tod.hour > 12 and ("forenoon" in pod.POD or "morning" in pod.POD or "first" in pod.POD):
+    elif tod.hour > 12 and (
+        "forenoon" in pod.POD or "morning" in pod.POD or "first" in pod.POD
+    ):
         # 17Uhr morgen -> do not merge
         return None
     else:
@@ -558,12 +572,16 @@ def rulePODTOD(ts: datetime, pod: Time, tod: Time) -> Optional[Time]:
 
 @rule(predicate("isDate"), predicate("isTOD"))
 def ruleDateTOD(ts: datetime, date: Time, tod: Time) -> Time:
-    return Time(year=date.year, month=date.month, day=date.day, hour=tod.hour, minute=tod.minute)
+    return Time(
+        year=date.year, month=date.month, day=date.day, hour=tod.hour, minute=tod.minute
+    )
 
 
 @rule(predicate("isTOD"), predicate("isDate"))
 def ruleTODDate(ts: datetime, tod: Time, date: Time) -> Time:
-    return Time(year=date.year, month=date.month, day=date.day, hour=tod.hour, minute=tod.minute)
+    return Time(
+        year=date.year, month=date.month, day=date.day, hour=tod.hour, minute=tod.minute
+    )
 
 
 @rule(predicate("isDate"), predicate("isPOD"))
@@ -634,14 +652,21 @@ def ruleDOYDate(ts: datetime, d1: Time, _: RegexMatch, d2: Time) -> Optional[Int
 
 
 @rule(predicate("isDateTime"), _regex_to_join, predicate("isDateTime"))
-def ruleDateTimeDateTime(ts: datetime, d1: Time, _: RegexMatch, d2: Time) -> Optional[Interval]:
+def ruleDateTimeDateTime(
+    ts: datetime, d1: Time, _: RegexMatch, d2: Time
+) -> Optional[Interval]:
     if d1.year > d2.year:
         return None
     if d1.year == d2.year and d1.month > d2.month:
         return None
     if d1.year == d2.year and d1.month == d2.month and d1.day > d2.day:
         return None
-    if d1.year == d2.year and d1.month == d2.month and d1.day == d2.day and d1.hour > d2.hour:
+    if (
+        d1.year == d2.year
+        and d1.month == d2.month
+        and d1.day == d2.day
+        and d1.hour > d2.hour
+    ):
         return None
     if (
         d1.year == d2.year
@@ -711,14 +736,19 @@ def rulePODInterval(ts: datetime, p: Time, i: Interval) -> Optional[Interval]:
         if t.hour is None:
             return None
         if t.hour < 12 and (
-            "afternoon" in p.POD or "evening" in p.POD or "night" in p.POD or "last" in p.POD
+            "afternoon" in p.POD
+            or "evening" in p.POD
+            or "night" in p.POD
+            or "last" in p.POD
         ):
             return t.hour + 12
         else:
             return t.hour
 
     # only makes sense if i is a time interval
-    if not ((i.t_from is None or i.t_from.hasTime) and (i.t_to is None or i.t_to.hasTime)):
+    if not (
+        (i.t_from is None or i.t_from.hasTime) and (i.t_to is None or i.t_to.hasTime)
+    ):
         return None
     t_to = t_from = None
     if i.t_to is not None:
@@ -776,7 +806,9 @@ _named_number = (
     (30, r"thirty|drei(ß|ss)ig"),
     (31, r"thirtyone|einundrei(ß|ss)ig"),
 )
-_rule_named_number = "|".join(r"(?P<n_{}>{}\b)".format(n, expr) for n, expr in _named_number)
+_rule_named_number = "|".join(
+    r"(?P<n_{}>{}\b)".format(n, expr) for n, expr in _named_number
+)
 _rule_named_number = r"({})\s*".format(_rule_named_number)
 
 _durations = [
@@ -789,7 +821,9 @@ _durations = [
 ]
 
 
-_rule_durations = r"|".join(r"(?P<d_{}>{}\b)".format(dur.value, expr) for dur, expr in _durations)
+_rule_durations = r"|".join(
+    r"(?P<d_{}>{}\b)".format(dur.value, expr) for dur, expr in _durations
+)
 _rule_durations = r"({})\s*".format(_rule_durations)
 
 
@@ -858,14 +892,18 @@ def ruleIntervalConjDuration(
 
 
 @rule(predicate("isDateInterval"), dimension(Duration))
-def ruleIntervalDuration(ts: datetime, interval: Interval, dur: Duration) -> Optional[Interval]:
+def ruleIntervalDuration(
+    ts: datetime, interval: Interval, dur: Duration
+) -> Optional[Interval]:
     # Variant without conjunction
     # 15-16 Nov 1 Nacht
     return ruleDurationInterval(ts, dur, interval)  # type: ignore
 
 
 @rule(dimension(Duration), predicate("isDateInterval"))
-def ruleDurationInterval(ts: datetime, dur: Duration, interval: Interval) -> Optional[Interval]:
+def ruleDurationInterval(
+    ts: datetime, dur: Duration, interval: Interval
+) -> Optional[Interval]:
     # 3 days 15-18 Nov
     delta = interval.t_to.dt - interval.t_from.dt
     dur_delta = _duration_to_relativedelta(dur)
@@ -875,7 +913,9 @@ def ruleDurationInterval(ts: datetime, dur: Duration, interval: Interval) -> Opt
 
 
 @rule(predicate("hasDate"), r"f[üo]r", dimension(Duration))
-def ruleTimeDuration(ts: datetime, t: Time, _: RegexMatch, dur: Duration) -> Optional[Interval]:
+def ruleTimeDuration(
+    ts: datetime, t: Time, _: RegexMatch, dur: Duration
+) -> Optional[Interval]:
     # Examples:
     # on the 27th for one day
     # heute eine Übernachtung
