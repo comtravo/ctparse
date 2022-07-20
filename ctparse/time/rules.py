@@ -54,7 +54,7 @@ _months = [
     ("november", r"november|nov\.?"),
     ("december", r"december|dezember|dez\.?|dec\.?"),
 ]
-_rule_months = "|".join(r"(?P<{}>{})".format(name, expr) for name, expr in _months)
+_rule_months = r"|".join(r"(?P<{}>{})".format(name, expr) for name, expr in _months)
 
 
 @rule(_rule_months)
@@ -400,9 +400,9 @@ def ruleMMDD(ts: datetime, m: RegexMatch) -> Time:
 
 
 @rule(
-    r"(?<!\d|\.)(?P<day>(?&_day))[-/\.]"
-    r"((?P<month>(?&_month))|(?P<named_month>({})))[-/\.]"
-    r"(?P<year>(?&_year))(?!\d)".format(_rule_months)
+    r"(?<!\d|\.)(?P<day>(?&_day))\s*[-/\.]"
+    r"\s*((?P<month>(?&_month))|(?P<named_month>({})))\s*[-/\.]"
+    r"\s*(?P<year>(?&_year))(?!\d)".format(_rule_months)
 )
 def ruleDDMMYYYY(ts: datetime, m: RegexMatch) -> Time:
     y = int(m.match.group("year"))
@@ -418,9 +418,9 @@ def ruleDDMMYYYY(ts: datetime, m: RegexMatch) -> Time:
 
 
 @rule(
-    r"(?P<year>(?&_year))[-/\.]"
-    r"(?P<month>(?&_month))[-/\.]"
-    r"(?P<day>(?&_day))(?!\d)"
+    r"(?P<year>(?&_year))\s*[-/\.]"
+    r"\s*(?P<month>(?&_month))\s*[-/\.]"
+    r"\s*(?P<day>(?&_day))(?!\d)"
 )
 def ruleYYYYMMDD(ts: datetime, m: RegexMatch) -> Time:
     y = int(m.match.group("year"))

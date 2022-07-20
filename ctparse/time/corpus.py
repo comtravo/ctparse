@@ -93,7 +93,9 @@ corpus = [
             "8.5.2018",
             "8. Mai 2018",
             "8. Mai 18",
-            "8/May/2018",
+            "8/ May/2018",  # the spaces are intended
+            "8 -May- 2018",
+            "08- 05 -2018",
             "8/May",
             "May/8",
             "5/8",

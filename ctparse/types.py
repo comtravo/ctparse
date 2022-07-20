@@ -437,7 +437,7 @@ class Time(Artifact):
         t = self.start
         if t.year is None or t.month is None or t.day is None:
             raise ValueError(
-                "cannot convert underspecified Time into datetime"
+                "cannot convert under specified Time into datetime"
                 ", missing at least one of year, month or day"
             )
         return datetime(t.year, t.month, t.day, t.hour or 0, t.minute or 0)
