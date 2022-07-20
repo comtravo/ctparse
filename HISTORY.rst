@@ -6,7 +6,10 @@ History
 ------------------
 
 * Add rule for straight forward US formatted dates (`ruleYYYYMMDD`)
-* Improve US formats in general
+* Added rule `ruleYearMonth`
+* Added corpus cases for some open issues that now pass
+* Changed all internal imports to be absolute (i.e. `from ctparse.x` instead of `from .x`)
+* Dropped `tox` (now using github actions)
 
 =======
 
