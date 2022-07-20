@@ -359,7 +359,8 @@ corpus = [
     ),
     # ruleTODTOD
     (
-        "Interval[]{2022-07-21 06:00 (X/X) - 2022-07-21 08:00 (X/X)}",
+        # Not resolving latent time in tests/training
+        "Interval[]{X-X-X 06:00 (X/X) - X-X-X 08:00 (X/X)}",
         "2022-07-20T10:43",
         ["between 6- 8 AM", "zwischen 6 und 8h"],
     ),

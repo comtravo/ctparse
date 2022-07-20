@@ -12,9 +12,9 @@ from typing import (
     Generator,
 )
 
-from .rule import rules as global_rules, ProductionRule, Predicate
-from .timers import timeit
-from .types import Artifact, RegexMatch
+from ctparse.rule import rules as global_rules, ProductionRule, Predicate
+from ctparse.timers import timeit
+from ctparse.types import Artifact, RegexMatch
 
 logger = logging.getLogger(__name__)
 

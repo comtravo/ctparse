@@ -1,7 +1,7 @@
 from typing import Sequence, Tuple
 
-from .nb_estimator import MultinomialNaiveBayes
-from .count_vectorizer import CountVectorizer
+from ctparse.nb_estimator import MultinomialNaiveBayes
+from ctparse.count_vectorizer import CountVectorizer
 
 
 class CTParsePipeline:

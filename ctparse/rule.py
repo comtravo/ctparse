@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union, Type
 
 import regex
 
-from .types import Artifact, RegexMatch
+from ctparse.types import Artifact, RegexMatch
 
 logger = logging.getLogger(__name__)
 
@@ -133,4 +133,4 @@ def predicate(pred: str) -> Predicate:
     return _predicate
 
 
-from .time.rules import *  # noqa
+from ctparse.time.rules import *  # noqa

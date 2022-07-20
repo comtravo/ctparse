@@ -1,4 +1,3 @@
-from ctparse.time.postprocess_latent import apply_postprocessing_rules
 import logging
 from datetime import datetime
 from typing import (
@@ -15,15 +14,13 @@ from typing import (
 
 import regex
 
-from .partial_parse import PartialParse
-from .rule import _regex as global_regex
-from .scorer import Scorer
-from .timers import CTParseTimeoutError, timeit
-
-# Avoid collision with variable "timeout"
-from .timers import timeout as timeout_
-from .types import Artifact, RegexMatch
-from .loader import load_default_scorer
+from ctparse.partial_parse import PartialParse
+from ctparse.rule import _regex as global_regex
+from ctparse.scorer import Scorer
+from ctparse.timers import CTParseTimeoutError, timeit, timeout as timeout_
+from ctparse.time.postprocess_latent import apply_postprocessing_rules
+from ctparse.types import Artifact, RegexMatch
+from ctparse.loader import load_default_scorer
 
 logger = logging.getLogger(__name__)
 

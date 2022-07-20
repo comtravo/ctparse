@@ -2,8 +2,8 @@ from typing import Optional, Any, cast
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY
-from ..rule import rule, predicate, dimension, _regex_to_join
-from ..types import Time, Duration, Interval, pod_hours, RegexMatch, DurationUnit
+from ctparse.rule import rule, predicate, dimension, _regex_to_join
+from ctparse.types import Time, Duration, Interval, pod_hours, RegexMatch, DurationUnit
 
 
 @rule(

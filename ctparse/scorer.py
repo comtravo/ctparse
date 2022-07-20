@@ -7,8 +7,8 @@ from datetime import datetime
 from random import Random
 from typing import Optional
 
-from .partial_parse import PartialParse
-from .types import Artifact
+from ctparse.partial_parse import PartialParse
+from ctparse.types import Artifact
 
 
 class Scorer(metaclass=ABCMeta):
