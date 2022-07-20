@@ -772,6 +772,11 @@ def rulePODInterval(ts: datetime, p: Time, i: Interval) -> Optional[Interval]:
     return Interval(t_from=t_from, t_to=t_to)
 
 
+@rule(predicate("isMonth"), predicate("isYear"))
+def ruleMonthYear(ts: datetime, month: Time, year: Time) -> Time:
+    return Time(month=month.month, year=year.year)
+
+
 # We add named numbers at least until 31 (max number of days in a month)
 _named_number = (
     (1, r"an?|one|ein[es]?"),

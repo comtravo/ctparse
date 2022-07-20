@@ -346,6 +346,12 @@ corpus = [
         "2018-03-07T12:43",
         ["5.8. - 16.8.2017", "Samstag 5.8. - Mittwoch 16.8.2017"],
     ),
+    # ruleMonthYear
+    (
+        "Time[]{2018-06-X X:X (X/X)}",
+        "2022-07-07T12:43",
+        ["June 2018", "Jun 2018"],
+    ),
     # ruleDateTimeDateTime
     (
         "Interval[]{2018-08-05 08:00 (X/X) - 2018-08-16 13:00 (X/X)}",
