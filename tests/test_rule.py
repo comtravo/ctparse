@@ -4,11 +4,11 @@ from ctparse.types import RegexMatch, Artifact
 from ctparse.rule import dimension, predicate, regex_match, rule
 
 
-class TestClassA(Artifact):
+class ClassA(Artifact):
     predA = 1
 
 
-class TestClassB(Artifact):
+class ClassB(Artifact):
     pass
 
 
@@ -33,12 +33,12 @@ class TestRule(TestCase):
         m = next(regex.finditer("(?P<R1>x)", "x"))
         r = RegexMatch(1, m)
         self.assertTrue(regex_match(1)(r))
-        self.assertFalse(regex_match(1)(TestClassA()))
+        self.assertFalse(regex_match(1)(ClassA()))
 
     def test_dimension(self):
-        self.assertTrue(dimension(TestClassA)(TestClassA()))
-        self.assertFalse(dimension(TestClassA)(TestClassB()))
+        self.assertTrue(dimension(ClassA)(ClassA()))
+        self.assertFalse(dimension(ClassA)(ClassB()))
 
     def test_predicate(self):
-        self.assertTrue(predicate("predA")(TestClassA()))
-        self.assertFalse(predicate("predA")(TestClassB()))
+        self.assertTrue(predicate("predA")(ClassA()))
+        self.assertFalse(predicate("predA")(ClassB()))

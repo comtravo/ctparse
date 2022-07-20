@@ -5,8 +5,8 @@ import logging
 import os
 import pickle
 
-from .scorer import Scorer, DummyScorer
-from .nb_scorer import NaiveBayesScorer
+from ctparse.scorer import Scorer, DummyScorer
+from ctparse.nb_scorer import NaiveBayesScorer
 
 logger = logging.getLogger(__name__)
 

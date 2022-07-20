@@ -2,8 +2,8 @@ from typing import Optional, Any, cast
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY
-from ..rule import rule, predicate, dimension, _regex_to_join
-from ..types import Time, Duration, Interval, pod_hours, RegexMatch, DurationUnit
+from ctparse.rule import rule, predicate, dimension, _regex_to_join
+from ctparse.types import Time, Duration, Interval, pod_hours, RegexMatch, DurationUnit
 
 
 @rule(
@@ -14,7 +14,7 @@ def ruleAbsorbOnTime(ts: datetime, _: RegexMatch, t: Time) -> Time:
     return t
 
 
-@rule(r"von|vom|zwischen|from|between", dimension(Interval))
+@rule(r"von|vom|zwischen|from|between|start(ing|s)?", dimension(Interval))
 def ruleAbsorbFromInterval(ts: datetime, _: Any, i: Interval) -> Interval:
     return i
 
@@ -417,6 +417,24 @@ def ruleDDMMYYYY(ts: datetime, m: RegexMatch) -> Time:
     return Time(year=y, month=month, day=int(m.match.group("day")))
 
 
+@rule(
+    r"(?P<year>(?&_year))[-/\.]"
+    r"(?P<month>(?&_month))[-/\.]"
+    r"(?P<day>(?&_day))(?!\d)"
+)
+def ruleYYYYMMDD(ts: datetime, m: RegexMatch) -> Time:
+    y = int(m.match.group("year"))
+    if y < 100:
+        y += 2000
+    if m.match.group("month"):
+        month = int(m.match.group("month"))
+    else:
+        for i, (name, _) in enumerate(_months):
+            if m.match.group(name):
+                month = i + 1
+    return Time(year=y, month=month, day=int(m.match.group("day")))
+
+
 def _is_valid_military_time(ts: datetime, t: Time) -> bool:
     if t.hour is None or t.minute is None:
         return False
@@ -752,6 +770,11 @@ def rulePODInterval(ts: datetime, p: Time, i: Interval) -> Optional[Interval]:
             DOW=i.t_from.DOW,
         )
     return Interval(t_from=t_from, t_to=t_to)
+
+
+@rule(predicate("isMonth"), predicate("isYear"))
+def ruleMonthYear(ts: datetime, month: Time, year: Time) -> Time:
+    return Time(month=month.month, year=year.year)
 
 
 # We add named numbers at least until 31 (max number of days in a month)

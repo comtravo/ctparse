@@ -5,9 +5,9 @@ from typing import Callable, Iterable, List, NamedTuple, Sequence, Tuple, TypeVa
 
 from tqdm import tqdm
 
-from .ctparse import ctparse_gen
-from .scorer import DummyScorer, Scorer
-from .types import Artifact, Duration, Interval, Time
+from ctparse.ctparse import ctparse_gen
+from ctparse.scorer import DummyScorer, Scorer
+from ctparse.types import Artifact, Duration, Interval, Time
 
 logger = logging.getLogger(__name__)
 

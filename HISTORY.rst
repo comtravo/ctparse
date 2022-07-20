@@ -2,6 +2,14 @@
 History
 =======
 
+0.3.3 (2022-07-18)
+------------------
+
+* Add rule for straight forward US formatted dates (`ruleYYYYMMDD`)
+* Improve US formats in general
+
+=======
+
 0.3.2 (2022-07-18)
 ------------------
 

@@ -8,9 +8,9 @@ from typing import Sequence
 from ctparse.nb_estimator import MultinomialNaiveBayes
 from ctparse.count_vectorizer import CountVectorizer
 from ctparse.pipeline import CTParsePipeline
-from .scorer import Scorer
-from .partial_parse import PartialParse
-from .types import Artifact
+from ctparse.scorer import Scorer
+from ctparse.partial_parse import PartialParse
+from ctparse.types import Artifact
 
 
 class NaiveBayesScorer(Scorer):
