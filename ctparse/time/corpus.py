@@ -352,6 +352,12 @@ corpus = [
         "2022-07-07T12:43",
         ["June 2018", "Jun 2018"],
     ),
+    # ruleTODTOD
+    (
+        "Interval[]{2022-07-08 06:00 (X/X) - 2022-07-08 08:00 (X/X)}",
+        "2022-07-07T12:43",
+        ["between 6- 8 AM", "zwischen 6 und 8h"],
+    ),
     # ruleDateTimeDateTime
     (
         "Interval[]{2018-08-05 08:00 (X/X) - 2018-08-16 13:00 (X/X)}",
