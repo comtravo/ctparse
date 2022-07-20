@@ -340,6 +340,11 @@ corpus = [
             "starting 2018/08/05 until 2018/08/16",
         ],
     ),
+    (
+        "Interval[]{2020-05-11 X:X (X/X) - 2020-05-15 X:X (X/X)}",
+        "2022-07-20T11:43",
+        ["ab dem 11.05.20-15.05.20"],
+    ),
     # ruleDOYDate
     (
         "Interval[]{2017-08-05 X:X (X/X) - 2017-08-16 X:X (X/X)}",
@@ -354,8 +359,8 @@ corpus = [
     ),
     # ruleTODTOD
     (
-        "Interval[]{2022-07-08 06:00 (X/X) - 2022-07-08 08:00 (X/X)}",
-        "2022-07-07T12:43",
+        "Interval[]{2022-07-21 06:00 (X/X) - 2022-07-21 08:00 (X/X)}",
+        "2022-07-20T10:43",
         ["between 6- 8 AM", "zwischen 6 und 8h"],
     ),
     # ruleDateTimeDateTime
