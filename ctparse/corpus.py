@@ -1,7 +1,16 @@
 import json
 import logging
 from datetime import datetime
-from typing import Callable, Iterable, List, NamedTuple, Sequence, Tuple, TypeVar, Union
+from typing import (
+    Callable,
+    Iterable,
+    List,
+    NamedTuple,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 from tqdm import tqdm
 
@@ -137,9 +146,9 @@ def parse_nb_string(gold_parse: str) -> Union[Time, Interval, Duration]:
 
 
 def _run_corpus_one_test(
-    target: str, ts: str, tests: List[str], max_stack_depth: int = 0
-) -> None:
-    ts = datetime.strptime(ts, "%Y-%m-%dT%H:%M")
+    target: str, ts_str: str, tests: List[str], max_stack_depth: int = 0
+) -> Tuple[List[List[str]], List[bool], int, int, int, int, int, bool]:
+    ts = datetime.strptime(ts_str, "%Y-%m-%dT%H:%M")
     all_tests_pass = True
     Xs = []
     ys = []
