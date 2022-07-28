@@ -2,13 +2,20 @@
 History
 =======
 
-0.3.3 (2022-07-28)
+0.3.4 (2022-07-28)
+------------------
+
+* Add fuzzy matching on longer literals
+* [internal] Detangle corpus tests into isolated test cases
+
+0.3.3 (2022-07-18)
 ------------------
 
 * Add rule for straight forward US formatted dates (`ruleYYYYMMDD`)
-* Improve US formats in general
-* Add fuzzy matching on longer literals
-* [internal] Detangle corpus tests into isolated test cases
+* Added rule `ruleYearMonth`
+* Added corpus cases for some open issues that now pass
+* Changed all internal imports to be absolute (i.e. `from ctparse.x` instead of `from .x`)
+* Dropped `tox` (now using github actions)
 
 =======
 
