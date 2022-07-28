@@ -70,7 +70,7 @@ def rule(*patterns: Union[str, Predicate]) -> Callable[[Any], ProductionRule]:
                 # or preceeded by a separator character
                 # r'(?i)(?:{sep})(?P<{re_key}>{re})(?:{sep})'.format(
                 re,
-                regex.VERSION1,
+                regex.VERSION1 |  regex.BESTMATCH,
             )
             if new_rr.match(""):
                 raise ValueError("expression {} matches empty strings".format(p))
