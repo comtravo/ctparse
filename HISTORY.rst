@@ -2,11 +2,13 @@
 History
 =======
 
-0.3.3 (2022-07-18)
+0.3.3 (2022-07-28)
 ------------------
 
 * Add rule for straight forward US formatted dates (`ruleYYYYMMDD`)
 * Improve US formats in general
+* Add fuzzy matching on longer literals
+* [internal] Detangle corpus tests into isolated test cases
 
 =======
 
