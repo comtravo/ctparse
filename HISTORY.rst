@@ -2,6 +2,13 @@
 History
 =======
 
+0.3.4 (2022-07-28)
+------------------
+
+* Add fuzzy matching on longer literals
+* [internal] De-tangle corpus tests into isolated test cases
+* Allow spaces around separators in ruleDDMMYYYY and ruleYYYYMMDD
+
 0.3.3 (2022-07-18)
 ------------------
 
@@ -10,8 +17,6 @@ History
 * Added corpus cases for some open issues that now pass
 * Changed all internal imports to be absolute (i.e. `from ctparse.x` instead of `from .x`)
 * Dropped `tox` (now using github actions)
-
-=======
 
 0.3.2 (2022-07-18)
 ------------------

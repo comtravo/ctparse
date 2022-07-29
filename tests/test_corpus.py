@@ -8,6 +8,7 @@ from ctparse.corpus import (
     make_partial_rule_dataset,
     parse_nb_string,
     run_corpus,
+    _run_corpus_one_test,
 )
 from ctparse.scorer import DummyScorer
 from ctparse.time.corpus import corpus
@@ -31,13 +32,19 @@ CORPUS_JSON = """
 """
 
 
-def test_run_corpus() -> None:
+@pytest.mark.parametrize(
+    "target,ts,test",
+    ((target, ts, test) for target, ts, tests in corpus for test in tests),
+)
+def test_run_corpus(target, ts, test) -> None:
     """The corpus passes if ctparse generates the desired
     solution for each test at least once. Otherwise it fails.
+
+    If a new case fails during tests, increasing the stack depth is ok. Original
+    tests run with max_stack_depth=0 (=unlimited). The current limit was introduced
+    to reduce the runtime of the tests.
     """
-    X, y = run_corpus(corpus)
-    assert isinstance(y[0], bool)
-    assert isinstance(X[0][0], str)
+    _run_corpus_one_test(target, ts, [test], max_stack_depth=20)
 
 
 def test_run_corpus_failure() -> None:

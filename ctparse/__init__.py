@@ -5,6 +5,6 @@
 """
 __author__ = """Sebastian Mika"""
 __email__ = "sebastian.mika@comtravo.com"
-__version__ = "__version__ = '0.3.3'"
+__version__ = "__version__ = '0.3.4'"
 
 from ctparse.ctparse import ctparse, ctparse_gen  # noqa

@@ -7,26 +7,29 @@ from ctparse.types import Time, Duration, Interval, pod_hours, RegexMatch, Durat
 
 
 @rule(
-    r"at|on|am|um|gegen|den|dem|der|the|ca\.?|approx\.?|about|(in|of)( the)?|around",
+    r"at|on|am|um|(gegen){e<=1}|den|dem|der|the|ca\.?|"
+    r"(approx\.?){e<=1}|about|(in|of)( the)?|(around){e<=1}",
     dimension(Time),
 )
 def ruleAbsorbOnTime(ts: datetime, _: RegexMatch, t: Time) -> Time:
     return t
 
 
-@rule(r"von|vom|zwischen|from|between|start(ing|s)?", dimension(Interval))
+@rule(
+    r"von|vom|(zwischen){e<=1}|from|(between){e<=1}|start(ing|s)?", dimension(Interval)
+)
 def ruleAbsorbFromInterval(ts: datetime, _: Any, i: Interval) -> Interval:
     return i
 
 
 _dows = [
-    ("mon", r"montags?|mondays?|mon?\.?"),
-    ("tue", r"die?nstags?|die?\.?|tuesdays?|tue?\.?"),
-    ("wed", r"mittwochs?|mi\.?|wednesday?|wed\.?"),
-    ("thu", r"donn?erstags?|don?\.?|thursdays?|thur?\.?"),
-    ("fri", r"freitags?|fridays?|fri?\.?"),
-    ("sat", r"samstags?|sonnabends?|saturdays?|sat?\.?"),
-    ("sun", r"sonntags?|so\.?|sundays?|sun?\.?"),
+    ("mon", r"(montags?){e<=1}|(mondays?){e<=1}|mon?\.?"),
+    ("tue", r"(die?nstags?){e<=1}|die?\.?|(tuesdays?){e<=1}|tue?\.?"),
+    ("wed", r"(mittwochs?){e<=1}|mi\.?|(wednesdays?){e<=1}|wed\.?"),
+    ("thu", r"(donn?erstags?){e<=1}|don?\.?|(thursdays?){e<=1}|thur?\.?"),
+    ("fri", r"(freitags?){e<=1}|(fridays?){e<=1}|fri?\.?"),
+    ("sat", r"(samstags?){e<=1}|(sonnabends?){e<=1}|(saturdays?){e<=1}|sat?\.?"),
+    ("sun", r"(sonntags?){e<=1}|so\.?|(sundays?){e<=1}|sun?\.?"),
 ]
 _rule_dows = r"|".join(r"(?P<{}>{})".format(dow, expr) for dow, expr in _dows)
 _rule_dows = r"({})\s*".format(_rule_dows)
@@ -41,20 +44,20 @@ def ruleNamedDOW(ts: datetime, m: RegexMatch) -> Optional[Time]:
 
 
 _months = [
-    ("january", r"january?|jan\.?"),
-    ("february", r"february?|feb\.?"),
-    ("march", r"märz|march|mar\.?|mrz\.?|mär\.?"),
-    ("april", r"april|apr\.?"),
+    ("january", r"(january?){e<=1}|jan\.?"),
+    ("february", r"(february?){e<=1}|feb\.?"),
+    ("march", r"märz|(march){e<=1}|mar\.?|mrz\.?|mär\.?"),
+    ("april", r"(april){e<=1}|apr\.?"),
     ("may", r"mai|may\.?"),
-    ("june", r"juni|june|jun\.?"),
+    ("june", r"juni|juno|june|jun\.?"),
     ("july", r"juli|july|jul\.?"),
-    ("august", r"august|aug\.?"),
-    ("september", r"september|sept?\.?"),
-    ("october", r"oktober|october|oct\.?|okt\.?"),
-    ("november", r"november|nov\.?"),
-    ("december", r"december|dezember|dez\.?|dec\.?"),
+    ("august", r"(august){e<=1}|aug\.?"),
+    ("september", r"(september){e<=1}|sept?\.?"),
+    ("october", r"(oktober){e<=1}|(october){e<=1}|oct\.?|okt\.?"),
+    ("november", r"(november){e<=1}|nov\.?"),
+    ("december", r"(december){e<=1}|(dezember){e<=1}|dez\.?|dec\.?"),
 ]
-_rule_months = "|".join(r"(?P<{}>{})".format(name, expr) for name, expr in _months)
+_rule_months = r"|".join(r"(?P<{}>{})".format(name, expr) for name, expr in _months)
 
 
 @rule(_rule_months)
@@ -96,7 +99,7 @@ def ruleNamedHour(ts: datetime, m: RegexMatch) -> Optional[Time]:
     return None
 
 
-@rule("mitternacht|midnight")
+@rule("(mitternacht|midnight){e<=1}")
 def ruleMidnight(ts: datetime, _: RegexMatch) -> Time:
     return Time(hour=0, minute=0)
 
@@ -137,14 +140,14 @@ _pods = [
             "so spät wie möglich(er?)?)"
         ),
     ),
-    ("earlymorning", r"very early|sehr früh"),
-    ("lateevening", r"very late|sehr spät"),
-    ("morning", r"morning|morgend?s?|(in der )?frühe?|early"),
-    ("forenoon", r"forenoon|vormittags?"),
-    ("afternoon", r"afternoon|nachmittags?"),
-    ("noon", r"noon|mittags?"),
-    ("evening", r"evening|tonight|late|abend?s?|spät"),
-    ("night", r"night|nachts?"),
+    ("earlymorning", r"(very early|sehr früh){e<=1}"),
+    ("lateevening", r"(very late|sehr spät){e<=1}"),
+    ("morning", r"(morning|morgend?s?|(in der )?frühe?){e<=1}|early"),
+    ("forenoon", r"(forenoon|vormittags?){e<=1}"),
+    ("afternoon", r"(afternoon|nachmittags?){e<=1}"),
+    ("noon", r"noon|(mittags?){e<=1}"),
+    ("evening", r"(evening){e<=1}|(tonight){e<=1}|late|abend?s?|spät"),
+    ("night", r"(night|nachts?){e<=1}"),
 ]
 
 _rule_pods = "|".join("(?P<{}>{})".format(pod, expr) for pod, expr in _pods)
@@ -204,16 +207,16 @@ def ruleYear(ts: datetime, m: RegexMatch) -> Time:
 
 
 @rule(
-    r"heute|(um diese zeit|zu dieser zeit|um diesen zeitpunkt|zu diesem zeitpunkt)|"
-    "todays?|(at this time)"
+    r"heute|(um diese zeit|zu dieser zeit|um diesen zeitpunkt|"
+    r"zu diesem zeitpunkt){e<=1}|todays?|(at this time){e<=1}"
 )
 def ruleToday(ts: datetime, _: RegexMatch) -> Time:
     return Time(year=ts.year, month=ts.month, day=ts.day)
 
 
 @rule(
-    r"(genau\s*)?jetzt|diesen moment|in diesem moment|gerade eben|"
-    r"((just|right)\s*)?now|immediately"
+    r"(genau\s*)?jetzt|(diesen moment){e<=1}|(in diesem moment){e<=1}|"
+    r"(gerade eben){e<=1}|((just|right)\s*)?now|(immediately){e<=1}"
 )
 def ruleNow(ts: datetime, _: RegexMatch) -> Time:
     return Time(
@@ -221,39 +224,41 @@ def ruleNow(ts: datetime, _: RegexMatch) -> Time:
     )
 
 
-@rule(r"morgen|tmrw?|tomm?or?rows?")
+@rule(r"(morgen){e<=1}|tmrw?|(tomm?or?rows?){e<=1}")
 def ruleTomorrow(ts: datetime, _: RegexMatch) -> Time:
     dm = ts + relativedelta(days=1)
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
-@rule(r"übermorgen")
+@rule(r"(übermorgen){e<=1}")
 def ruleAfterTomorrow(ts: datetime, _: RegexMatch) -> Time:
     dm = ts + relativedelta(days=2)
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
-@rule(r"gestern|yesterdays?")
+@rule(r"(gestern|yesterdays?){e<=1}")
 def ruleYesterday(ts: datetime, _: RegexMatch) -> Time:
     dm = ts + relativedelta(days=-1)
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
-@rule(r"vor\s?gestern")
+@rule(r"(vor\s?gestern){e<=1}")
 def ruleBeforeYesterday(ts: datetime, _: RegexMatch) -> Time:
     dm = ts + relativedelta(days=-2)
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
-@rule(r"(das )?ende (des|dieses) monats?|(the )?(EOM|end of (the )?month)")
+@rule(
+    r"((das )?ende (des|dieses) monats?){e<=1}|(the )?(EOM|(end of (the )?month){e<=1})"
+)
 def ruleEOM(ts: datetime, _: RegexMatch) -> Time:
     dm = ts + relativedelta(day=1, months=1, days=-1)
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
 @rule(
-    r"(das )?(EOY|jahr(es)? ?ende|ende (des )?jahr(es)?)|"
-    r"(the )?(EOY|end of (the )?year)"
+    r"(das )?(EOY|(jahr(es)? ?ende){e<=1}|(ende (des )?jahr(es)?)){e<=1}|"
+    r"(the )?(EOY|(end of (the )?year){e<=1})"
 )
 def ruleEOY(ts: datetime, _: RegexMatch) -> Time:
     dm = ts + relativedelta(day=1, month=1, years=1, days=-1)
@@ -284,8 +289,8 @@ def ruleAtDOW(ts: datetime, _: RegexMatch, dow: Time) -> Time:
 
 
 @rule(
-    r"((am )?(dem |den )?((kommenden?|nächsten?)( Woche)?))|"
-    "((on |at )?(the )?((next|following)( week)?))",
+    r"(((am )?(dem |den )?((kommenden?|nächsten?)( Woche)?))|"
+    r"((on |at )?(the )?((next|following)( week)?))){e<=1}",
     predicate("isDOW"),
 )
 def ruleNextDOW(ts: datetime, _: RegexMatch, dow: Time) -> Time:
@@ -293,7 +298,7 @@ def ruleNextDOW(ts: datetime, _: RegexMatch, dow: Time) -> Time:
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
-@rule(predicate("isDOW"), r"((kommende|nächste) Woche)|((next|following) week)")
+@rule(predicate("isDOW"), r"(((kommende|nächste) Woche)|((next|following) week)){e<=1}")
 def ruleDOWNextWeek(ts: datetime, dow: Time, _: RegexMatch) -> Time:
     dm = ts + relativedelta(weekday=dow.DOW, weeks=1)
     return Time(year=dm.year, month=dm.month, day=dm.day)
@@ -400,9 +405,9 @@ def ruleMMDD(ts: datetime, m: RegexMatch) -> Time:
 
 
 @rule(
-    r"(?<!\d|\.)(?P<day>(?&_day))[-/\.]"
-    r"((?P<month>(?&_month))|(?P<named_month>({})))[-/\.]"
-    r"(?P<year>(?&_year))(?!\d)".format(_rule_months)
+    r"(?<!\d|\.)(?P<day>(?&_day))\s*[-/\.]"
+    r"\s*((?P<month>(?&_month))|(?P<named_month>({})))\s*[-/\.]"
+    r"\s*(?P<year>(?&_year))(?!\d)".format(_rule_months)
 )
 def ruleDDMMYYYY(ts: datetime, m: RegexMatch) -> Time:
     y = int(m.match.group("year"))
@@ -418,9 +423,9 @@ def ruleDDMMYYYY(ts: datetime, m: RegexMatch) -> Time:
 
 
 @rule(
-    r"(?P<year>(?&_year))[-/\.]"
-    r"(?P<month>(?&_month))[-/\.]"
-    r"(?P<day>(?&_day))(?!\d)"
+    r"(?P<year>(?&_year))\s*[-/\.]"
+    r"\s*(?P<month>(?&_month))\s*[-/\.]"
+    r"\s*(?P<day>(?&_day))(?!\d)"
 )
 def ruleYYYYMMDD(ts: datetime, m: RegexMatch) -> Time:
     y = int(m.match.group("year"))
@@ -509,7 +514,9 @@ def ruleHHOClock(ts: datetime, m: RegexMatch) -> Time:
     return Time(hour=int(m.match.group("hour")))
 
 
-@rule(r"(a |one )?quarter( to| till| before| of)|vie?rtel vor", predicate("isTOD"))
+@rule(
+    r"((a |one )?quarter( to| till| before| of)|vie?rtel vor){e<=1}", predicate("isTOD")
+)
 def ruleQuarterBeforeHH(ts: datetime, _: RegexMatch, t: Time) -> Optional[Time]:
     # no quarter past hh:mm where mm is not 0 or missing
     if t.minute:
@@ -520,14 +527,14 @@ def ruleQuarterBeforeHH(ts: datetime, _: RegexMatch, t: Time) -> Optional[Time]:
         return Time(hour=23, minute=45)
 
 
-@rule(r"((a |one )?quarter( after| past)|vie?rtel nach)", predicate("isTOD"))
+@rule(r"((a |one )?quarter( after| past)|vie?rtel nach){e<=1}", predicate("isTOD"))
 def ruleQuarterAfterHH(ts: datetime, _: RegexMatch, t: Time) -> Optional[Time]:
     if t.minute:
         return None
     return Time(hour=t.hour, minute=15)
 
 
-@rule(r"halfe?( to| till| before| of)?|halb( vor)?", predicate("isTOD"))
+@rule(r"(halfe?( to| till| before| of)?|halb( vor)?){e<=1}", predicate("isTOD"))
 def ruleHalfBeforeHH(ts: datetime, _: RegexMatch, t: Time) -> Optional[Time]:
     if t.minute:
         return None
@@ -537,7 +544,7 @@ def ruleHalfBeforeHH(ts: datetime, _: RegexMatch, t: Time) -> Optional[Time]:
         return Time(hour=23, minute=30)
 
 
-@rule(r"halfe?( after| past)|halb nach", predicate("isTOD"))
+@rule(r"(halfe?( after| past)|halb nach){e<=1}", predicate("isTOD"))
 def ruleHalfAfterHH(ts: datetime, _: RegexMatch, t: Time) -> Optional[Time]:
     if t.minute:
         return None
@@ -595,7 +602,8 @@ def rulePODDate(ts: datetime, pod: Time, d: Time) -> Time:
 
 
 @rule(
-    r"((?P<not>not |nicht )?(vor|before))|(bis )?spätestens( bis)?|bis|latest",
+    r"((?P<not>not |nicht )?(vor|(before){e<=1}))|"
+    r"((bis )?spätestens( bis)?){e<=1}|bis|(latest){e<=1}",
     dimension(Time),
 )
 def ruleBeforeTime(ts: datetime, r: RegexMatch, t: Time) -> Interval:
@@ -606,8 +614,8 @@ def ruleBeforeTime(ts: datetime, r: RegexMatch, t: Time) -> Interval:
 
 
 @rule(
-    r"((?P<not>not |nicht )?(nach|after))|(ab )?frühe?stens( ab)?|ab|"
-    "(from )?earliest( after)?|from",
+    r"((?P<not>not |nicht )?(nach|after))|((ab )?frühe?stens( ab)?){e<=1}|ab|"
+    r"((from )?earliest( after)?){e<=1}|from",
     dimension(Time),
 )
 def ruleAfterTime(ts: datetime, r: RegexMatch, t: Time) -> Interval:
@@ -791,25 +799,25 @@ _named_number = (
     (10, r"ten|zehn"),
     (11, r"eleven|elf"),
     (12, r"twelve|zwölf"),
-    (13, r"thirteen|dreizehn"),
-    (14, r"fourteen|vierzehn"),
-    (15, r"fifteen|fünfzehn"),
-    (16, r"sixteen|sechszehn"),
-    (17, r"seventeen|siebzehn"),
-    (18, r"eighteen|achtzehn"),
-    (19, r"nineteen|neunzehn"),
+    (13, r"(thirteen|dreizehn){e<=1}"),
+    (14, r"(fourteen|vierzehn){e<=1}"),
+    (15, r"(fifteen|fünfzehn){e<=1}"),
+    (16, r"(sixteen|sechszehn){e<=1}"),
+    (17, r"(seventeen|siebzehn){e<=1}"),
+    (18, r"(eighteen|achtzehn){e<=1}"),
+    (19, r"(nineteen|neunzehn){e<=1}"),
     (20, r"twenty|zwanzig"),
-    (21, r"twentyone|einund?zwanzig"),
-    (22, r"twentytwo|zweiund?zwanzig"),
-    (23, r"twentythree|dreiund?zwanzig"),
-    (24, r"twentyfour|vierund?zwanzig"),
-    (25, r"twentyfive|fünfund?zwanzig"),
-    (26, r"twentysix|sechsund?zwanzig"),
-    (27, r"twentyseven|siebenud?zwanzig"),
-    (28, r"twentyeight|achtund?zwanzig"),
-    (29, r"twentynine|neunund?zwanzig"),
+    (21, r"(twentyone|einund?zwanzig){e<=1}"),
+    (22, r"(twentytwo|zweiund?zwanzig){e<=1}"),
+    (23, r"(twentythree|dreiund?zwanzig){e<=1}"),
+    (24, r"(twentyfour|vierund?zwanzig){e<=1}"),
+    (25, r"(twentyfive|fünfund?zwanzig){e<=1}"),
+    (26, r"(twentysix|sechsund?zwanzig){e<=1}"),
+    (27, r"(twentyseven|siebenud?zwanzig){e<=1}"),
+    (28, r"(twentyeight|achtund?zwanzig){e<=1}"),
+    (29, r"(twentynine|neunund?zwanzig){e<=1}"),
     (30, r"thirty|drei(ß|ss)ig"),
-    (31, r"thirtyone|einundrei(ß|ss)ig"),
+    (31, r"(thirtyone|einundrei(ß|ss)ig){e<=1}"),
 )
 _rule_named_number = "|".join(
     r"(?P<n_{}>{}\b)".format(n, expr) for n, expr in _named_number
@@ -817,10 +825,10 @@ _rule_named_number = "|".join(
 _rule_named_number = r"({})\s*".format(_rule_named_number)
 
 _durations = [
-    (DurationUnit.NIGHTS, r"n[aä]chte?|nights?|[üu]bernachtung"),
+    (DurationUnit.NIGHTS, r"n[aä]chte?|nights?|([üu]bernachtung){e<=1}"),
     (DurationUnit.DAYS, r"tage?|days?"),
     (DurationUnit.MINUTES, r"m(inute[ns]?)?"),
-    (DurationUnit.HOURS, r"stunden?|h(ours?)?"),
+    (DurationUnit.HOURS, r"(stunden?){e<=1}|h(ours?)?"),
     (DurationUnit.WEEKS, r"weeks?|wochen?"),
     (DurationUnit.MONTHS, r"monate?|months?"),
 ]

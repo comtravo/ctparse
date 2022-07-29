@@ -1,7 +1,16 @@
 import json
 import logging
 from datetime import datetime
-from typing import Callable, Iterable, List, NamedTuple, Sequence, Tuple, TypeVar, Union
+from typing import (
+    Callable,
+    Iterable,
+    List,
+    NamedTuple,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 from tqdm import tqdm
 
@@ -136,6 +145,67 @@ def parse_nb_string(gold_parse: str) -> Union[Time, Interval, Duration]:
         raise ValueError("'{}' has an invalid format".format(gold_parse))
 
 
+def _run_corpus_one_test(
+    target: str, ts_str: str, tests: List[str], max_stack_depth: int = 0
+) -> Tuple[List[List[str]], List[bool], int, int, int, int, int, bool]:
+    ts = datetime.strptime(ts_str, "%Y-%m-%dT%H:%M")
+    all_tests_pass = True
+    Xs = []
+    ys = []
+    pos_parses = neg_parses = pos_first_parses = pos_best_scored = total_tests = 0
+
+    at_least_one_failed = False
+    for test in tests:
+        one_prod_passes = False
+        first_prod = True
+        y_score = []
+        for parse in ctparse_gen(
+            test,
+            ts,
+            relative_match_len=1.0,
+            timeout=0,
+            max_stack_depth=max_stack_depth,
+            scorer=DummyScorer(),
+            latent_time=False,
+        ):
+            assert parse is not None
+
+            y = parse.resolution.nb_str() == target
+            # Build data set, one sample for each applied rule in
+            # the sequence of rules applied in this production
+            # *after* the matched regular expressions
+            for i in range(1, len(parse.production) + 1):
+                Xs.append([str(p) for p in parse.production[:i]])
+                ys.append(y)
+
+            one_prod_passes |= y
+            pos_parses += int(y)
+            neg_parses += int(not y)
+            pos_first_parses += int(y and first_prod)
+            first_prod = False
+            y_score.append((parse.score, y))
+        if not one_prod_passes:
+            logger.warning(
+                'failure: target "{}" never produced in "{}"'.format(target, test)
+            )
+        pos_best_scored += int(max(y_score, key=lambda x: x[0])[1])
+        total_tests += len(tests)
+        all_tests_pass &= one_prod_passes
+    if not all_tests_pass:
+        logger.warning('failure: "{}" not always produced'.format(target))
+        at_least_one_failed = True
+    return (
+        Xs,
+        ys,
+        total_tests,
+        pos_parses,
+        neg_parses,
+        pos_first_parses,
+        pos_best_scored,
+        at_least_one_failed,
+    )
+
+
 def run_corpus(
     corpus: Sequence[Tuple[str, str, Sequence[str]]]
 ) -> Tuple[List[List[str]], List[bool]]:
@@ -172,47 +242,24 @@ def run_corpus(
     Xs = []
     ys = []
     for target, ts, tests in tqdm(corpus):
-        ts = datetime.strptime(ts, "%Y-%m-%dT%H:%M")
-        all_tests_pass = True
-        for test in tests:
-            one_prod_passes = False
-            first_prod = True
-            y_score = []
-            for parse in ctparse_gen(
-                test,
-                ts,
-                relative_match_len=1.0,
-                timeout=0,
-                max_stack_depth=0,
-                scorer=DummyScorer(),
-                latent_time=False,
-            ):
-                assert parse is not None
-
-                y = parse.resolution.nb_str() == target
-                # Build data set, one sample for each applied rule in
-                # the sequence of rules applied in this production
-                # *after* the matched regular expressions
-                for i in range(1, len(parse.production) + 1):
-                    Xs.append([str(p) for p in parse.production[:i]])
-                    ys.append(y)
-
-                one_prod_passes |= y
-                pos_parses += int(y)
-                neg_parses += int(not y)
-                pos_first_parses += int(y and first_prod)
-                first_prod = False
-                y_score.append((parse.score, y))
-            if not one_prod_passes:
-                logger.warning(
-                    'failure: target "{}" never produced in "{}"'.format(target, test)
-                )
-            pos_best_scored += int(max(y_score, key=lambda x: x[0])[1])
-            total_tests += len(tests)
-            all_tests_pass &= one_prod_passes
-        if not all_tests_pass:
-            logger.warning('failure: "{}" not always produced'.format(target))
-            at_least_one_failed = True
+        (
+            Xs_,
+            ys_,
+            total_tests_,
+            pos_parses_,
+            neg_parses_,
+            pos_first_parses_,
+            pos_best_scored_,
+            at_least_one_failed_,
+        ) = _run_corpus_one_test(target, ts, tests)
+        Xs.extend(Xs_)
+        ys.extend(ys_)
+        total_tests += total_tests_
+        pos_parses += pos_parses_
+        neg_parses += neg_parses_
+        pos_first_parses += pos_first_parses_
+        pos_best_scored += pos_best_scored_
+        at_least_one_failed = at_least_one_failed or at_least_one_failed_
     logger.info(
         "run {} tests on {} targets with a total of "
         "{} positive and {} negative parses (={})".format(
