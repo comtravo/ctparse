@@ -207,8 +207,8 @@ def ruleYear(ts: datetime, m: RegexMatch) -> Time:
 
 
 @rule(
-    r"heute|(um diese zeit|zu dieser zeit|um diesen zeitpunkt|zu diesem zeitpunkt){e<=1}|"
-    r"todays?|(at this time){e<=1}"
+    r"heute|(um diese zeit|zu dieser zeit|um diesen zeitpunkt|"
+    r"zu diesem zeitpunkt){e<=1}|todays?|(at this time){e<=1}"
 )
 def ruleToday(ts: datetime, _: RegexMatch) -> Time:
     return Time(year=ts.year, month=ts.month, day=ts.day)
