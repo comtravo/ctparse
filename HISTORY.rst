@@ -17,8 +17,6 @@ History
 * Changed all internal imports to be absolute (i.e. `from ctparse.x` instead of `from .x`)
 * Dropped `tox` (now using github actions)
 
-=======
-
 0.3.2 (2022-07-18)
 ------------------
 
