@@ -49,7 +49,7 @@ _months = [
     ("march", r"märz|(march){e<=1}|mar\.?|mrz\.?|mär\.?"),
     ("april", r"(april){e<=1}|apr\.?"),
     ("may", r"mai|may\.?"),
-    ("june", r"juni|june|jun\.?"),
+    ("june", r"juni|juno|june|jun\.?"),
     ("july", r"juli|july|jul\.?"),
     ("august", r"(august){e<=1}|aug\.?"),
     ("september", r"(september){e<=1}|sept?\.?"),
@@ -207,8 +207,8 @@ def ruleYear(ts: datetime, m: RegexMatch) -> Time:
 
 
 @rule(
-    r"(heute|(um diese zeit|zu dieser zeit|um diesen zeitpunkt|zu diesem zeitpunkt)|"
-    r"todays?|(at this time)){e<=1}"
+    r"heute|(um diese zeit|zu dieser zeit|um diesen zeitpunkt|zu diesem zeitpunkt){e<=1}|"
+    r"todays?|(at this time){e<=1}"
 )
 def ruleToday(ts: datetime, _: RegexMatch) -> Time:
     return Time(year=ts.year, month=ts.month, day=ts.day)

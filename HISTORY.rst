@@ -6,7 +6,8 @@ History
 ------------------
 
 * Add fuzzy matching on longer literals
-* [internal] Detangle corpus tests into isolated test cases
+* [internal] De-tangle corpus tests into isolated test cases
+* Allow spaces around separators in ruleDDMMYYYY and ruleYYYYMMDD
 
 0.3.3 (2022-07-18)
 ------------------
