@@ -4,7 +4,9 @@ from datetime import datetime
 from typing import (
     Callable,
     Iterable,
+    Iterator,
     List,
+    Optional,
     NamedTuple,
     Sequence,
     Tuple,
@@ -14,7 +16,7 @@ from typing import (
 
 from tqdm import tqdm
 
-from ctparse.ctparse import ctparse_gen
+from ctparse.ctparse import ctparse_gen, CTParse
 from ctparse.scorer import DummyScorer, Scorer
 from ctparse.types import Artifact, Duration, Interval, Time
 
@@ -146,7 +148,7 @@ def parse_nb_string(gold_parse: str) -> Union[Time, Interval, Duration]:
 
 
 def _run_corpus_one_test(
-    target: str, ts_str: str, tests: List[str], max_stack_depth: int = 0
+    target: str, ts_str: str, tests: List[str], ctparse_generator: Callable[[str, datetime], Iterator[Optional[CTParse]]]
 ) -> Tuple[List[List[str]], List[bool], int, int, int, int, int, bool]:
     ts = datetime.strptime(ts_str, "%Y-%m-%dT%H:%M")
     all_tests_pass = True
@@ -159,15 +161,7 @@ def _run_corpus_one_test(
         one_prod_passes = False
         first_prod = True
         y_score = []
-        for parse in ctparse_gen(
-            test,
-            ts,
-            relative_match_len=1.0,
-            timeout=0,
-            max_stack_depth=max_stack_depth,
-            scorer=DummyScorer(),
-            latent_time=False,
-        ):
+        for parse in ctparse_generator(test, ts):
             assert parse is not None
 
             y = parse.resolution.nb_str() == target
@@ -206,6 +200,20 @@ def _run_corpus_one_test(
     )
 
 
+def run_single_test(target: str, ts: str, test: str) -> Tuple[List[List[str]], List[bool], int, int, int, int, int, bool]:
+    def ctparse_generator(test: str, ts: datetime) -> Iterator[Optional[CTParse]]:
+        return ctparse_gen(
+            test,
+            ts,
+            relative_match_len=1.0,
+            timeout=0,
+            max_stack_depth=100,
+            latent_time=False,
+        )
+
+    return _run_corpus_one_test(target, ts, [test], ctparse_generator)
+
+
 def run_corpus(
     corpus: Sequence[Tuple[str, str, Sequence[str]]]
 ) -> Tuple[List[List[str]], List[bool]]:
@@ -241,6 +249,18 @@ def run_corpus(
     total_tests = 0
     Xs = []
     ys = []
+
+    def ctparse_generator(test: str, ts: datetime) -> Iterator[Optional[CTParse]]:
+        return ctparse_gen(
+            test,
+            ts,
+            relative_match_len=1.0,
+            timeout=0,
+            max_stack_depth=0,
+            scorer=DummyScorer(),
+            latent_time=False,
+        )
+
     for target, ts, tests in tqdm(corpus):
         (
             Xs_,
@@ -251,7 +271,7 @@ def run_corpus(
             pos_first_parses_,
             pos_best_scored_,
             at_least_one_failed_,
-        ) = _run_corpus_one_test(target, ts, tests)
+        ) = _run_corpus_one_test(target, ts, tests, ctparse_generator)
         Xs.extend(Xs_)
         ys.extend(ys_)
         total_tests += total_tests_
