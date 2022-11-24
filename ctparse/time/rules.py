@@ -280,11 +280,17 @@ def ruleMonthDOM(ts: datetime, m: Time, dom: Time) -> Time:
     return Time(month=m.month, day=dom.day)
 
 
-@rule(r"am|diese(n|m)|at|on|this", predicate("isDOW"))
+@rule(r"am|at|on", predicate("isDOW"))
 def ruleAtDOW(ts: datetime, _: RegexMatch, dow: Time) -> Time:
     dm = ts + relativedelta(weekday=dow.DOW)
     if dm.date() == ts.date():
         dm += relativedelta(weeks=1)
+    return Time(year=dm.year, month=dm.month, day=dm.day)
+
+
+@rule(r"diese(n|m)|this", predicate("isDOW"))
+def ruleThisDOW(ts: datetime, _: RegexMatch, dow: Time) -> Time:
+    dm = ts + relativedelta(weekday=dow.DOW)
     return Time(year=dm.year, month=dm.month, day=dm.day)
 
 
@@ -320,6 +326,16 @@ def ruleDOWDOM(ts: datetime, dow: Time, dom: Time) -> Time:
     # Find next date at this day of week and day of month
     dm = rrule(MONTHLY, dtstart=ts, byweekday=dow.DOW, bymonthday=dom.day, count=1)[0]
     return Time(year=dm.year, month=dm.month, day=dm.day)
+
+
+# This also covers DOW1 - DOW2 cases, with ruleLatentDOW(DOW1) = Date
+@rule(predicate("hasDate"), _regex_to_join, predicate("isDOW"))
+def ruleDateDOWInterval(
+    ts: datetime, t_from: Time, _: RegexMatch, dow: Time
+) -> Interval:
+    dt_to = t_from.dt + relativedelta(weekday=dow.DOW)
+    t_to = Time(year=dt_to.year, month=dt_to.month, day=dt_to.day)
+    return Interval(t_from=t_from, t_to=t_to)
 
 
 @rule(predicate("hasDOW"), predicate("isDate"))
@@ -481,7 +497,7 @@ def _maybe_apply_am_pm(t: Time, ampm_match: str) -> Time:
 
 @rule(
     # match hhmm
-    r"(?<!\d|\.)(?P<hour>(?:[01]\d)|(?:2[0-3]))(?P<minute>(?&_minute))"
+    r"(?<!\d|\.)(?P<hour>(?:[01]{0,1}\d)|(?:2[0-3]))(?P<minute>(?&_minute))"
     r"\s*(?P<clock>uhr|h)?"  # optional uhr
     r"\s*(?P<ampm>\s*[ap]\.?m\.?)?(?!\d)"  # optional am/pm
 )
