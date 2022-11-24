@@ -121,6 +121,28 @@ corpus = [
         "2018-03-07T12:43",
         ["Saturday 2nd", "Jun 2nd", "am 2ten Juni"],
     ),
+    # ruleDOWDOW
+    (
+        "Interval[]{2022-11-08 X:X (X/X) - 2022-11-11 X:X (X/X)}",
+        "2022-11-03T12:43",
+        ["Tuesday - Friday", "from Tuesday to Friday"],
+    ),
+    # ruleThisDOW vs ruleNextDow
+    (  # Nov 1st is a Tuesday
+        "Interval[]{2022-11-01 X:X (X/X) - 2022-11-04 X:X (X/X)}",
+        "2022-11-01T12:43",
+        ["this Tuesday - Friday"],
+    ),
+    (  # Nov 1st is a Tuesday
+        "Interval[]{2022-11-01 X:X (X/X) - 2022-11-11 X:X (X/X)}",
+        "2022-11-01T12:43",
+        ["this Tuesday - next Friday"],
+    ),
+    (  # Nov 1st is a Tuesday
+        "Interval[]{2022-11-08 X:X (X/X) - 2022-11-11 X:X (X/X)}",
+        "2022-11-01T12:43",
+        ["next Tuesday - Friday"],
+    ),
     # ruleDOWDate, ruleDateDOW
     (
         "Time[]{2018-05-08 X:X (X/X)}",
@@ -414,6 +436,18 @@ corpus = [
         "Interval[]{None - 2018-11-26 08:00 (X/X)}",
         "2018-03-07T12:43",
         ["26.11.2018 vor 08:00 Uhr", "26.11. vor 08:00 Uhr", "26.11. not after 08:00"],
+    ),
+    # ruleMilitaryHHMM
+    (
+        "Time[]{X-X-X 20:10 (X/X)}",
+        "2018-03-07T00:00",
+        ["2010", "0810 pm"],
+    ),
+    # ruleMilitaryHHMM - no leading zero
+    (
+        "Time[]{X-X-X 08:10 (X/X)}",
+        "2018-03-07T00:00",
+        ["0810", "810"],
     ),
     # ruleHHMM
     (
