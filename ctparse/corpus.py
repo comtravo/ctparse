@@ -148,7 +148,10 @@ def parse_nb_string(gold_parse: str) -> Union[Time, Interval, Duration]:
 
 
 def _run_corpus_one_test(
-    target: str, ts_str: str, tests: List[str], ctparse_generator: Callable[[str, datetime], Iterator[Optional[CTParse]]]
+    target: str,
+    ts_str: str,
+    tests: List[str],
+    ctparse_generator: Callable[[str, datetime], Iterator[Optional[CTParse]]],
 ) -> Tuple[List[List[str]], List[bool], int, int, int, int, int, bool]:
     ts = datetime.strptime(ts_str, "%Y-%m-%dT%H:%M")
     all_tests_pass = True
@@ -200,7 +203,21 @@ def _run_corpus_one_test(
     )
 
 
-def run_single_test(target: str, ts: str, test: str) -> Tuple[List[List[str]], List[bool], int, int, int, int, int, bool]:
+def run_single_test(target: str, ts: str, test: str) -> None:
+    """Run a single test case and raise an exception if the target was never produced.
+
+    Below `max_stack_depth` might be increased if tests fail.
+
+    Parameters
+    ----------
+    target : str
+        Target to produce
+    ts : str
+        Reference time as *string*
+    test : str
+        Test case
+    """
+
     def ctparse_generator(test: str, ts: datetime) -> Iterator[Optional[CTParse]]:
         return ctparse_gen(
             test,
@@ -211,7 +228,11 @@ def run_single_test(target: str, ts: str, test: str) -> Tuple[List[List[str]], L
             latent_time=False,
         )
 
-    return _run_corpus_one_test(target, ts, [test], ctparse_generator)
+    res = _run_corpus_one_test(target, ts, [test], ctparse_generator)
+    if res[-1]:
+        raise Exception(
+            'failure: target "{}" never produced in "{}"'.format(target, test)
+        )
 
 
 def run_corpus(

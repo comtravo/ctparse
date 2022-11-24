@@ -44,11 +44,7 @@ def test_run_corpus(target, ts, test) -> None:
     tests run with max_stack_depth=0 (=unlimited). The current limit was introduced
     to reduce the runtime of the tests.
     """
-    res = run_single_test(target, ts, test)
-    if res[-1]:
-        raise Exception(
-            'failure: target "{}" never produced in "{}"'.format(target, test)
-        )
+    run_single_test(target, ts, test)
 
 
 def test_run_corpus_failure() -> None:
