@@ -985,3 +985,15 @@ def _duration_to_relativedelta(dur: Duration) -> relativedelta:
         DurationUnit.HOURS: relativedelta(hours=dur.value),
         DurationUnit.MINUTES: relativedelta(minutes=dur.value),
     }[dur.unit]
+
+
+@rule(dimension(Duration), dimension(Duration))
+def ruleDurationDuration(ts: datetime, d1: Duration, d2: Duration) -> Duration:
+    return d1 + d2
+
+
+@rule(dimension(Duration), r"and|und", dimension(Duration))
+def ruleDurationAndDuration(
+    ts: datetime, d1: Duration, _: RegexMatch, d2: Duration
+) -> Duration:
+    return d1 + d2
