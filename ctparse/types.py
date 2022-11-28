@@ -518,6 +518,73 @@ class Duration(Artifact):
     def __str__(self) -> str:
         return "{} {}".format(self.value, self.unit.value)
 
+    _mapping = {
+        (DurationUnit.MINUTES, DurationUnit.MINUTES): (DurationUnit.MINUTES, 1, 1),
+        (DurationUnit.MINUTES, DurationUnit.HOURS): (DurationUnit.MINUTES, 1, 60),
+        (DurationUnit.MINUTES, DurationUnit.DAYS): (DurationUnit.MINUTES, 1, 60 * 24),
+        (DurationUnit.MINUTES, DurationUnit.NIGHTS): (DurationUnit.MINUTES, 1, 60 * 24),
+        (DurationUnit.MINUTES, DurationUnit.WEEKS): (
+            DurationUnit.MINUTES,
+            1,
+            60 * 24 * 7,
+        ),
+        (DurationUnit.MINUTES, DurationUnit.MONTHS): (
+            DurationUnit.MINUTES,
+            1,
+            (365 * 24 * 60) / 12,
+        ),
+        (DurationUnit.HOURS, DurationUnit.MINUTES): (DurationUnit.MINUTES, 60, 1),
+        (DurationUnit.HOURS, DurationUnit.HOURS): (DurationUnit.HOURS, 1, 1),
+        (DurationUnit.HOURS, DurationUnit.DAYS): (DurationUnit.HOURS, 1, 24),
+        (DurationUnit.HOURS, DurationUnit.NIGHTS): (DurationUnit.HOURS, 1, 24),
+        (DurationUnit.HOURS, DurationUnit.WEEKS): (DurationUnit.HOURS, 1, 24 * 7),
+        (DurationUnit.HOURS, DurationUnit.MONTHS): (
+            DurationUnit.HOURS,
+            1,
+            (365 * 24) / 12,
+        ),
+        (DurationUnit.DAYS, DurationUnit.MINUTES): (DurationUnit.MINUTES, 24 * 60, 1),
+        (DurationUnit.DAYS, DurationUnit.HOURS): (DurationUnit.HOURS, 24, 1),
+        (DurationUnit.DAYS, DurationUnit.DAYS): (DurationUnit.DAYS, 1, 1),
+        (DurationUnit.DAYS, DurationUnit.NIGHTS): (DurationUnit.DAYS, 1, 1),
+        (DurationUnit.DAYS, DurationUnit.WEEKS): (DurationUnit.DAYS, 1, 7),
+        (DurationUnit.DAYS, DurationUnit.MONTHS): (DurationUnit.DAYS, 1, 365 / 12),
+        (DurationUnit.NIGHTS, DurationUnit.MINUTES): (DurationUnit.MINUTES, 24 * 60, 1),
+        (DurationUnit.NIGHTS, DurationUnit.HOURS): (DurationUnit.HOURS, 24, 1),
+        (DurationUnit.NIGHTS, DurationUnit.DAYS): (DurationUnit.DAYS, 1, 1),
+        (DurationUnit.NIGHTS, DurationUnit.NIGHTS): (DurationUnit.DAYS, 1, 1),
+        (DurationUnit.NIGHTS, DurationUnit.WEEKS): (DurationUnit.DAYS, 1, 7),
+        (DurationUnit.NIGHTS, DurationUnit.MONTHS): (DurationUnit.DAYS, 1, 365 / 12),
+        (DurationUnit.WEEKS, DurationUnit.MINUTES): (
+            DurationUnit.MINUTES,
+            7 * 24 * 60,
+            1,
+        ),
+        (DurationUnit.WEEKS, DurationUnit.HOURS): (DurationUnit.HOURS, 7 * 24, 1),
+        (DurationUnit.WEEKS, DurationUnit.DAYS): (DurationUnit.DAYS, 7, 1),
+        (DurationUnit.WEEKS, DurationUnit.NIGHTS): (DurationUnit.DAYS, 7, 1),
+        (DurationUnit.WEEKS, DurationUnit.WEEKS): (DurationUnit.DAYS, 1, 1),
+        (DurationUnit.WEEKS, DurationUnit.MONTHS): (DurationUnit.DAYS, 1, 52 / 12),
+        (DurationUnit.MONTHS, DurationUnit.MINUTES): (
+            DurationUnit.MINUTES,
+            (365 * 24 * 60) / 12,
+            1,
+        ),
+        (DurationUnit.MONTHS, DurationUnit.HOURS): (
+            DurationUnit.HOURS,
+            (365 * 24) / 12,
+            1,
+        ),
+        (DurationUnit.MONTHS, DurationUnit.DAYS): (DurationUnit.DAYS, 365 / 12, 1),
+        (DurationUnit.MONTHS, DurationUnit.NIGHTS): (DurationUnit.DAYS, 365 / 12, 1),
+        (DurationUnit.MONTHS, DurationUnit.WEEKS): (DurationUnit.DAYS, 52 / 12, 1),
+        (DurationUnit.MONTHS, DurationUnit.MONTHS): (DurationUnit.DAYS, 1, 1),
+    }
+
+    def __add__(self, other: "Duration") -> "Duration":
+        unit, f1, f2 = Duration._mapping[(self.unit, other.unit)]
+        return Duration(value=int(f1 * self.value + f2 * other.value), unit=unit)
+
     @classmethod
     def from_str(cls: Type["Duration"], text: str) -> "Duration":
         value, unit = text.split()

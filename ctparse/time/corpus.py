@@ -822,6 +822,12 @@ corpus = [
         "2020-02-25T12:34",
         ["3 days 15-18 Nov", "15-18 Nov 3 Nächte", "15-18 Nov für 3 Nächte"],
     ),
+    # ruleDurationDuration
+    (
+        "Duration[]{102 minutes}",
+        "2020-02-25T12:34",
+        ["1 hour and 42 minutes", "1 hour 42 minutes", "42 minutes 1 hour"],
+    ),
     # ruleYYYYMMDD
     (
         "Time[]{2022-11-01 X:X (X/X)}",
