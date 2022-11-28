@@ -8,7 +8,7 @@ from ctparse.corpus import (
     make_partial_rule_dataset,
     parse_nb_string,
     run_corpus,
-    _run_corpus_one_test,
+    run_single_test,
 )
 from ctparse.scorer import DummyScorer
 from ctparse.time.corpus import corpus
@@ -44,7 +44,7 @@ def test_run_corpus(target, ts, test) -> None:
     tests run with max_stack_depth=0 (=unlimited). The current limit was introduced
     to reduce the runtime of the tests.
     """
-    _run_corpus_one_test(target, ts, [test], max_stack_depth=20)
+    run_single_test(target, ts, test)
 
 
 def test_run_corpus_failure() -> None:
