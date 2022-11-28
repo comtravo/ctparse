@@ -101,7 +101,7 @@ class MultinomialNaiveBayes:
         Parameters
         ----------
         X : Sequence[Dict[int, int]]
-            Sequence of data to predict on as sparse {feature_index: count} dictionarie
+            Sequence of data to predict on as sparse {feature_index: count} dictionaries
 
         Returns
         -------

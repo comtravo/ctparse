@@ -286,7 +286,7 @@ class Time(Artifact):
         self.POD = POD
 
     # -----------------------------------------------------------------------------
-    # Make sure to not accidentially test bool(x) as False when x==0, but you meant
+    # Make sure to not accidentally test bool(x) as False when x==0, but you meant
     # x==None
     # -----------------------------------------------------------------------------
     @property

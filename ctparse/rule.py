@@ -67,7 +67,7 @@ def rule(*patterns: Union[str, Predicate]) -> Callable[[Any], ProductionRule]:
             new_rr = regex.compile(
                 # Removed the separator here - leads to more matches,
                 # as now each rule can also match if it is not followed
-                # or preceeded by a separator character
+                # or preceded by a separator character
                 # r'(?i)(?:{sep})(?P<{re_key}>{re})(?:{sep})'.format(
                 re,
                 regex.VERSION1 | regex.BESTMATCH,

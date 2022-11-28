@@ -165,12 +165,12 @@ def _seq_match(
     #
     # If pat does not start with a RegexMatch then there must be at
     # least one element in seq before the first RegexMatch in pat that
-    # is alignes on seq. Likewise, if pat does not end with a
+    # is aligned on seq. Likewise, if pat does not end with a
     # RegexMatch, then there must be at least one additional element
     # in seq to match the last non-RegexMatch element in pat.
     #
     # STRONG ASSUMPTIONS ON ARGUMENTS: seq and pat do not contain
-    # consequiteve elements which are both of type RegexMatch! Callers
+    # consecutive elements which are both of type RegexMatch! Callers
     # obligation to ensure this!
 
     if not pat:
@@ -195,7 +195,7 @@ def _seq_match(
         else:
             # Get number of RegexMatch in p
             n_regex = sum(1 for p in pat if p.__name__ == "_regex_match")
-            # For each occurance of RegexMatch pat[0] in seq
+            # For each occurrence of RegexMatch pat[0] in seq
             for iseq, s in enumerate(seq):
                 # apply _regex_match check
                 if p1(s):

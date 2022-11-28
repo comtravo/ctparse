@@ -7,7 +7,7 @@ class CountVectorizer:
         """Create new count vectorizer that also counts n-grams.
 
         A count vectorizer builds an internal vocabulary and embeds each input
-        by counting for each term in the document how often it appearsin the vocabulary.
+        by counting for each term in the document how often it appears in the vocabulary.
         Here also n-grams are considered to be part of the vocabulary and the document
         terms, respectively
 
